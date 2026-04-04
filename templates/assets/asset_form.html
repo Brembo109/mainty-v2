@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ form_title }}{% endblock %}
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block header_actions %}
+  {% if object %}
+    <a href="{% url 'assets:detail' object.pk %}" class="btn-ghost">
+      {% trans "Abbrechen" %}
+    </a>
+  {% else %}
+    <a href="{% url 'assets:list' %}" class="btn-ghost">
+      {% trans "Abbrechen" %}
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-2xl">
+    <div class="card p-6">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="space-y-5">
+
+          {# Non-field errors #}
+          {% if form.non_field_errors %}
+            <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger">
+              {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+          {% endif %}
+
+          {# Name #}
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.name.label }} <span class="text-status-danger">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <p class="mt-1 text-xs text-status-danger">{{ form.name.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          {# Serial number #}
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.serial_number.label }} <span class="text-status-danger">*</span>
+            </label>
+            {{ form.serial_number }}
+            {% if form.serial_number.errors %}
+              <p class="mt-1 text-xs text-status-danger">{{ form.serial_number.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          {# Location #}
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.location.label }} <span class="text-status-danger">*</span>
+            </label>
+            {{ form.location }}
+            {% if form.location.errors %}
+              <p class="mt-1 text-xs text-status-danger">{{ form.location.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          {# Manufacturer #}
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.manufacturer.label }}
+            </label>
+            {{ form.manufacturer }}
+            {% if form.manufacturer.errors %}
+              <p class="mt-1 text-xs text-status-danger">{{ form.manufacturer.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          {# Status #}
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.status.label }} <span class="text-status-danger">*</span>
+            </label>
+            {{ form.status }}
+            {% if form.status.errors %}
+              <p class="mt-1 text-xs text-status-danger">{{ form.status.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+        </div>
+
+        {# Submit row #}
+        <div class="flex items-center gap-3 mt-7 pt-5 border-t border-border">
+          <button type="submit" class="btn-primary">
+            {{ submit_label }}
+          </button>
+          {% if object %}
+            <a href="{% url 'assets:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-white transition-colors">
+              {% trans "Abbrechen" %}
+            </a>
+          {% else %}
+            <a href="{% url 'assets:list' %}" class="text-sm text-content-tertiary hover:text-white transition-colors">
+              {% trans "Abbrechen" %}
+            </a>
+          {% endif %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+{% endblock %}

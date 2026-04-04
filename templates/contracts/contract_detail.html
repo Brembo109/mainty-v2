@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ contract.title }}{% endblock %}
+{% block page_title %}{{ contract.title }}{% endblock %}
+
+{% block header_actions %}
+  {% if can_write %}
+  <a href="{% url 'contracts:update' contract.pk %}" class="btn-ghost">
+    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+    </svg>
+    {% trans "Bearbeiten" %}
+  </a>
+  <a href="{% url 'contracts:delete' contract.pk %}"
+     class="px-3 py-1.5 text-xs border border-status-danger/30 rounded text-status-danger hover:bg-status-danger-bg transition-colors flex items-center gap-1.5">
+    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>
+    {% trans "Löschen" %}
+  </a>
+  {% endif %}
+  <a href="{% url 'contracts:list' %}" class="btn-ghost">← {% trans "Zurück" %}</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  {# ── Main info card ────────────────────────────────────────────── #}
+  <div class="lg:col-span-2 card p-6 space-y-5">
+
+    <div class="flex items-start justify-between gap-4">
+      <h2 class="text-lg font-semibold text-white">{{ contract.title }}</h2>
+      <span class="{{ contract.status_badge_class }} shrink-0">{{ contract.status_label }}</span>
+    </div>
+
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+
+      <div>
+        <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Vertragspartner" %}</dt>
+        <dd class="text-sm text-white">{{ contract.vendor }}</dd>
+      </div>
+
+      {% if contract.contract_number %}
+      <div>
+        <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Vertragsnummer" %}</dt>
+        <dd class="font-mono text-sm text-white">{{ contract.contract_number }}</dd>
+      </div>
+      {% endif %}
+
+      <div>
+        <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Laufzeit" %}</dt>
+        <dd class="font-mono text-sm text-white">
+          {{ contract.start_date|date:"Y-m-d" }} → {{ contract.end_date|date:"Y-m-d" }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Restlaufzeit" %}</dt>
+        <dd class="text-sm {% if contract.days_remaining < 0 %}text-status-danger{% elif contract.days_remaining <= 90 %}text-status-warning{% else %}text-white{% endif %}">
+          {% if contract.days_remaining < 0 %}
+            {% blocktrans with days=contract.days_overdue %}Abgelaufen seit {{ days }} Tagen{% endblocktrans %}
+          {% else %}
+            {% blocktrans with days=contract.days_remaining %}Noch {{ days }} Tage{% endblocktrans %}
+          {% endif %}
+        </dd>
+      </div>
+
+    </dl>
+
+    {% if contract.notes %}
+    <div class="pt-2 border-t border-border">
+      <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-2">{% trans "Notizen" %}</dt>
+      <dd class="text-sm text-content-secondary whitespace-pre-line">{{ contract.notes }}</dd>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# ── Right column ──────────────────────────────────────────────── #}
+  <div class="space-y-5">
+
+    {# Assigned assets #}
+    <div class="card p-5">
+      <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider mb-3">
+        {% trans "Zugeordnete Anlagen" %}
+      </h3>
+      {% with assets=contract.assets.all %}
+        {% if assets %}
+          <ul class="space-y-1.5">
+            {% for asset in assets %}
+            <li>
+              <a href="{% url 'assets:detail' asset.pk %}"
+                 class="flex items-center gap-2 text-sm text-content-secondary hover:text-white transition-colors group">
+                <svg class="w-3.5 h-3.5 text-content-tertiary group-hover:text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+                <span class="truncate">{{ asset.name }}</span>
+                <span class="font-mono text-xs text-content-tertiary shrink-0">{{ asset.serial_number }}</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-xs text-content-tertiary">{% trans "Keine Anlagen zugeordnet." %}</p>
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    {# Meta card #}
+    <div class="card p-5 space-y-3">
+      <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider">{% trans "Metadaten" %}</h3>
+      <dl class="space-y-3">
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Erstellt am" %}</dt>
+          <dd class="font-mono text-xs text-content-secondary">{{ contract.created_at|date:"Y-m-d H:i" }}</dd>
+        </div>
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Geändert am" %}</dt>
+          <dd class="font-mono text-xs text-content-secondary">{{ contract.updated_at|date:"Y-m-d H:i" }}</dd>
+        </div>
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "ID" %}</dt>
+          <dd class="font-mono text-xs text-content-tertiary">#{{ contract.pk }}</dd>
+        </div>
+      </dl>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

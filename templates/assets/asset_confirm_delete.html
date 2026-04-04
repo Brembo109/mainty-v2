@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Anlage löschen" %}{% endblock %}
+{% block page_title %}{% trans "Anlage löschen" %}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'assets:detail' asset.pk %}" class="btn-ghost">
+    {% trans "Abbrechen" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-lg">
+    <div class="card p-6">
+
+      <div class="flex items-start gap-4 mb-6">
+        <div class="shrink-0 w-10 h-10 rounded-full bg-status-danger-bg border border-status-danger/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-status-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-base font-semibold text-white mb-1">
+            {% trans "Anlage wirklich löschen?" %}
+          </h2>
+          <p class="text-sm text-content-secondary">
+            {% blocktrans with name=asset.name serial=asset.serial_number %}
+              <strong class="text-white">{{ name }}</strong> ({{ serial }}) wird dauerhaft gelöscht.
+              Dieser Vorgang kann nicht rückgängig gemacht werden.
+            {% endblocktrans %}
+          </p>
+        </div>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="flex items-center gap-3">
+          <button type="submit"
+            class="inline-flex items-center gap-2 px-3 py-1.5 bg-status-danger text-white text-sm font-medium rounded hover:bg-status-danger/90 transition-colors">
+            {% trans "Endgültig löschen" %}
+          </button>
+          <a href="{% url 'assets:detail' asset.pk %}"
+             class="text-sm text-content-tertiary hover:text-white transition-colors">
+            {% trans "Abbrechen" %}
+          </a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+{% endblock %}

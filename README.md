@@ -12,6 +12,8 @@ GMP-compliant maintenance management system built with Django 5.1.
 - **Brute-force protection** — django-axes (5 failed attempts → 15 min lockout)
 - **Password rotation** — mandatory change after 90 days (configurable)
 - **GMP audit trail** — automatic logging of all model changes + login/logout events, exportable as CSV/XLSX
+- **Asset management** — CRUD for equipment with location, serial number, manufacturer and status (Frei / Gesperrt / Außer Betrieb); HTMX-powered live filter
+- **Service contracts** — CRUD with dynamic status calculation (Aktiv / Läuft aus / Abgelaufen) based on configurable warning threshold; M2M assignment to assets
 - **Bilingual UI** — German (default) and English via Django i18n
 
 ---
@@ -106,6 +108,7 @@ All variables are documented in [`.env.example`](.env.example).
 | `POSTGRES_USER` | | `mainty` | Database user (Docker Compose) |
 | `POSTGRES_PASSWORD` | | `mainty` | Database password — **change in production** |
 | `PASSWORD_EXPIRY_DAYS` | | `90` | Days before users must change their password |
+| `CONTRACT_EXPIRY_WARNING_DAYS` | | `90` | Days before contract end to show "Läuft aus" warning |
 | `DJANGO_ADMIN_USER` | | — | Initial admin username |
 | `DJANGO_ADMIN_EMAIL` | | — | Initial admin email |
 | `DJANGO_ADMIN_PASSWORD` | | — | Initial admin password — **change in production** |
@@ -150,7 +153,9 @@ docker compose up --build
 mainty-v2/
 ├── apps/
 │   ├── accounts/          # Custom user model, roles, authentication
-│   └── audit/             # GMP audit trail (signals, views, export)
+│   ├── audit/             # GMP audit trail (signals, views, export)
+│   ├── assets/            # Equipment management (CRUD, status, HTMX filter)
+│   └── contracts/         # Service contracts (CRUD, dynamic status, M2M assets)
 ├── mainty/
 │   ├── settings/
 │   │   ├── base.py        # Shared settings
@@ -160,7 +165,9 @@ mainty-v2/
 ├── templates/
 │   ├── base.html          # App shell (sidebar + topbar)
 │   ├── accounts/          # Auth pages
-│   └── audit/             # Audit trail pages
+│   ├── audit/             # Audit trail pages
+│   ├── assets/            # Asset pages + HTMX partials
+│   └── contracts/         # Contract pages + HTMX partials
 ├── static/src/main.css    # Tailwind source
 ├── docker-compose.yml     # Development stack
 ├── docker-compose.prod.yml # Production stack

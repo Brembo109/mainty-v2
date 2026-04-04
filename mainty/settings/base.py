@@ -25,6 +25,8 @@ LOCAL_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.audit",
+    "apps.assets",
+    "apps.contracts",
 ]
 
 THIRD_PARTY_APPS = [
@@ -114,6 +116,9 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 # Password rotation (days)
 PASSWORD_EXPIRY_DAYS = env.int("PASSWORD_EXPIRY_DAYS", default=90)
+
+# Contracts — days before expiry to show "läuft aus" warning
+CONTRACT_EXPIRY_WARNING_DAYS = env.int("CONTRACT_EXPIRY_WARNING_DAYS", default=90)
 
 # django-axes — brute-force protection
 AXES_FAILURE_LIMIT = 5

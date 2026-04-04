@@ -1,0 +1,111 @@
+{% load i18n %}
+
+{% if assets %}
+<div class="overflow-x-auto rounded border border-border">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% trans "Name" %}</th>
+        <th>{% trans "Seriennummer" %}</th>
+        <th>{% trans "Standort" %}</th>
+        <th class="hidden md:table-cell">{% trans "Hersteller" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th class="hidden lg:table-cell">{% trans "Geändert am" %}</th>
+        <th class="w-20"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for asset in assets %}
+      <tr>
+
+        {# Name #}
+        <td class="font-medium">
+          <a href="{% url 'assets:detail' asset.pk %}"
+             class="hover:text-white transition-colors">
+            {{ asset.name }}
+          </a>
+        </td>
+
+        {# Serial number #}
+        <td class="font-mono text-xs text-content-secondary">
+          {{ asset.serial_number }}
+        </td>
+
+        {# Location #}
+        <td class="text-sm text-content-secondary">
+          {{ asset.location }}
+        </td>
+
+        {# Manufacturer #}
+        <td class="text-sm text-content-secondary hidden md:table-cell">
+          {{ asset.manufacturer|default:"—" }}
+        </td>
+
+        {# Status badge #}
+        <td>
+          <span class="{{ asset.status_badge_class }}">
+            {{ asset.get_status_display }}
+          </span>
+        </td>
+
+        {# Updated at #}
+        <td class="font-mono text-xs text-content-tertiary hidden lg:table-cell whitespace-nowrap">
+          {{ asset.updated_at|date:"Y-m-d" }}
+        </td>
+
+        {# Actions #}
+        <td>
+          <div class="flex items-center gap-2 justify-end">
+            {% if can_write %}
+            <a href="{% url 'assets:update' asset.pk %}"
+               class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+              {% trans "Bearbeiten" %}
+            </a>
+            {% endif %}
+          </div>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Pagination #}
+{% if is_paginated %}
+<div class="flex items-center justify-between mt-4">
+  <p class="text-xs text-content-tertiary">
+    {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+      {{ start }}–{{ end }} von {{ total }} Anlagen
+    {% endblocktrans %}
+  </p>
+  <div class="flex items-center gap-1">
+    {% if page_obj.has_previous %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.previous_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">←</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-xs text-content-secondary">
+      {{ page_obj.number }} / {{ paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.next_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">→</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+  <svg class="w-8 h-8 text-content-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Z" />
+  </svg>
+  <p class="text-sm text-content-secondary">{% trans "Keine Anlagen gefunden." %}</p>
+  {% if request.GET %}
+    <p class="text-xs text-content-tertiary mt-1">{% trans "Passen Sie die Filter an." %}</p>
+  {% else %}
+    <p class="text-xs text-content-tertiary mt-1">{% trans "Legen Sie die erste Anlage an." %}</p>
+  {% endif %}
+</div>
+{% endif %}
