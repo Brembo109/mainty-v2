@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-black text-white antialiased;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-elevated;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-strong rounded-full;
+  }
+}
+
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-surface-card border border-border rounded-md;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 bg-white text-black text-sm font-medium rounded hover:bg-white/90 transition-colors;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-content-secondary text-sm font-medium rounded border border-border hover:bg-surface-card hover:text-white transition-colors;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium;
+  }
+  .badge-success {
+    @apply badge bg-status-success-bg text-status-success;
+  }
+  .badge-warning {
+    @apply badge bg-status-warning-bg text-status-warning;
+  }
+  .badge-danger {
+    @apply badge bg-status-danger-bg text-status-danger;
+  }
+  .badge-neutral {
+    @apply badge bg-border text-content-secondary;
+  }
+
+  /* Tables */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead tr {
+    @apply border-b border-border;
+  }
+  .data-table thead th {
+    @apply px-4 py-3 text-left text-2xs font-medium text-content-secondary uppercase tracking-wider;
+  }
+  .data-table tbody tr {
+    @apply border-b border-border-subtle hover:bg-surface-card transition-colors;
+  }
+  .data-table tbody td {
+    @apply px-4 py-3 text-content-primary;
+  }
+
+  /* Form inputs */
+  .form-input {
+    @apply w-full bg-surface-card border border-border rounded px-3 py-2 text-sm text-white placeholder-content-tertiary focus:outline-none focus:border-white/40 transition-colors;
+  }
+  .form-label {
+    @apply block text-xs font-medium text-content-secondary mb-1.5;
+  }
+
+  /* Nav item in sidebar */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded text-sm text-content-secondary hover:text-white hover:bg-surface-card transition-colors;
+  }
+  .nav-item.active {
+    @apply text-white bg-surface-card;
+  }
+}

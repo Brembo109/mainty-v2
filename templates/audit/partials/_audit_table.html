@@ -1,0 +1,116 @@
+{% load i18n %}
+
+{% if entries %}
+<div class="overflow-x-auto rounded border border-border">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="whitespace-nowrap">{% trans "Zeitstempel" %}</th>
+        <th>{% trans "Benutzer" %}</th>
+        <th>{% trans "Aktion" %}</th>
+        <th>{% trans "Objekt" %}</th>
+        <th class="hidden lg:table-cell">{% trans "Änderungen" %}</th>
+        <th class="hidden xl:table-cell">{% trans "IP-Adresse" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr>
+
+        {# Timestamp #}
+        <td class="font-mono text-xs text-content-secondary whitespace-nowrap">
+          {{ entry.timestamp|date:"Y-m-d H:i:s" }}
+        </td>
+
+        {# Actor #}
+        <td class="text-xs">
+          {{ entry.actor_username|default:"—" }}
+        </td>
+
+        {# Action badge #}
+        <td>
+          {% if entry.action == 'CREATE' %}
+            <span class="badge-success border border-status-success">{% trans "Erstellt" %}</span>
+          {% elif entry.action == 'UPDATE' %}
+            <span class="badge-neutral border border-border">{% trans "Geändert" %}</span>
+          {% elif entry.action == 'DELETE' %}
+            <span class="badge-danger border border-status-danger">{% trans "Gelöscht" %}</span>
+          {% elif entry.action == 'LOGIN' %}
+            <span class="badge-success border border-status-success">{% trans "Angemeldet" %}</span>
+          {% elif entry.action == 'LOGOUT' %}
+            <span class="badge-neutral border border-border">{% trans "Abgemeldet" %}</span>
+          {% elif entry.action == 'LOGIN_FAILED' %}
+            <span class="badge-warning border border-status-warning">{% trans "Fehlgeschlagen" %}</span>
+          {% endif %}
+        </td>
+
+        {# Object #}
+        <td class="text-xs max-w-xs">
+          {% if entry.content_type %}
+            <span class="text-content-tertiary">{{ entry.content_type.model }}</span>
+            {% if entry.object_repr %}
+              <span class="text-content-tertiary mx-1">/</span>{{ entry.object_repr|truncatechars:60 }}
+            {% endif %}
+          {% else %}
+            <span class="text-content-tertiary">—</span>
+          {% endif %}
+        </td>
+
+        {# Changes summary #}
+        <td class="text-xs text-content-secondary hidden lg:table-cell max-w-xs">
+          {% if entry.action == 'CREATE' %}
+            <span class="text-content-tertiary italic">{% trans "Neuer Eintrag" %}</span>
+          {% elif entry.action == 'UPDATE' and entry.changes %}
+            <span class="font-mono" title="{{ entry.changes.keys|join:', ' }}">{{ entry.changes.keys|join:", "|truncatechars:50 }}</span>
+          {% elif entry.action == 'DELETE' %}
+            <span class="text-content-tertiary italic">{% trans "Eintrag entfernt" %}</span>
+          {% else %}
+            <span class="text-content-tertiary">—</span>
+          {% endif %}
+        </td>
+
+        {# IP address #}
+        <td class="font-mono text-xs text-content-tertiary hidden xl:table-cell">
+          {{ entry.ip_address|default:"—" }}
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Pagination #}
+{% if is_paginated %}
+<div class="flex items-center justify-between mt-4">
+  <p class="text-xs text-content-tertiary">
+    {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+      {{ start }}–{{ end }} von {{ total }} Einträgen
+    {% endblocktrans %}
+  </p>
+  <div class="flex items-center gap-1">
+    {% if page_obj.has_previous %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.previous_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">←</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-xs text-content-secondary">
+      {{ page_obj.number }} / {{ paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.next_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">→</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+  <svg class="w-8 h-8 text-content-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+  </svg>
+  <p class="text-sm text-content-secondary">{% trans "Keine Einträge gefunden." %}</p>
+  <p class="text-xs text-content-tertiary mt-1">{% trans "Passen Sie die Filter an oder warten Sie auf neue Ereignisse." %}</p>
+</div>
+{% endif %}

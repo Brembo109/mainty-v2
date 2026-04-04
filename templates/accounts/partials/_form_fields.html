@@ -1,0 +1,12 @@
+{% for field in form %}
+<div>
+  <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {{ field }}
+  {% if field.errors %}
+  <p class="mt-1 text-xs text-status-danger">{{ field.errors.0 }}</p>
+  {% endif %}
+  {% if field.help_text %}
+  <p class="mt-1 text-xs text-content-secondary">{{ field.help_text }}</p>
+  {% endif %}
+</div>
+{% endfor %}

@@ -1,0 +1,94 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}mainty{% endblock %} — mainty</title>
+  <link rel="stylesheet" href="{% static 'main.css' %}">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body class="bg-black text-white min-h-full flex" hx-boost="true">
+
+  {# ── Sidebar ──────────────────────────────────────────────────── #}
+  <aside class="w-56 min-h-screen bg-surface-elevated border-r border-border flex flex-col fixed left-0 top-0 bottom-0 z-20">
+
+    {# Logo #}
+    <div class="flex items-center gap-2 px-4 h-12 border-b border-border shrink-0">
+      <span class="text-white font-semibold text-sm tracking-tight">mainty</span>
+      <span class="text-content-tertiary text-2xs font-mono ml-auto">v2</span>
+    </div>
+
+    {# Navigation #}
+    <nav class="flex-1 px-2 py-4 overflow-y-auto">
+      {% include "partials/sidebar.html" %}
+    </nav>
+
+    {# Language switcher #}
+    <div class="px-3 py-4 border-t border-border shrink-0">
+      <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+        {% get_current_language as current_lang %}
+        {% get_available_languages as lang_list %}
+        <select
+          name="language"
+          onchange="this.form.submit()"
+          class="w-full bg-surface-card text-content-secondary text-xs border border-border rounded px-2 py-1.5 focus:outline-none focus:border-white/40"
+        >
+          {% for code, name in lang_list %}
+            <option value="{{ code }}" {% if code == current_lang %}selected{% endif %}>
+              {{ name }}
+            </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+  </aside>
+
+  {# ── Main area ────────────────────────────────────────────────── #}
+  <div class="ml-56 flex-1 flex flex-col min-h-screen">
+
+    {# Top bar #}
+    <header class="h-12 border-b border-border flex items-center justify-between px-6 bg-black sticky top-0 z-10">
+      <h1 class="text-sm font-medium text-white">{% block page_title %}{% endblock %}</h1>
+      <div class="flex items-center gap-3">
+        {% block header_actions %}{% endblock %}
+        {% if user.is_authenticated %}
+        <span class="text-content-secondary text-xs">{{ user.get_username }}</span>
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit"
+            class="text-content-secondary text-xs hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+            {% trans "Abmelden" %}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </header>
+
+    {# Flash messages #}
+    {% if messages %}
+    <div class="px-6 pt-4 space-y-2">
+      {% for message in messages %}
+      <div class="flex items-center gap-3 px-4 py-3 rounded border text-sm
+        {% if message.tags == 'error' %}border-status-danger bg-status-danger-bg text-status-danger
+        {% elif message.tags == 'success' %}border-status-success bg-status-success-bg text-status-success
+        {% elif message.tags == 'warning' %}border-status-warning bg-status-warning-bg text-status-warning
+        {% else %}border-border bg-surface-card text-content-primary{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Page content #}
+    <main class="flex-1 px-6 py-6">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+</body>
+</html>

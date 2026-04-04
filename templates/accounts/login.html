@@ -1,0 +1,56 @@
+{% extends "accounts/base_auth.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Anmelden" %}{% endblock %}
+
+{% block content %}
+<div class="card px-6 py-8">
+
+  <h1 class="text-sm font-semibold text-white mb-6">{% trans "Anmelden" %}</h1>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% include "accounts/partials/_form_errors.html" %}
+
+    <div class="space-y-4">
+
+      <div>
+        <label class="form-label" for="{{ form.username.id_for_label }}">
+          {% trans "Benutzername" %}
+        </label>
+        {{ form.username }}
+        {% if form.username.errors %}
+        <p class="mt-1 text-xs text-status-danger">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="form-label" for="{{ form.password.id_for_label }}">
+          {% trans "Passwort" %}
+        </label>
+        {{ form.password }}
+        {% if form.password.errors %}
+        <p class="mt-1 text-xs text-status-danger">{{ form.password.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <input type="hidden" name="next" value="{{ next }}">
+
+    <button type="submit" class="btn-primary w-full justify-center mt-6 py-2">
+      {% trans "Anmelden" %}
+    </button>
+
+  </form>
+
+  <div class="mt-5 text-center">
+    <a href="{% url 'accounts:password_reset' %}"
+       class="text-content-secondary text-xs hover:text-white transition-colors">
+      {% trans "Passwort vergessen?" %}
+    </a>
+  </div>
+
+</div>
+{% endblock %}

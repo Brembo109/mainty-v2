@@ -1,0 +1,45 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %} — mainty</title>
+  <link rel="stylesheet" href="{% static 'main.css' %}">
+</head>
+<body class="bg-black text-white min-h-full flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-sm">
+
+    {# Logo #}
+    <div class="text-center mb-8">
+      <span class="text-white font-semibold text-base tracking-tight">mainty</span>
+    </div>
+
+    {% block content %}{% endblock %}
+
+    {# Language switcher #}
+    <div class="mt-6 flex justify-center">
+      <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+        {% get_current_language as current_lang %}
+        {% get_available_languages as lang_list %}
+        <select
+          name="language"
+          onchange="this.form.submit()"
+          class="bg-transparent text-content-tertiary text-xs border-0 focus:outline-none cursor-pointer"
+        >
+          {% for code, name in lang_list %}
+            <option value="{{ code }}" {% if code == current_lang %}selected{% endif %} class="bg-black">
+              {{ name }}
+            </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+  </div>
+
+</body>
+</html>

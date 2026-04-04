@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Audit-Trail" %}{% endblock %}
+{% block page_title %}{% trans "Audit-Trail" %}{% endblock %}
+
+{% block header_actions %}
+  {# Export dropdown — uses <details> so it works without Alpine.js #}
+  <details class="relative" id="export-dropdown">
+    <summary class="list-none cursor-pointer flex items-center gap-1.5 text-xs text-content-secondary border border-border rounded px-3 py-1.5 hover:bg-surface-card hover:text-white transition-colors select-none">
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+      {% trans "Export" %}
+      <svg class="w-3 h-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      </svg>
+    </summary>
+    <div class="absolute right-0 top-full mt-1 w-40 bg-surface-elevated border border-border rounded shadow-lg z-30 overflow-hidden">
+      {# hx-boost="false" lets the browser handle the file download directly #}
+      <a href="{% url 'audit:export' 'csv' %}?{{ request.GET.urlencode }}"
+         hx-boost="false"
+         class="flex items-center gap-2 px-3 py-2 text-xs text-content-secondary hover:bg-surface-card hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+        {% trans "Als CSV" %}
+      </a>
+      <a href="{% url 'audit:export' 'xlsx' %}?{{ request.GET.urlencode }}"
+         hx-boost="false"
+         class="flex items-center gap-2 px-3 py-2 text-xs text-content-secondary hover:bg-surface-card hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+        {% trans "Als XLSX" %}
+      </a>
+    </div>
+  </details>
+  {# Close dropdown when clicking elsewhere #}
+  <script>
+    document.addEventListener('click', function(e) {
+      var d = document.getElementById('export-dropdown');
+      if (d && !d.contains(e.target)) d.removeAttribute('open');
+    });
+  </script>
+{% endblock %}
+
+{% block content %}
+
+  {# ── Filter bar ──────────────────────────────────────────────────── #}
+  <form
+    method="get"
+    id="audit-filter"
+    hx-get="{% url 'audit:list' %}"
+    hx-target="#audit-results"
+    hx-trigger="change, keyup changed delay:400ms from:[name=actor]"
+    hx-push-url="true"
+    hx-indicator="#htmx-indicator"
+    class="flex flex-wrap items-end gap-3 mb-5"
+  >
+    <div class="flex flex-col gap-1">
+      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.date_from.label }}</label>
+      {{ filter_form.date_from }}
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.date_to.label }}</label>
+      {{ filter_form.date_to }}
+    </div>
+    <div class="flex flex-col gap-1 min-w-36">
+      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.actor.label }}</label>
+      {{ filter_form.actor }}
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.action.label }}</label>
+      {{ filter_form.action }}
+    </div>
+    <button type="submit"
+      class="px-3 py-1.5 text-xs border border-border rounded text-content-secondary hover:bg-surface-card hover:text-white transition-colors self-end">
+      {% trans "Filtern" %}
+    </button>
+    {% if request.GET %}
+      <a href="{% url 'audit:list' %}"
+         class="px-3 py-1.5 text-xs text-content-tertiary hover:text-white transition-colors self-end">
+        {% trans "Zurücksetzen" %}
+      </a>
+    {% endif %}
+  </form>
+
+  {# ── Results (HTMX swap target) ──────────────────────────────────── #}
+  <div id="audit-results">
+    {% include "audit/partials/_audit_table.html" %}
+  </div>
+
+  {# HTMX loading indicator #}
+  <div id="htmx-indicator" class="htmx-indicator fixed bottom-4 right-4 text-xs text-content-tertiary bg-surface-card border border-border rounded px-3 py-1.5">
+    {% trans "Laden…" %}
+  </div>
+
+{% endblock %}
