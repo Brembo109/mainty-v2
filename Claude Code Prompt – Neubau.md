@@ -209,7 +209,29 @@ docker compose run web python manage.py create_initial_admin
 
 ---
 
-### ⬜ Schritt 3 — audit-Modul (ausstehend)
+### ✅ Schritt 3 — audit-Modul (abgeschlossen)
+
+- **`apps/audit`** als eigenständige Django-App mit `AuditConfig.ready()` zur Signal-Registrierung
+- **`AuditedModel`** — abstrakte Basisklasse; jedes Modell das davon erbt wird automatisch getrackt
+- **`AuditLog`-Modell** — speichert: Zeitstempel, Actor (FK + Username-Snapshot), Aktion (CREATE/UPDATE/DELETE/LOGIN/LOGOUT/LOGIN_FAILED), ContentType/Object-ID/Object-Repr, Änderungen als JSON (`{field: [alt, neu]}`), IP-Adresse
+- **`AuditMiddleware`** — speichert `request.user` und Client-IP in Thread-Local Storage; Signals lesen daraus den aktuellen Benutzer
+- **Signals** — `pre_save` snapshoted DB-Zustand vor dem Speichern (für UPDATE-Diff), `post_save` / `post_delete` schreiben den Log; alle Connections mit `dispatch_uid` gegen Doppelregistrierung beim Dev-Server-Reload abgesichert
+- **Auth-Signals** — `user_logged_in`, `user_logged_out`, `user_login_failed` (via `@receiver` mit `dispatch_uid`)
+- **Listenansicht** `/audit/` — `AuditLogListView` (HTMX-aware, `RoleRequiredMixin(Role.ADMIN)`), 50 Einträge pro Seite, HTMX-Filterleiste (Datum von/bis, Benutzername, Aktionstyp) mit `hx-push-url`
+- **Export** — Dropdown mit CSV und XLSX (`openpyxl`); respektiert aktive Filter; `hx-boost="false"` damit Browser den Download direkt handled
+- **Django Admin** — schreibgeschützt (`has_add/change/delete_permission → False`)
+- **Sidebar** — Audit-Trail-Link auf echte URL umgestellt, Guard von `user.is_staff` auf `user.role == 'Admin'` umgestellt
+
+**Verwendung in eigenen Modellen:**
+```python
+from apps.audit.mixins import AuditedModel
+
+class Equipment(AuditedModel):
+    name = models.CharField(max_length=255)
+```
+
+---
+
 ### ⬜ Schritt 4 — assets-Modul (ausstehend)
 ### ⬜ Schritt 5 — contracts-Modul (ausstehend)
 ### ⬜ Schritt 6 — maintenance-Modul (ausstehend)
