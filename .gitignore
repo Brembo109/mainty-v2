@@ -45,6 +45,9 @@ static/dist/*.css
 # Claude Code — local permission overrides contain machine-specific paths
 .claude/settings.local.json
 
+# Local planning/prompt files
+Claude Code Prompt – Neubau.md
+
 # IDEs
 .vscode/
 .idea/
