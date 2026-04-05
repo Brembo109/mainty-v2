@@ -14,6 +14,11 @@ GMP-compliant maintenance management system built with Django 5.1.
 - **GMP audit trail** — automatic logging of all model changes + login/logout events, exportable as CSV/XLSX
 - **Asset management** — CRUD for equipment with location, serial number, manufacturer and status (Frei / Gesperrt / Außer Betrieb); HTMX-powered live filter
 - **Service contracts** — CRUD with dynamic status calculation (Aktiv / Läuft aus / Abgelaufen) based on configurable warning threshold; M2M assignment to assets
+- **Maintenance plans** — configurable interval-based plans with next-due calculation, mandatory change-reason field, performed-record log
+- **Qualification cycles** — IQ/OQ/PQ per asset with recurrence intervals; CFR 21 Part 11 electronic signatures via re-authentication password modal; immutable signature records
+- **Tasks** — action item management with priority (Niedrig/Mittel/Hoch), status (Offen/In Bearbeitung/Erledigt), due date and optional asset assignment
+- **Dashboard** — KPI tiles for all modules, critical item widgets (overdue/due-soon), expiring contracts and open tasks at a glance
+- **Reminder emails** — daily management command (`send_reminders`) with HTML email, once-per-day dedup guard, `--dry-run` and `--force` flags
 - **Bilingual UI** — German (default) and English via Django i18n
 
 ---
@@ -112,8 +117,15 @@ All variables are documented in [`.env.example`](.env.example).
 | `DJANGO_ADMIN_USER` | | — | Initial admin username |
 | `DJANGO_ADMIN_EMAIL` | | — | Initial admin email |
 | `DJANGO_ADMIN_PASSWORD` | | — | Initial admin password — **change in production** |
+| `EMAIL_BACKEND` | | `console.EmailBackend` | Django email backend (use `smtp.EmailBackend` in production) |
 | `EMAIL_HOST` | | `mailhog` | SMTP host |
 | `EMAIL_PORT` | | `1025` | SMTP port |
+| `EMAIL_USE_TLS` | | `False` | Enable STARTTLS |
+| `EMAIL_HOST_USER` | | — | SMTP username |
+| `EMAIL_HOST_PASSWORD` | | — | SMTP password |
+| `DEFAULT_FROM_EMAIL` | | `mainty@localhost` | Sender address for system emails |
+| `SITE_URL` | | `http://localhost:8000` | Base URL included in reminder emails |
+| `REMINDER_EMAIL_SUBJECT` | | `[mainty] GMP-Erinnerung…` | Subject line for reminder emails |
 
 ---
 
@@ -143,6 +155,24 @@ docker compose exec web pytest
 
 # Rebuild the image (after changing requirements)
 docker compose up --build
+
+# Send daily GMP reminder emails
+docker compose exec web python manage.py send_reminders
+
+# Dry-run — show what would be sent without sending
+docker compose exec web python manage.py send_reminders --dry-run
+
+# Force send even if already sent today
+docker compose exec web python manage.py send_reminders --force
+```
+
+### Scheduling reminder emails (production)
+
+Add to crontab (`crontab -e`) on the host or inside the container:
+
+```cron
+# Send GMP reminders every day at 07:00
+0 7 * * * docker compose -f /path/to/mainty-v2/docker-compose.prod.yml exec -T web python manage.py send_reminders
 ```
 
 ---
@@ -155,7 +185,11 @@ mainty-v2/
 │   ├── accounts/          # Custom user model, roles, authentication
 │   ├── audit/             # GMP audit trail (signals, views, export)
 │   ├── assets/            # Equipment management (CRUD, status, HTMX filter)
-│   └── contracts/         # Service contracts (CRUD, dynamic status, M2M assets)
+│   ├── contracts/         # Service contracts (CRUD, dynamic status, M2M assets)
+│   ├── maintenance/       # Maintenance plans (intervals, records, next-due)
+│   ├── qualification/     # Qualification cycles (IQ/OQ/PQ, CFR 21 Part 11 signatures)
+│   ├── tasks/             # Task management (priority, status, asset assignment)
+│   └── core/              # Dashboard, health check, ReminderLog, send_reminders command
 ├── mainty/
 │   ├── settings/
 │   │   ├── base.py        # Shared settings
@@ -164,10 +198,15 @@ mainty-v2/
 │   └── urls.py
 ├── templates/
 │   ├── base.html          # App shell (sidebar + topbar)
+│   ├── emails/            # HTML email templates
 │   ├── accounts/          # Auth pages
 │   ├── audit/             # Audit trail pages
 │   ├── assets/            # Asset pages + HTMX partials
-│   └── contracts/         # Contract pages + HTMX partials
+│   ├── contracts/         # Contract pages + HTMX partials
+│   ├── maintenance/       # Maintenance pages + HTMX partials
+│   ├── qualification/     # Qualification pages + sign modal
+│   ├── tasks/             # Task pages + HTMX partials
+│   └── core/              # Dashboard
 ├── static/src/main.css    # Tailwind source
 ├── docker-compose.yml     # Development stack
 ├── docker-compose.prod.yml # Production stack
@@ -203,11 +242,13 @@ SECRET_KEY=<long-random-string>
 POSTGRES_PASSWORD=<strong-password>
 DJANGO_ADMIN_PASSWORD=<strong-password>
 
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 EMAIL_HOST=your-smtp-host
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your@email.com
 EMAIL_HOST_PASSWORD=your-smtp-password
+SITE_URL=https://yourdomain.com
 ```
 
 ### 2. Start the production stack

@@ -35,7 +35,7 @@ class AssetListView(LoginRequiredMixin, ListView):
         return ctx
 
     def render_to_response(self, context, **kwargs):
-        if self.request.headers.get("HX-Request"):
+        if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(
                 self.request, "assets/partials/_asset_table.html", context
             )
