@@ -37,7 +37,7 @@ class AuditLogListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
 
     def render_to_response(self, context, **kwargs):
         # Return only the table partial for HTMX filter requests.
-        if self.request.headers.get("HX-Request"):
+        if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(self.request, "audit/partials/_audit_table.html", context)
         return super().render_to_response(context, **kwargs)
 
