@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMP-Erinnerung — mainty</title>
+<style>
+  body { margin: 0; padding: 0; background: #0a0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #e5e5e5; }
+  .wrapper { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+  .header { padding: 20px 0 16px; border-bottom: 1px solid #262626; margin-bottom: 24px; }
+  .logo { font-size: 15px; font-weight: 600; color: #ffffff; letter-spacing: -0.02em; }
+  .logo-sub { font-size: 11px; color: #525252; font-family: monospace; margin-left: 8px; }
+  h1 { font-size: 16px; font-weight: 600; color: #ffffff; margin: 0 0 4px; }
+  .date { font-size: 12px; color: #525252; margin: 0 0 24px; font-family: monospace; }
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 10px; font-weight: 500; color: #737373; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid #1f1f1f; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 8px 0; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+  td:first-child { width: 60%; padding-right: 12px; }
+  .item-name { color: #e5e5e5; font-weight: 500; }
+  .item-sub { font-size: 11px; color: #737373; margin-top: 2px; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 500; border: 1px solid; }
+  .badge-danger { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.07); }
+  .badge-warning { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.07); }
+  .badge-neutral { color: #737373; border-color: #262626; background: #141414; }
+  .mono { font-family: monospace; font-size: 12px; color: #a3a3a3; }
+  .cta { margin-top: 28px; padding-top: 20px; border-top: 1px solid #1f1f1f; }
+  .btn { display: inline-block; padding: 8px 16px; background: #ffffff; color: #0a0a0a; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 4px; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #141414; font-size: 11px; color: #404040; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <span class="logo">mainty</span><span class="logo-sub">v2</span>
+  </div>
+
+  <h1>GMP-Erinnerung — Handlungsbedarf</h1>
+  <p class="date">{{ today|date:"Y-m-d" }}</p>
+
+  {% if contracts_expired %}
+  <div class="section">
+    <p class="section-title">Serviceverträge — Abgelaufen ({{ contracts_expired|length }})</p>
+    <table>
+      {% for c in contracts_expired %}
+      <tr>
+        <td>
+          <div class="item-name">{{ c.title }}</div>
+          <div class="item-sub">{{ c.vendor }}</div>
+        </td>
+        <td>
+          <span class="mono">{{ c.end_date|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-danger" style="margin-top:4px">Abgelaufen</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if contracts_expiring %}
+  <div class="section">
+    <p class="section-title">Serviceverträge — Läuft aus ({{ contracts_expiring|length }})</p>
+    <table>
+      {% for c in contracts_expiring %}
+      <tr>
+        <td>
+          <div class="item-name">{{ c.title }}</div>
+          <div class="item-sub">{{ c.vendor }}</div>
+        </td>
+        <td>
+          <span class="mono">{{ c.end_date|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-warning" style="margin-top:4px">Läuft aus</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if maint_overdue %}
+  <div class="section">
+    <p class="section-title">Wartungspläne — Überfällig ({{ maint_overdue|length }})</p>
+    <table>
+      {% for p in maint_overdue %}
+      <tr>
+        <td>
+          <div class="item-name">{{ p.title }}</div>
+          <div class="item-sub">{{ p.asset.name }}</div>
+        </td>
+        <td>
+          <span class="mono">{{ p.next_due|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-danger" style="margin-top:4px">Überfällig</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if maint_due_soon %}
+  <div class="section">
+    <p class="section-title">Wartungspläne — Bald fällig ({{ maint_due_soon|length }})</p>
+    <table>
+      {% for p in maint_due_soon %}
+      <tr>
+        <td>
+          <div class="item-name">{{ p.title }}</div>
+          <div class="item-sub">{{ p.asset.name }}</div>
+        </td>
+        <td>
+          <span class="mono">{{ p.next_due|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-warning" style="margin-top:4px">Fällig bald</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if qual_overdue %}
+  <div class="section">
+    <p class="section-title">Qualifizierungen — Überfällig ({{ qual_overdue|length }})</p>
+    <table>
+      {% for c in qual_overdue %}
+      <tr>
+        <td>
+          <div class="item-name"><span style="font-family:monospace;font-size:11px;color:#737373;margin-right:6px">{{ c.qual_type }}</span>{{ c.title }}</div>
+          <div class="item-sub">{{ c.asset.name }}</div>
+        </td>
+        <td>
+          <span class="mono">{{ c.next_due|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-danger" style="margin-top:4px">Überfällig</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if qual_due_soon %}
+  <div class="section">
+    <p class="section-title">Qualifizierungen — Bald fällig ({{ qual_due_soon|length }})</p>
+    <table>
+      {% for c in qual_due_soon %}
+      <tr>
+        <td>
+          <div class="item-name"><span style="font-family:monospace;font-size:11px;color:#737373;margin-right:6px">{{ c.qual_type }}</span>{{ c.title }}</div>
+          <div class="item-sub">{{ c.asset.name }}</div>
+        </td>
+        <td>
+          <span class="mono">{{ c.next_due|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-warning" style="margin-top:4px">Fällig bald</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if qual_never %}
+  <div class="section">
+    <p class="section-title">Qualifizierungen — Nie signiert ({{ qual_never|length }})</p>
+    <table>
+      {% for c in qual_never %}
+      <tr>
+        <td>
+          <div class="item-name"><span style="font-family:monospace;font-size:11px;color:#737373;margin-right:6px">{{ c.qual_type }}</span>{{ c.title }}</div>
+          <div class="item-sub">{{ c.asset.name }}</div>
+        </td>
+        <td>
+          <span class="badge badge-neutral" style="margin-top:4px">Nie signiert</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if tasks_overdue %}
+  <div class="section">
+    <p class="section-title">Aufgaben — Überfällig ({{ tasks_overdue|length }})</p>
+    <table>
+      {% for t in tasks_overdue %}
+      <tr>
+        <td>
+          <div class="item-name">{{ t.title }}</div>
+          {% if t.asset %}<div class="item-sub">{{ t.asset.name }}</div>{% endif %}
+          {% if t.assigned_to %}<div class="item-sub">→ {{ t.assigned_to.get_username }}</div>{% endif %}
+        </td>
+        <td>
+          <span class="mono">{{ t.due_date|date:"Y-m-d" }}</span><br>
+          <span class="badge badge-danger" style="margin-top:4px">Überfällig</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="cta">
+    <a href="{{ site_url }}" class="btn">Dashboard öffnen</a>
+  </div>
+
+  <div class="footer">
+    Diese E-Mail wurde automatisch von mainty generiert.<br>
+    Um Erinnerungen zu deaktivieren, wenden Sie sich an Ihren Administrator.
+  </div>
+
+</div>
+</body>
+</html>

@@ -16,6 +16,9 @@ urlpatterns += i18n_patterns(
     path("audit/", include("apps.audit.urls")),
     path("assets/", include("apps.assets.urls")),
     path("contracts/", include("apps.contracts.urls")),
+    path("maintenance/", include("apps.maintenance.urls")),
+    path("qualification/", include("apps.qualification.urls")),
+    path("tasks/", include("apps.tasks.urls")),
     path("", include("apps.core.urls")),
     prefix_default_language=False,
 )

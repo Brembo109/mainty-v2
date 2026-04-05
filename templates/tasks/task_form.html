@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ form_title }}{% endblock %}
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block header_actions %}
+  {% if object %}
+    <a href="{% url 'tasks:detail' object.pk %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+  {% else %}
+    <a href="{% url 'tasks:list' %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="card p-6">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="space-y-5">
+
+        {% if form.non_field_errors %}
+          <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        {# Title #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.title.label }} <span class="text-status-danger">*</span>
+          </label>
+          {{ form.title }}
+          {% if form.title.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.title.errors.0 }}</p>{% endif %}
+        </div>
+
+        {# Priority + Status row #}
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.priority.label }}
+            </label>
+            {{ form.priority }}
+            {% if form.priority.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.priority.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.status.label }}
+            </label>
+            {{ form.status }}
+            {% if form.status.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.status.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        {# Due date #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.due_date.label }}
+          </label>
+          {{ form.due_date }}
+          {% if form.due_date.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.due_date.errors.0 }}</p>{% endif %}
+        </div>
+
+        {# Assigned to #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.assigned_to.label }}
+          </label>
+          {{ form.assigned_to }}
+          {% if form.assigned_to.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.assigned_to.errors.0 }}</p>{% endif %}
+        </div>
+
+        {# Asset #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.asset.label }}
+          </label>
+          {{ form.asset }}
+          {% if form.asset.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.asset.errors.0 }}</p>{% endif %}
+        </div>
+
+        {# Description #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.description.label }}
+          </label>
+          {{ form.description }}
+          {% if form.description.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.description.errors.0 }}</p>{% endif %}
+        </div>
+
+        {# Change reason — GMP Pflichtfeld, nur beim Update #}
+        {% if is_update %}
+        <div class="pt-4 border-t border-border">
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.change_reason.label }} <span class="text-status-danger">*</span>
+          </label>
+          <p class="text-xs text-content-tertiary mb-2">
+            {% trans "GMP-Pflichtfeld — Begründung dieser Änderung wird im Audit-Trail erfasst." %}
+          </p>
+          {{ form.change_reason }}
+          {% if form.change_reason.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.change_reason.errors.0 }}</p>{% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+
+      <div class="flex items-center gap-3 mt-7 pt-5 border-t border-border">
+        <button type="submit" class="btn-primary">{{ submit_label }}</button>
+        {% if object %}
+          <a href="{% url 'tasks:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-white transition-colors">{% trans "Abbrechen" %}</a>
+        {% else %}
+          <a href="{% url 'tasks:list' %}" class="text-sm text-content-tertiary hover:text-white transition-colors">{% trans "Abbrechen" %}</a>
+        {% endif %}
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% load i18n %}
+
+{% if tasks %}
+<div class="overflow-x-auto rounded border border-border">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% trans "Titel" %}</th>
+        <th class="hidden sm:table-cell">{% trans "Priorität" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th class="hidden md:table-cell">{% trans "Zugewiesen an" %}</th>
+        <th class="hidden md:table-cell">{% trans "Anlage" %}</th>
+        <th class="hidden lg:table-cell">{% trans "Fällig" %}</th>
+        <th class="w-20"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+
+        <td class="font-medium">
+          <a href="{% url 'tasks:detail' task.pk %}" class="hover:text-white transition-colors">
+            {{ task.title }}
+          </a>
+          {% if task.is_overdue %}
+          <span class="ml-2 text-2xs text-status-danger font-normal">{% trans "Überfällig" %}</span>
+          {% endif %}
+        </td>
+
+        <td class="hidden sm:table-cell">
+          <span class="{{ task.priority_badge_class }}">{{ task.priority_label }}</span>
+        </td>
+
+        <td>
+          <span class="{{ task.status_badge_class }}">{{ task.status_label }}</span>
+        </td>
+
+        <td class="text-xs text-content-secondary hidden md:table-cell">
+          {{ task.assigned_to|default:"—" }}
+        </td>
+
+        <td class="hidden md:table-cell">
+          {% if task.asset %}
+          <a href="{% url 'assets:detail' task.asset.pk %}" class="text-xs text-content-secondary hover:text-white transition-colors">
+            {{ task.asset.name }}
+          </a>
+          {% else %}
+          <span class="text-xs text-content-tertiary">—</span>
+          {% endif %}
+        </td>
+
+        <td class="font-mono text-xs hidden lg:table-cell
+          {% if task.is_overdue %}text-status-danger{% else %}text-content-secondary{% endif %}">
+          {{ task.due_date|date:"Y-m-d"|default:"—" }}
+        </td>
+
+        <td>
+          {% if can_write %}
+          <a href="{% url 'tasks:update' task.pk %}"
+             class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+            {% trans "Bearbeiten" %}
+          </a>
+          {% endif %}
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<div class="flex items-center justify-between mt-4">
+  <p class="text-xs text-content-tertiary">
+    {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+      {{ start }}–{{ end }} von {{ total }} Aufgaben
+    {% endblocktrans %}
+  </p>
+  <div class="flex items-center gap-1">
+    {% if page_obj.has_previous %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.previous_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">←</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-xs text-content-secondary">
+      {{ page_obj.number }} / {{ paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.next_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">→</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+  <svg class="w-8 h-8 text-content-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" />
+  </svg>
+  <p class="text-sm text-content-secondary">{% trans "Keine Aufgaben gefunden." %}</p>
+  {% if request.GET %}
+    <p class="text-xs text-content-tertiary mt-1">{% trans "Passen Sie die Filter an." %}</p>
+  {% else %}
+    <p class="text-xs text-content-tertiary mt-1">{% trans "Legen Sie die erste Aufgabe an." %}</p>
+  {% endif %}
+</div>
+{% endif %}

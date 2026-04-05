@@ -1,0 +1,118 @@
+{% load i18n %}
+
+{% if cycles %}
+<div class="overflow-x-auto rounded border border-border">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% trans "Bezeichnung" %}</th>
+        <th>{% trans "Anlage" %}</th>
+        <th class="hidden sm:table-cell">{% trans "Typ" %}</th>
+        <th class="hidden md:table-cell">{% trans "Intervall" %}</th>
+        <th>{% trans "Nächste Fälligkeit" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th class="hidden lg:table-cell">{% trans "Verantwortlich" %}</th>
+        <th class="w-20"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cycle in cycles %}
+      <tr>
+
+        <td class="font-medium">
+          <a href="{% url 'qualification:detail' cycle.pk %}" class="hover:text-white transition-colors">
+            {{ cycle.title }}
+          </a>
+        </td>
+
+        <td class="text-sm text-content-secondary">
+          <a href="{% url 'assets:detail' cycle.asset.pk %}" class="hover:text-white transition-colors">
+            {{ cycle.asset.name }}
+          </a>
+        </td>
+
+        <td class="hidden sm:table-cell">
+          <span class="font-mono text-xs font-semibold text-content-secondary px-1.5 py-0.5 rounded bg-surface-card border border-border">
+            {{ cycle.qual_type }}
+          </span>
+        </td>
+
+        <td class="text-xs text-content-tertiary hidden md:table-cell whitespace-nowrap">
+          {{ cycle.interval_days }} {% trans "Tage" %}
+        </td>
+
+        <td class="font-mono text-xs whitespace-nowrap
+          {% if cycle.status == 'overdue' %}text-status-danger
+          {% elif cycle.status == 'due_soon' %}text-status-warning
+          {% elif cycle.status == 'never_signed' %}text-content-tertiary
+          {% else %}text-content-secondary{% endif %}">
+          {{ cycle.next_due|date:"Y-m-d" }}
+          {% if cycle.status != 'never_signed' %}
+            {% if cycle.days_until_due < 0 %}
+              <span class="ml-1">({{ cycle.days_until_due }}d)</span>
+            {% elif cycle.days_until_due <= 60 %}
+              <span class="ml-1">({{ cycle.days_until_due }}d)</span>
+            {% endif %}
+          {% endif %}
+        </td>
+
+        <td>
+          <span class="{{ cycle.status_badge_class }}">{{ cycle.status_label }}</span>
+        </td>
+
+        <td class="text-xs text-content-tertiary hidden lg:table-cell">
+          {{ cycle.responsible|default:"—" }}
+        </td>
+
+        <td>
+          {% if can_write %}
+          <a href="{% url 'qualification:update' cycle.pk %}"
+             class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+            {% trans "Bearbeiten" %}
+          </a>
+          {% endif %}
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<div class="flex items-center justify-between mt-4">
+  <p class="text-xs text-content-tertiary">
+    {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+      {{ start }}–{{ end }} von {{ total }} Zyklen
+    {% endblocktrans %}
+  </p>
+  <div class="flex items-center gap-1">
+    {% if page_obj.has_previous %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.previous_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">←</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-xs text-content-secondary">
+      {{ page_obj.number }} / {{ paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+      <a href="?{% if filter_params %}{{ filter_params }}&{% endif %}page={{ page_obj.next_page_number }}"
+         class="btn-ghost px-3 py-1 text-xs">→</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="flex flex-col items-center justify-center py-16 text-center">
+  <svg class="w-8 h-8 text-content-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+  </svg>
+  <p class="text-sm text-content-secondary">{% trans "Keine Qualifizierungszyklen gefunden." %}</p>
+  {% if request.GET %}
+    <p class="text-xs text-content-tertiary mt-1">{% trans "Passen Sie die Filter an." %}</p>
+  {% else %}
+    <p class="text-xs text-content-tertiary mt-1">{% trans "Legen Sie den ersten Qualifizierungszyklus an." %}</p>
+  {% endif %}
+</div>
+{% endif %}

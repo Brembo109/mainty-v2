@@ -56,6 +56,23 @@ class AssetDetailView(LoginRequiredMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
         ctx["contracts"] = self.object.contracts.order_by("end_date")
+        from django.db.models import Max
+        ctx["maintenance_plans"] = (
+            self.object.maintenance_plans
+            .annotate(last_performed_at=Max("records__performed_at"))
+            .order_by("title")
+        )
+        ctx["qualification_cycles"] = (
+            self.object.qualification_cycles
+            .annotate(last_signed_at=Max("signatures__signed_at"))
+            .order_by("qual_type", "title")
+        )
+        ctx["asset_tasks"] = (
+            self.object.tasks
+            .select_related("assigned_to")
+            .exclude(status="done")
+            .order_by("status", "-priority", "due_date")
+        )
         return ctx
 
 

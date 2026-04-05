@@ -27,6 +27,9 @@ LOCAL_APPS = [
     "apps.audit",
     "apps.assets",
     "apps.contracts",
+    "apps.maintenance",
+    "apps.qualification",
+    "apps.tasks",
 ]
 
 THIRD_PARTY_APPS = [
@@ -134,3 +137,13 @@ SESSION_COOKIE_HTTPONLY = True
 
 # Email defaults (overridden per environment)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="mainty@localhost")
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+
+# Reminder command
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
+REMINDER_EMAIL_SUBJECT = env("REMINDER_EMAIL_SUBJECT", default="[mainty] GMP-Erinnerung — Handlungsbedarf")
