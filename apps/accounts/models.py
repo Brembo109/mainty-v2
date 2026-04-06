@@ -5,9 +5,17 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
+    THEME_CHOICES = [("dark", "Dark"), ("light", "Light")]
+
     password_changed_at = models.DateTimeField(
         default=timezone.now,
         verbose_name=_("Passwort geändert am"),
+    )
+    theme = models.CharField(
+        max_length=5,
+        choices=THEME_CHOICES,
+        default="dark",
+        verbose_name=_("Theme"),
     )
 
     class Meta:
