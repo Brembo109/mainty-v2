@@ -79,14 +79,14 @@
             <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
               {% trans "Gerätekürzel" %}
             </dt>
-            <dd class="text-sm text-content-primary font-mono">{{ asset.device_code }}</dd>
+            <dd class="text-sm text-content-primary font-mono">{{ asset.device_code|default:"—" }}</dd>
           </div>
 
           <div>
             <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
               {% trans "Inventarnummer" %}
             </dt>
-            <dd class="text-sm text-content-primary font-mono">{{ asset.inventory_number }}</dd>
+            <dd class="text-sm text-content-primary font-mono">{{ asset.inventory_number|default:"—" }}</dd>
           </div>
 
           <div>
