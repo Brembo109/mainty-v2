@@ -15,7 +15,7 @@
 
     {# Logo #}
     <div class="flex items-center gap-2 px-4 h-12 border-b border-border shrink-0">
-      <span class="text-white font-semibold text-sm tracking-tight">mainty</span>
+      <span class="text-content-primary font-semibold text-sm tracking-tight">mainty</span>
       <span class="text-content-tertiary text-2xs font-mono ml-auto">v2</span>
     </div>
 
@@ -50,7 +50,7 @@
         <select
           name="language"
           onchange="this.form.submit()"
-          class="w-full bg-surface-card text-content-secondary text-xs border border-border rounded px-2 py-1.5 focus:outline-none focus:border-white/40"
+          class="w-full bg-surface-card text-content-secondary text-xs border border-border rounded px-2 py-1.5 focus:outline-none focus:border-border-strong"
         >
           {% for code, name in lang_list %}
             <option value="{{ code }}" {% if code == current_lang %}selected{% endif %}>
@@ -76,7 +76,7 @@
         <form method="post" action="{% url 'accounts:logout' %}">
           {% csrf_token %}
           <button type="submit"
-            class="text-content-secondary text-xs hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+            class="text-content-secondary text-xs hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
             {% trans "Abmelden" %}
           </button>
         </form>
