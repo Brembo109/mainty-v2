@@ -24,6 +24,9 @@
       {% include "partials/sidebar.html" %}
     </nav>
 
+    {# Notification dropdown panel — must be outside nav to avoid overflow-y:auto clip #}
+    <div id="notification-panel"></div>
+
     {# Theme + Language #}
     <div class="px-3 py-4 border-t border-border shrink-0">
       {% if user.is_authenticated %}

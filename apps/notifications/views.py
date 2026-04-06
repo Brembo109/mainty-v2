@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import View
 
@@ -24,7 +23,11 @@ class MarkReadView(LoginRequiredMixin, View):
         notification = get_object_or_404(Notification, pk=pk, user=request.user)
         notification.is_read = True
         notification.save(update_fields=["is_read"])
-        return HttpResponse("")
+        remaining = (
+            Notification.objects.filter(user=request.user, is_read=False)
+            .order_by("-created_at")[:50]
+        )
+        return render(request, "notifications/dropdown.html", {"notifications": remaining})
 
 
 class MarkAllReadView(LoginRequiredMixin, View):

@@ -11,6 +11,7 @@
       hx-get="{% url 'notifications:dropdown' %}"
       hx-target="#notification-panel"
       hx-swap="outerHTML"
+      hx-boost="false"
       class="nav-item w-full">
       <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round"
@@ -23,7 +24,6 @@
       </span>
       {% endif %}
     </button>
-    <div id="notification-panel"></div>
   </div>
 
   {# Dashboard #}

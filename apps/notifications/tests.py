@@ -256,8 +256,14 @@ class MarkReadViewTest(TestCase):
     def test_marks_notification_as_read(self):
         from apps.notifications.models import Notification
         from apps.notifications.constants import Category
+        task = Task.objects.create(
+            title="Overdue",
+            due_date=date.today() - timedelta(days=1),
+            status="open",
+            priority="medium",
+        )
         n = Notification.objects.create(
-            user=self.user, category=Category.TASK_OVERDUE, object_id=1, message="test"
+            user=self.user, category=Category.TASK_OVERDUE, object_id=task.pk, message="test"
         )
         response = self.client.post(
             reverse("notifications:mark-read", kwargs={"pk": n.pk})
