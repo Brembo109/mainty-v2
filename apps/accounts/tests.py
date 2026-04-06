@@ -339,11 +339,11 @@ class UserDeleteViewTest(TestCase):
         target = User.objects.create_user(username="audited", password="pass")
         AuditLog.objects.create(actor=target, actor_username="audited", action="CREATE")
         response = self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 409)
         self.assertTrue(User.objects.filter(username="audited").exists())
 
     def test_blocked_delete_shows_deactivate_button(self):
         target = User.objects.create_user(username="audited2", password="pass")
         AuditLog.objects.create(actor=target, actor_username="audited2", action="CREATE")
         response = self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
-        self.assertContains(response, "toggle-active")
+        self.assertContains(response, "toggle-active", status_code=409)

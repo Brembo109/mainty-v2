@@ -208,7 +208,7 @@ class UserDeleteView(RoleRequiredMixin, DeleteView):
     def form_valid(self, form):
         if AuditLog.objects.filter(actor=self.object).exists():
             ctx = self.get_context_data()
-            return self.render_to_response(ctx)
+            return self.render_to_response(ctx, status=409)
         messages.success(self.request, _("Benutzer %(username)s wurde gelöscht.") % {"username": self.object.username})
         self.object.delete()
         return redirect(self.success_url)
