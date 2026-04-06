@@ -1,11 +1,17 @@
+from datetime import date, timedelta
+from io import StringIO
+
+from django.contrib.auth.models import Group
+from django.conf import settings as django_settings
+from django.core import mail
+from django.core.management import call_command
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.conf import settings as django_settings
-from django.contrib.auth.models import Group
-from django.core import mail
 
-from apps.accounts.models import User
 from apps.accounts.constants import Role
+from apps.accounts.models import User
+from apps.contracts.models import Contract
+from apps.core.models import SiteConfig
 
 
 def _make_user(username, role=None):
@@ -137,18 +143,12 @@ class SendTestEmailViewTest(TestCase):
         self.assertEqual(response.status_code, 403)
 
 
-from datetime import date, timedelta
-
-
 class IndexViewSiteConfigIntegrationTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.admin = _make_user("admin_idx", role=Role.ADMIN)
 
     def test_index_uses_site_config_contract_warning_days(self):
-        from apps.core.models import SiteConfig
-        from apps.contracts.models import Contract
-
         # Create SiteConfig with 30-day warning window
         SiteConfig.objects.create(pk=1, contract_expiry_warning_days=30)
 
@@ -167,15 +167,8 @@ class IndexViewSiteConfigIntegrationTest(TestCase):
         self.assertEqual(response.context["contracts_expiring"], 0)
 
 
-from django.core.management import call_command
-from io import StringIO
-
-
 class SendRemindersIntegrationTest(TestCase):
     def test_uses_site_config_contract_warning_days(self):
-        from apps.core.models import SiteConfig
-        from apps.contracts.models import Contract
-
         # 30-day warning window via SiteConfig
         SiteConfig.objects.create(pk=1, contract_expiry_warning_days=30)
 
