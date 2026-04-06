@@ -21,7 +21,7 @@ class SetThemeViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username="themeuser", password="testpass123")
-        self.client.login(username="themeuser", password="testpass123")
+        self.client.force_login(self.user)
 
     def test_set_theme_to_light(self):
         response = self.client.post(
