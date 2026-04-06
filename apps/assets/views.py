@@ -21,7 +21,7 @@ class AssetListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return _apply_filters(
-            Asset.objects.all(),
+            Asset.objects.select_related("responsible").all(),
             self._filter_form(),
         )
 
@@ -51,6 +51,9 @@ class AssetDetailView(LoginRequiredMixin, DetailView):
     model = Asset
     template_name = "assets/asset_detail.html"
     context_object_name = "asset"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("responsible", "deputy")
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -135,4 +138,8 @@ def _apply_filters(qs, form):
         qs = qs.filter(status=cd["status"])
     if cd.get("location"):
         qs = qs.filter(location__icontains=cd["location"])
+    if cd.get("department"):
+        qs = qs.filter(department=cd["department"])
+    if cd.get("responsible"):
+        qs = qs.filter(responsible=cd["responsible"])
     return qs

@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.test import Client, TestCase
+from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.assets.constants import Department
@@ -152,3 +153,66 @@ class AssetFormValidationTest(TestCase):
         form = AssetForm(data=self._valid_data(responsible=inactive.pk))
         self.assertFalse(form.is_valid())
         self.assertIn("responsible", form.errors)
+
+
+class AssetFilterViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username="viewer", password="pass")
+        self.client.force_login(self.user)
+
+        self.responsible = User.objects.create_user(username="resp", password="pass")
+        self.deputy = User.objects.create_user(username="dep", password="pass")
+
+        self.asset_h = Asset.objects.create(
+            name="Anlage Herstellung",
+            serial_number="SN-H01",
+            location="Halle 1",
+            device_code="H-01",
+            inventory_number="INV-H01",
+            department=Department.HERSTELLUNG,
+            responsible=self.responsible,
+            deputy=self.deputy,
+        )
+        self.asset_q = Asset.objects.create(
+            name="Anlage QK",
+            serial_number="SN-Q01",
+            location="Halle 2",
+            device_code="Q-01",
+            inventory_number="INV-Q01",
+            department=Department.QUALITAETSKONTROLLE,
+            responsible=self.responsible,
+            deputy=self.deputy,
+        )
+
+    def test_filter_by_department(self):
+        response = self.client.get(
+            reverse("assets:list"),
+            {"department": Department.HERSTELLUNG},
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Anlage Herstellung")
+        self.assertNotContains(response, "Anlage QK")
+
+    def test_filter_by_responsible(self):
+        other_resp = User.objects.create_user(username="other_resp", password="pass")
+        Asset.objects.create(
+            name="Anlage Andere",
+            serial_number="SN-A01",
+            location="Halle 3",
+            device_code="A-01",
+            inventory_number="INV-A01",
+            department=Department.PROZESSENTWICKLUNG,
+            responsible=other_resp,
+            deputy=self.deputy,
+        )
+        response = self.client.get(
+            reverse("assets:list"),
+            {"responsible": self.responsible.pk},
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Anlage Herstellung")
+        self.assertContains(response, "Anlage QK")
+        self.assertNotContains(response, "Anlage Andere")
