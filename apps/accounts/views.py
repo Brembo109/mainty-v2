@@ -1,4 +1,5 @@
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -71,3 +72,13 @@ class PasswordExpiredView(PasswordChangeView):
 
     template_name = "accounts/password_expired.html"
     success_url = reverse_lazy("index")
+
+
+@login_required
+def set_theme(request):
+    if request.method == "POST":
+        theme = request.POST.get("theme")
+        if theme in ("dark", "light"):
+            request.user.theme = theme
+            request.user.save(update_fields=["theme"])
+    return redirect(request.POST.get("next") or "/")

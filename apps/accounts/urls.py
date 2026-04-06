@@ -18,4 +18,5 @@ urlpatterns = [
     ),
     path("password-reset/complete/", views.PasswordResetCompleteView.as_view(), name="password_reset_complete"),
     path("password-expired/", views.PasswordExpiredView.as_view(), name="password_expired"),
+    path("set-theme/", views.set_theme, name="set_theme"),
 ]
