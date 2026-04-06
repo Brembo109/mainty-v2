@@ -71,7 +71,8 @@
           {% if form.assigned_to.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.assigned_to.errors.0 }}</p>{% endif %}
         </div>
 
-        {# Asset #}
+        {# Assets — multi-select on create, single select on update #}
+        {% if is_update %}
         <div>
           <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
             {{ form.asset.label }}
@@ -79,6 +80,24 @@
           {{ form.asset }}
           {% if form.asset.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.asset.errors.0 }}</p>{% endif %}
         </div>
+        {% else %}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {% trans "Anlagen" %} <span class="text-content-tertiary font-normal normal-case tracking-normal">{% trans "(optional, Mehrfachauswahl möglich)" %}</span>
+          </label>
+          <div class="border border-border rounded overflow-y-auto max-h-48 bg-surface-card divide-y divide-border-subtle">
+            {% for checkbox in form.assets %}
+            <label class="flex items-center gap-3 px-3 py-2 hover:bg-surface-elevated cursor-pointer text-sm text-content-primary">
+              {{ checkbox.tag }}
+              <span>{{ checkbox.choice_label }}</span>
+            </label>
+            {% empty %}
+            <p class="px-3 py-2 text-sm text-content-tertiary">{% trans "Keine Anlagen vorhanden." %}</p>
+            {% endfor %}
+          </div>
+          {% if form.assets.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.assets.errors.0 }}</p>{% endif %}
+        </div>
+        {% endif %}
 
         {# Description #}
         <div>
