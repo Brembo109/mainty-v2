@@ -4,6 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from .forms import LoginForm, StyledPasswordChangeForm, StyledSetPasswordForm
 
@@ -75,10 +77,13 @@ class PasswordExpiredView(PasswordChangeView):
 
 
 @login_required
+@require_POST
 def set_theme(request):
-    if request.method == "POST":
-        theme = request.POST.get("theme")
-        if theme in ("dark", "light"):
-            request.user.theme = theme
-            request.user.save(update_fields=["theme"])
-    return redirect(request.POST.get("next") or "/")
+    theme = request.POST.get("theme")
+    if theme in ("dark", "light"):
+        request.user.theme = theme
+        request.user.save(update_fields=["theme"])
+    next_url = request.POST.get("next") or "/"
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = "/"
+    return redirect(next_url)

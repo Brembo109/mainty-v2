@@ -35,14 +35,17 @@ class SetThemeViewTest(TestCase):
     def test_set_theme_to_dark(self):
         self.user.theme = "light"
         self.user.save(update_fields=["theme"])
-        self.client.post(
+        response = self.client.post(
             reverse("accounts:set_theme"),
             {"theme": "dark", "next": "/"},
         )
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
         self.user.refresh_from_db()
         self.assertEqual(self.user.theme, "dark")
 
     def test_invalid_theme_ignored(self):
+        self.user.theme = "dark"
+        self.user.save(update_fields=["theme"])
         self.client.post(
             reverse("accounts:set_theme"),
             {"theme": "rainbow", "next": "/"},
@@ -57,4 +60,11 @@ class SetThemeViewTest(TestCase):
             {"theme": "light", "next": "/"},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response["Location"])
+        self.assertIn(reverse("accounts:login"), response["Location"])
+
+    def test_next_open_redirect_rejected(self):
+        response = self.client.post(
+            reverse("accounts:set_theme"),
+            {"theme": "light", "next": "https://evil.com"},
+        )
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
