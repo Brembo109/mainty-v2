@@ -66,3 +66,12 @@ coverage.xml
 
 # Translations (compiled)
 *.mo
+
+# ─── Claude Code / AI development files (managed in mainty-v2-ai-config) ───
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.agents/
+skills-lock.json
+docs/superpowers/
+.mcp.json
