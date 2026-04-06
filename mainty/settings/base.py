@@ -114,7 +114,7 @@ AUTHENTICATION_BACKENDS = [
 
 # Auth redirects
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "index"
+LOGIN_REDIRECT_URL = "core:index"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 # Password rotation (days)

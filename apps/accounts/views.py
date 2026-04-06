@@ -21,7 +21,7 @@ class LoginView(auth_views.LoginView):
     template_name = "accounts/login.html"
     authentication_form = LoginForm
     redirect_authenticated_user = True
-    next_page = reverse_lazy("index")
+    next_page = reverse_lazy("core:index")
 
 
 class LogoutView(auth_views.LogoutView):
@@ -80,7 +80,7 @@ class PasswordExpiredView(PasswordChangeView):
     """
 
     template_name = "accounts/password_expired.html"
-    success_url = reverse_lazy("index")
+    success_url = reverse_lazy("core:index")
 
 
 @login_required
