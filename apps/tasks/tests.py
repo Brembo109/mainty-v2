@@ -1,5 +1,8 @@
+import itertools
+
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.contrib.auth.models import Group
 
 from apps.accounts.models import User
 from apps.assets.models import Asset
@@ -8,15 +11,13 @@ from apps.tasks.forms import TaskCreateForm
 from apps.tasks.models import Task
 
 
-_counter = 0
+_counter = itertools.count(1)
 
 
 def _make_user(username="writer", role=None):
-    from django.contrib.auth.models import Group
-    from apps.accounts.constants import Role
     global _counter
-    _counter += 1
-    u = User.objects.create_user(username=f"{username}_{_counter}", password="pass")
+    c = next(_counter)
+    u = User.objects.create_user(username=f"{username}_{c}", password="pass")
     if role:
         Group.objects.get_or_create(name=role)
         u.set_role(role)
@@ -25,13 +26,13 @@ def _make_user(username="writer", role=None):
 
 def _make_asset(name=None):
     global _counter
-    _counter += 1
+    c = next(_counter)
     return Asset.objects.create(
-        name=name or f"Asset {_counter}",
-        serial_number=f"SN-{_counter:04d}",
+        name=name or f"Asset {c}",
+        serial_number=f"SN-{c:04d}",
         location="Halle 1",
-        device_code=f"DEV-{_counter:02d}",
-        inventory_number=f"INV-{_counter:03d}",
+        device_code=f"DEV-{c:02d}",
+        inventory_number=f"INV-{c:03d}",
         department=Department.HERSTELLUNG,
     )
 
