@@ -79,28 +79,33 @@ class TaskCreateView(LoginRequiredMixin, WriteAccessMixin, CreateView):
         return ctx
 
     def form_valid(self, form):
-        assets = list(form.cleaned_data.pop("assets"))
-        base_data = {
-            field: form.cleaned_data[field]
-            for field in form.cleaned_data
-        }
+        assets = list(form.cleaned_data.get("assets", []))
+        template = form.save(commit=False)
 
         if not assets:
-            task = Task.objects.create(**base_data, asset=None)
-            self.object = task
+            template.save()
+            self.object = template
             messages.success(self.request, _("Aufgabe wurde erfolgreich erstellt."))
             return redirect(self.get_success_url())
 
         if len(assets) == 1:
-            task = Task.objects.create(**base_data, asset=assets[0])
-            self.object = task
+            template.asset = assets[0]
+            template.save()
+            self.object = template
             messages.success(self.request, _("Aufgabe wurde erfolgreich erstellt."))
             return redirect(self.get_success_url())
 
         for asset in assets:
-            Task.objects.create(**base_data, asset=asset)
-        count = len(assets)
-        messages.success(self.request, _(f"{count} Aufgaben wurden erstellt."))
+            Task.objects.create(
+                title=template.title,
+                description=template.description,
+                assigned_to=template.assigned_to,
+                due_date=template.due_date,
+                priority=template.priority,
+                status=template.status,
+                asset=asset,
+            )
+        messages.success(self.request, _("%(count)d Aufgaben wurden erstellt.") % {"count": len(assets)})
         return redirect(reverse("tasks:list"))
 
 
