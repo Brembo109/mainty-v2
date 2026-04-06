@@ -2,7 +2,7 @@
   /* Light Mode */
   --color-surface: #ffffff;
   --color-surface-card: #f5f5f5;
-  --color-surface-elevated: #fafafa;
+  --color-surface-elevated: #efefef;
   --color-border: #e5e5e5;
   --color-border-subtle: #f0f0f0;
   --color-border-strong: #d4d4d4;
@@ -42,7 +42,7 @@
 
 @layer base {
   html {
-    @apply bg-black text-white antialiased;
+    @apply bg-surface text-content-primary antialiased;
   }
 
   /* Scrollbar */
@@ -71,7 +71,7 @@
 
   /* Ghost button */
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 text-content-secondary text-sm font-medium rounded border border-border hover:bg-surface-card hover:text-white transition-colors;
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-content-secondary text-sm font-medium rounded border border-border hover:bg-surface-card hover:text-content-primary transition-colors;
   }
 
   /* Status badges */
@@ -110,7 +110,7 @@
 
   /* Form inputs */
   .form-input {
-    @apply w-full bg-surface-card border border-border rounded px-3 py-2 text-sm text-white placeholder-content-tertiary focus:outline-none focus:border-white/40 transition-colors;
+    @apply w-full bg-surface-card border border-border rounded px-3 py-2 text-sm text-content-primary placeholder-content-tertiary focus:outline-none focus:border-content-tertiary transition-colors;
   }
   .form-label {
     @apply block text-xs font-medium text-content-secondary mb-1.5;
@@ -118,9 +118,9 @@
 
   /* Nav item in sidebar */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2 rounded text-sm text-content-secondary hover:text-white hover:bg-surface-card transition-colors;
+    @apply flex items-center gap-3 px-3 py-2 rounded text-sm text-content-secondary hover:text-content-primary hover:bg-surface-card transition-colors;
   }
   .nav-item.active {
-    @apply text-white bg-surface-card;
+    @apply text-content-primary bg-surface-card;
   }
 }
