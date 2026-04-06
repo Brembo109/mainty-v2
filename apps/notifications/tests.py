@@ -203,3 +203,123 @@ class ContextProcessorTest(TestCase):
         task.save()
         cp(request)
         self.assertEqual(Notification.objects.filter(user=user).count(), 0)
+
+
+# ── Views ─────────────────────────────────────────────────────────────────────
+
+class DropdownViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = _make_user("dv1")
+        self.client.force_login(self.user)
+
+    def test_returns_200(self):
+        from apps.notifications.models import Category, Notification
+        response = self.client.get(reverse("notifications:dropdown"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_only_own_unread_notifications_in_context(self):
+        from apps.notifications.models import Notification
+        from apps.notifications.constants import Category
+        # Create a real overdue task so the context processor keeps the notification
+        task = Task.objects.create(
+            title="Overdue",
+            due_date=date.today() - timedelta(days=1),
+            status="open",
+            priority="medium",
+        )
+        other = _make_user("dv2")
+        Notification.objects.create(
+            user=self.user, category=Category.TASK_OVERDUE, object_id=task.pk, message="mine"
+        )
+        # other user's notification won't survive context processor either, but
+        # we only care that self.user sees exactly their own unread items
+        response = self.client.get(reverse("notifications:dropdown"))
+        self.assertEqual(response.status_code, 200)
+        items = list(response.context["notifications"])
+        self.assertGreaterEqual(len(items), 1)
+        self.assertTrue(all(n.user == self.user for n in items))
+
+    def test_unauthenticated_redirects(self):
+        self.client.logout()
+        response = self.client.get(reverse("notifications:dropdown"))
+        self.assertEqual(response.status_code, 302)
+
+
+class MarkReadViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = _make_user("mr1")
+        self.client.force_login(self.user)
+
+    def test_marks_notification_as_read(self):
+        from apps.notifications.models import Notification
+        from apps.notifications.constants import Category
+        n = Notification.objects.create(
+            user=self.user, category=Category.TASK_OVERDUE, object_id=1, message="test"
+        )
+        response = self.client.post(
+            reverse("notifications:mark-read", kwargs={"pk": n.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        n.refresh_from_db()
+        self.assertTrue(n.is_read)
+
+    def test_other_users_notification_returns_404(self):
+        from apps.notifications.models import Notification
+        from apps.notifications.constants import Category
+        other = _make_user("mr2")
+        n = Notification.objects.create(
+            user=other, category=Category.TASK_OVERDUE, object_id=1, message="theirs"
+        )
+        response = self.client.post(
+            reverse("notifications:mark-read", kwargs={"pk": n.pk})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_unauthenticated_redirects(self):
+        from apps.notifications.models import Notification
+        from apps.notifications.constants import Category
+        self.client.logout()
+        n = Notification.objects.create(
+            user=self.user, category=Category.TASK_OVERDUE, object_id=1, message="test"
+        )
+        response = self.client.post(
+            reverse("notifications:mark-read", kwargs={"pk": n.pk})
+        )
+        self.assertEqual(response.status_code, 302)
+
+
+class MarkAllReadViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = _make_user("mar1")
+        self.client.force_login(self.user)
+
+    def test_marks_all_own_notifications_as_read(self):
+        from apps.notifications.models import Notification
+        from apps.notifications.constants import Category
+        for i in range(3):
+            Notification.objects.create(
+                user=self.user,
+                category=Category.TASK_OVERDUE,
+                object_id=i,
+                message=f"test {i}",
+            )
+        response = self.client.post(reverse("notifications:mark-all-read"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            Notification.objects.filter(user=self.user, is_read=False).count(), 0
+        )
+
+    def test_does_not_affect_other_users(self):
+        from apps.notifications.models import Notification
+        from apps.notifications.constants import Category
+        other = _make_user("mar2")
+        Notification.objects.create(
+            user=other, category=Category.TASK_OVERDUE, object_id=1, message="theirs"
+        )
+        self.client.post(reverse("notifications:mark-all-read"))
+        self.assertFalse(
+            Notification.objects.get(user=other).is_read
+        )

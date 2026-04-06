@@ -1,0 +1,5 @@
+{% if notifications %}
+<ul>{% for n in notifications %}<li>{{ n.message }}</li>{% endfor %}</ul>
+{% else %}
+<p>Keine neuen Benachrichtigungen</p>
+{% endif %}
