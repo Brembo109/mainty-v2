@@ -1,2 +1,143 @@
 {% extends "base.html" %}
-{% block content %}{{ form }}{% endblock %}
+{% load i18n %}
+
+{% block title %}{% trans "Einstellungen" %}{% endblock %}
+{% block page_title %}{% trans "Einstellungen" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl space-y-6">
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+
+    {# ── Allgemein ──────────────────────────────────────────────────── #}
+    <div class="card p-6">
+      <h2 class="text-sm font-medium text-content-primary mb-5">{% trans "Allgemein" %}</h2>
+      <div class="space-y-4">
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.company_name.label }}
+          </label>
+          {{ form.company_name }}
+          {% if form.company_name.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.company_name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.site_url.label }}
+          </label>
+          {{ form.site_url }}
+          {% if form.site_url.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.site_url.errors.0 }}</p>{% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    {# ── Benachrichtigungen ─────────────────────────────────────────── #}
+    <div class="card p-6">
+      <h2 class="text-sm font-medium text-content-primary mb-5">{% trans "Benachrichtigungen" %}</h2>
+      <div class="space-y-4">
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.contract_expiry_warning_days.label }}
+          </label>
+          <p class="text-xs text-content-tertiary mb-2">{% trans "Verträge werden als 'läuft aus' markiert, wenn das Ablaufdatum innerhalb dieser Anzahl von Tagen liegt." %}</p>
+          {{ form.contract_expiry_warning_days }}
+          {% if form.contract_expiry_warning_days.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.contract_expiry_warning_days.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.reminder_email_subject.label }}
+          </label>
+          {{ form.reminder_email_subject }}
+          {% if form.reminder_email_subject.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.reminder_email_subject.errors.0 }}</p>{% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    {# ── E-Mail-Server ──────────────────────────────────────────────── #}
+    <div class="card p-6">
+      <h2 class="text-sm font-medium text-content-primary mb-5">{% trans "E-Mail-Server" %}</h2>
+      <div class="space-y-4">
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.email_from.label }}
+          </label>
+          {{ form.email_from }}
+          {% if form.email_from.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.email_from.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.email_host.label }}
+            </label>
+            {{ form.email_host }}
+            {% if form.email_host.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.email_host.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.email_port.label }}
+            </label>
+            {{ form.email_port }}
+            {% if form.email_port.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.email_port.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div>
+          <label class="flex items-center gap-2 cursor-pointer">
+            {{ form.email_use_tls }}
+            <span class="text-sm text-content-primary">{{ form.email_use_tls.label }}</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.email_host_user.label }}
+          </label>
+          {{ form.email_host_user }}
+          {% if form.email_host_user.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.email_host_user.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.email_host_password.label }}
+          </label>
+          {{ form.email_host_password }}
+          {% if form.email_host_password.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.email_host_password.errors.0 }}</p>{% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="btn-primary">{% trans "Einstellungen speichern" %}</button>
+    </div>
+
+  </form>
+
+  {# ── Test-E-Mail ────────────────────────────────────────────────── #}
+  <div class="card p-6">
+    <h2 class="text-sm font-medium text-content-primary mb-2">{% trans "E-Mail-Konfiguration testen" %}</h2>
+    <p class="text-xs text-content-tertiary mb-4">
+      {% trans "Sendet eine Test-E-Mail an Ihre eigene Adresse um die SMTP-Konfiguration zu prüfen." %}
+    </p>
+    <form method="post" action="{% url 'core:settings-test-email' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-ghost">{% trans "Test-E-Mail senden" %}</button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
