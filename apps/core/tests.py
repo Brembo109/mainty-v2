@@ -48,3 +48,68 @@ class SiteConfigModelTest(TestCase):
         config = SiteConfig.get()
         expected = getattr(django_settings, "SITE_URL", "http://localhost:8000")
         self.assertEqual(config.site_url, expected)
+
+
+class SettingsViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = _make_user("admin", role=Role.ADMIN)
+        self.user = _make_user("user", role=Role.USER)
+        self.viewer = _make_user("viewer", role=Role.VIEWER)
+
+    def test_admin_can_get_settings(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("core:settings"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_gets_403(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("core:settings"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_viewer_gets_403(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(reverse("core:settings"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_anonymous_redirects_to_login(self):
+        response = self.client.get(reverse("core:settings"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login", response["Location"])
+
+    def test_admin_can_save_settings(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("core:settings"), {
+            "company_name": "Acme GmbH",
+            "site_url": "https://acme.example.com",
+            "contract_expiry_warning_days": 60,
+            "reminder_email_subject": "[acme] Reminder",
+            "email_from": "noreply@acme.example.com",
+            "email_host": "smtp.acme.example.com",
+            "email_port": 465,
+            "email_use_tls": True,
+            "email_host_user": "smtp_user",
+            "email_host_password": "secret",
+        })
+        self.assertRedirects(response, reverse("core:settings"), fetch_redirect_response=False)
+        from apps.core.models import SiteConfig
+        config = SiteConfig.objects.get(pk=1)
+        self.assertEqual(config.company_name, "Acme GmbH")
+        self.assertEqual(config.contract_expiry_warning_days, 60)
+
+    def test_invalid_form_shows_errors(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("core:settings"), {
+            "company_name": "",
+            "site_url": "not-a-url",
+            "contract_expiry_warning_days": "abc",
+            "reminder_email_subject": "[test]",
+            "email_from": "noreply@example.com",
+            "email_host": "localhost",
+            "email_port": 587,
+            "email_use_tls": True,
+            "email_host_user": "",
+            "email_host_password": "",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors)

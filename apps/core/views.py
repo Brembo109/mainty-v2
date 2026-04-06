@@ -1,11 +1,17 @@
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Max
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.utils.translation import gettext_lazy as _
+from django.views import View
 
+from apps.accounts.constants import Role
+from apps.accounts.mixins import RoleRequiredMixin
 from apps.assets.models import Asset
 from apps.contracts.models import Contract
 from apps.maintenance.models import MaintenancePlan
@@ -91,3 +97,26 @@ def index(request):
         "open_tasks": open_tasks,
         "tasks_overdue": tasks_overdue,
     })
+
+
+class SettingsView(LoginRequiredMixin, RoleRequiredMixin, View):
+    required_role = Role.ADMIN
+    template_name = "core/settings.html"
+
+    def get(self, request):
+        from apps.core.forms import SiteConfigForm
+        from apps.core.models import SiteConfig
+        config = SiteConfig.get()
+        form = SiteConfigForm(instance=config)
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request):
+        from apps.core.forms import SiteConfigForm
+        from apps.core.models import SiteConfig
+        config = SiteConfig.get()
+        form = SiteConfigForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Einstellungen wurden gespeichert."))
+            return redirect("core:settings")
+        return render(request, self.template_name, {"form": form})
