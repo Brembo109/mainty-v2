@@ -135,3 +135,60 @@ class SendTestEmailViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(reverse("core:settings-test-email"))
         self.assertEqual(response.status_code, 403)
+
+
+from datetime import date, timedelta
+
+
+class IndexViewSiteConfigIntegrationTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = _make_user("admin_idx", role=Role.ADMIN)
+
+    def test_index_uses_site_config_contract_warning_days(self):
+        from apps.core.models import SiteConfig
+        from apps.contracts.models import Contract
+
+        # Create SiteConfig with 30-day warning window
+        SiteConfig.objects.create(pk=1, contract_expiry_warning_days=30)
+
+        # Contract expiring in 50 days — outside the 30-day window
+        Contract.objects.create(
+            title="Test Contract",
+            vendor="Test Vendor",
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=50),
+        )
+
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("core:index"))
+        self.assertEqual(response.status_code, 200)
+        # 50 days > 30-day window → not counted as expiring
+        self.assertEqual(response.context["contracts_expiring"], 0)
+
+
+from django.core.management import call_command
+from io import StringIO
+
+
+class SendRemindersIntegrationTest(TestCase):
+    def test_uses_site_config_contract_warning_days(self):
+        from apps.core.models import SiteConfig
+        from apps.contracts.models import Contract
+
+        # 30-day warning window via SiteConfig
+        SiteConfig.objects.create(pk=1, contract_expiry_warning_days=30)
+
+        # Contract expiring in 50 days — outside 30-day window
+        Contract.objects.create(
+            title="Test Contract",
+            vendor="Test Vendor",
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=50),
+        )
+
+        out = StringIO()
+        call_command("send_reminders", "--dry-run", "--force", stdout=out)
+        output = out.getvalue()
+        # Dry-run reports "No action items found" because 50 days > 30-day window
+        self.assertIn("No action items found", output)

@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 
-from django.conf import settings
 from django.contrib import messages
 from django.core.mail import get_connection, send_mail
 from django.contrib.auth.decorators import login_required
@@ -21,9 +20,6 @@ from apps.maintenance.models import MaintenancePlan
 from apps.qualification.models import QualificationCycle
 from apps.tasks.models import Task
 
-_CONTRACT_WARNING_DAYS = getattr(settings, "CONTRACT_EXPIRY_WARNING_DAYS", 90)
-
-
 def health(request):
     return JsonResponse({"status": "ok"})
 
@@ -31,7 +27,8 @@ def health(request):
 @login_required
 def index(request):
     today = date.today()
-    contract_warning = today + timedelta(days=_CONTRACT_WARNING_DAYS)
+    config = SiteConfig.get()
+    contract_warning = today + timedelta(days=config.contract_expiry_warning_days)
 
     # ── Assets ──────────────────────────────────────────────────────────
     asset_count = Asset.objects.count()

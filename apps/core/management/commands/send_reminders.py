@@ -12,24 +12,19 @@ Or via systemd timer (see docs/reminders-systemd.md).
 
 from datetime import date, timedelta
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.core.management.base import BaseCommand
 from django.db.models import Max
 from django.template.loader import render_to_string
-from django.utils import timezone
 
 from apps.contracts.models import Contract
+from apps.core.models import SiteConfig
 from apps.maintenance.models import MaintenancePlan
 from apps.qualification.models import QualificationCycle
 from apps.tasks.models import Task
 
 User = get_user_model()
-
-_CONTRACT_WARNING_DAYS = getattr(settings, "CONTRACT_EXPIRY_WARNING_DAYS", 90)
-REMINDER_FROM = getattr(settings, "DEFAULT_FROM_EMAIL", "mainty@localhost")
-REMINDER_SUBJECT = getattr(settings, "REMINDER_EMAIL_SUBJECT", "[mainty] GMP-Erinnerung — Handlungsbedarf")
 
 
 class Command(BaseCommand):
@@ -50,11 +45,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from apps.core.models import ReminderLog
 
+        config = SiteConfig.get()
         today = date.today()
         force = options["force"]
         dry_run = options["dry_run"]
 
-        # ── Once-per-day guard ─────────────────────��────────────────────
+        # ── Once-per-day guard ────────────────────────────────────────────
         if not force and not dry_run:
             already_sent = ReminderLog.objects.filter(sent_at__date=today).exists()
             if already_sent:
@@ -63,8 +59,9 @@ class Command(BaseCommand):
                 )
                 return
 
-        # ── Build item lists ──────────────────────────��─────────────────
-        items = self._collect_items(today)
+        # ── Build item lists ──────────────────────────────────────────────
+        contract_warning = today + timedelta(days=config.contract_expiry_warning_days)
+        items = self._collect_items(today, contract_warning)
         total = sum(len(v) for v in items.values())
 
         if total == 0:
@@ -76,7 +73,7 @@ class Command(BaseCommand):
                 )
             return
 
-        # ── Collect recipients (Admin + User roles) ──────────────────���──
+        # ── Collect recipients (Admin + User roles) ───────────────────────
         recipients = list(
             User.objects.filter(
                 groups__name__in=["Admin", "User"],
@@ -93,26 +90,33 @@ class Command(BaseCommand):
             self._print_dry_run(items, recipients)
             return
 
-        # ── Render and send ─────────────────────────────────────────────
-        site_url = getattr(settings, "SITE_URL", "http://localhost:8000")
+        # ── Render and send ───────────────────────────────────────────────
         context = {
             "today": today,
-            "site_url": site_url,
+            "site_url": config.site_url,
             **items,
         }
         html_body = render_to_string("emails/reminder.html", context)
-        text_body = self._text_body(items, site_url)
+        text_body = self._text_body(items, config.site_url)
 
+        connection = get_connection(
+            host=config.email_host,
+            port=config.email_port,
+            username=config.email_host_user,
+            password=config.email_host_password,
+            use_tls=config.email_use_tls,
+        )
         msg = EmailMultiAlternatives(
-            subject=REMINDER_SUBJECT,
+            subject=config.reminder_email_subject,
             body=text_body,
-            from_email=REMINDER_FROM,
+            from_email=config.email_from,
             to=recipients,
+            connection=connection,
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send()
 
-        # ── Log ─────────────────��───────────────────────────────────────
+        # ── Log ───────────────────────────────────────────────────────────
         summary = {k: [str(i) for i in v] for k, v in items.items()}
         summary["items_found"] = total
         ReminderLog.objects.create(
@@ -126,11 +130,9 @@ class Command(BaseCommand):
             )
         )
 
-    # ── Helpers ──────────────────────────────────��───────────────────────
+    # ── Helpers ───────────────────────────────────────────────────────────
 
-    def _collect_items(self, today):
-        contract_warning = today + timedelta(days=_CONTRACT_WARNING_DAYS)
-
+    def _collect_items(self, today, contract_warning):
         # Contracts — DB-side
         contracts_expiring = list(
             Contract.objects.filter(end_date__gte=today, end_date__lte=contract_warning)
