@@ -13,6 +13,8 @@ from django.views import View
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin
 from apps.assets.models import Asset
+from apps.core.forms import SiteConfigForm
+from apps.core.models import SiteConfig
 from apps.contracts.models import Contract
 from apps.maintenance.models import MaintenancePlan
 from apps.qualification.models import QualificationCycle
@@ -104,15 +106,11 @@ class SettingsView(LoginRequiredMixin, RoleRequiredMixin, View):
     template_name = "core/settings.html"
 
     def get(self, request):
-        from apps.core.forms import SiteConfigForm
-        from apps.core.models import SiteConfig
         config = SiteConfig.get()
         form = SiteConfigForm(instance=config)
         return render(request, self.template_name, {"form": form})
 
     def post(self, request):
-        from apps.core.forms import SiteConfigForm
-        from apps.core.models import SiteConfig
         config = SiteConfig.get()
         form = SiteConfigForm(request.POST, instance=config)
         if form.is_valid():
