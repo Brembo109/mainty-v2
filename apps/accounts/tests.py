@@ -169,3 +169,181 @@ class AdminSetPasswordFormTest(TestCase):
         )
         self.assertFalse(form.is_valid())
         self.assertIn("new_password2", form.errors)
+
+
+from apps.audit.models import AuditLog
+
+
+class UserListViewTest(TestCase):
+    def setUp(self):
+        self.admin = _make_admin("admin_list")
+        self.client.force_login(self.admin)
+
+    def test_admin_sees_list(self):
+        response = self.client.get(reverse("accounts:user-list"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_role_gets_403(self):
+        _setup_roles()
+        u = User.objects.create_user(username="userrole", password="pass")
+        u.set_role(Role.USER)
+        self.client.force_login(u)
+        response = self.client.get(reverse("accounts:user-list"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_viewer_role_gets_403(self):
+        _setup_roles()
+        v = User.objects.create_user(username="viewerrole", password="pass")
+        v.set_role(Role.VIEWER)
+        self.client.force_login(v)
+        response = self.client.get(reverse("accounts:user-list"))
+        self.assertEqual(response.status_code, 403)
+
+
+class UserCreateViewTest(TestCase):
+    def setUp(self):
+        self.admin = _make_admin("admin_create")
+        self.client.force_login(self.admin)
+
+    def test_get_returns_form(self):
+        response = self.client.get(reverse("accounts:user-create"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_creates_user_with_role(self):
+        response = self.client.post(
+            reverse("accounts:user-create"),
+            {
+                "username": "brandnew",
+                "email": "",
+                "first_name": "",
+                "last_name": "",
+                "role": Role.USER,
+                "password1": "sicher1234!",
+                "password2": "sicher1234!",
+            },
+        )
+        self.assertRedirects(response, reverse("accounts:user-list"), fetch_redirect_response=False)
+        user = User.objects.get(username="brandnew")
+        self.assertEqual(user.role, Role.USER)
+
+    def test_password_mismatch_shows_error(self):
+        response = self.client.post(
+            reverse("accounts:user-create"),
+            {
+                "username": "brandnew2",
+                "email": "",
+                "first_name": "",
+                "last_name": "",
+                "role": Role.USER,
+                "password1": "sicher1234!",
+                "password2": "falsch",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="brandnew2").exists())
+
+
+class UserUpdateViewTest(TestCase):
+    def setUp(self):
+        self.admin = _make_admin("admin_update")
+        self.client.force_login(self.admin)
+        _setup_roles()
+        self.target = User.objects.create_user(username="target", password="pass")
+        self.target.set_role(Role.USER)
+
+    def test_get_returns_form(self):
+        response = self.client.get(reverse("accounts:user-update", kwargs={"pk": self.target.pk}))
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_updates_role(self):
+        self.client.post(
+            reverse("accounts:user-update", kwargs={"pk": self.target.pk}),
+            {
+                "username": "target",
+                "email": "",
+                "first_name": "",
+                "last_name": "",
+                "is_active": True,
+                "role": Role.VIEWER,
+            },
+        )
+        self.target.refresh_from_db()
+        self.assertEqual(self.target.role, Role.VIEWER)
+
+
+class AdminSetPasswordViewTest(TestCase):
+    def setUp(self):
+        self.admin = _make_admin("admin_pw")
+        self.client.force_login(self.admin)
+        self.target = User.objects.create_user(username="pwuser", password="oldpass")
+
+    def test_get_returns_form(self):
+        response = self.client.get(reverse("accounts:user-password", kwargs={"pk": self.target.pk}))
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_sets_password_and_resets_clock(self):
+        from django.utils import timezone as tz
+        before = tz.now()
+        self.client.post(
+            reverse("accounts:user-password", kwargs={"pk": self.target.pk}),
+            {"new_password1": "neuesPass1!", "new_password2": "neuesPass1!"},
+        )
+        self.target.refresh_from_db()
+        self.assertTrue(self.target.check_password("neuesPass1!"))
+        self.assertGreaterEqual(self.target.password_changed_at, before)
+
+    def test_mismatch_shows_error(self):
+        response = self.client.post(
+            reverse("accounts:user-password", kwargs={"pk": self.target.pk}),
+            {"new_password1": "neuesPass1!", "new_password2": "falsch"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.target.refresh_from_db()
+        self.assertTrue(self.target.check_password("oldpass"))  # unchanged
+
+
+class UserToggleActiveViewTest(TestCase):
+    def setUp(self):
+        self.admin = _make_admin("admin_toggle")
+        self.client.force_login(self.admin)
+        self.target = User.objects.create_user(username="toggleuser", password="pass", is_active=True)
+
+    def test_post_deactivates_user(self):
+        self.client.post(reverse("accounts:user-toggle-active", kwargs={"pk": self.target.pk}))
+        self.target.refresh_from_db()
+        self.assertFalse(self.target.is_active)
+
+    def test_post_reactivates_user(self):
+        self.target.is_active = False
+        self.target.save()
+        self.client.post(reverse("accounts:user-toggle-active", kwargs={"pk": self.target.pk}))
+        self.target.refresh_from_db()
+        self.assertTrue(self.target.is_active)
+
+    def test_get_returns_405(self):
+        response = self.client.get(reverse("accounts:user-toggle-active", kwargs={"pk": self.target.pk}))
+        self.assertEqual(response.status_code, 405)
+
+
+class UserDeleteViewTest(TestCase):
+    def setUp(self):
+        self.admin = _make_admin("admin_del")
+        self.client.force_login(self.admin)
+
+    def test_user_without_audit_entries_is_deleted(self):
+        target = User.objects.create_user(username="nodelete", password="pass")
+        self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
+        self.assertFalse(User.objects.filter(username="nodelete").exists())
+
+    def test_user_with_audit_entries_is_not_deleted(self):
+        target = User.objects.create_user(username="audited", password="pass")
+        AuditLog.objects.create(actor=target, actor_username="audited", action="CREATE")
+        response = self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.filter(username="audited").exists())
+
+    def test_blocked_delete_shows_deactivate_button(self):
+        target = User.objects.create_user(username="audited2", password="pass")
+        AuditLog.objects.create(actor=target, actor_username="audited2", action="CREATE")
+        response = self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
+        self.assertContains(response, "toggle-active")

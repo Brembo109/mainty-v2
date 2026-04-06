@@ -19,4 +19,11 @@ urlpatterns = [
     path("password-reset/complete/", views.PasswordResetCompleteView.as_view(), name="password_reset_complete"),
     path("password-expired/", views.PasswordExpiredView.as_view(), name="password_expired"),
     path("set-theme/", views.set_theme, name="set_theme"),
+    path("users/", views.UserListView.as_view(), name="user-list"),
+    path("users/create/", views.UserCreateView.as_view(), name="user-create"),
+    path("users/<int:pk>/", views.UserDetailView.as_view(), name="user-detail"),
+    path("users/<int:pk>/edit/", views.UserUpdateView.as_view(), name="user-update"),
+    path("users/<int:pk>/password/", views.UserPasswordView.as_view(), name="user-password"),
+    path("users/<int:pk>/toggle-active/", views.UserToggleActiveView.as_view(), name="user-toggle-active"),
+    path("users/<int:pk>/delete/", views.UserDeleteView.as_view(), name="user-delete"),
 ]

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ target_user.username }}{% endblock %}
+
+{% block content %}
+<h1>{{ target_user.username }}</h1>
+<p>{{ target_user.email }}</p>
+<p>{% trans "Rolle" %}: {{ target_user.role }}</p>
+<p>{% trans "Aktiv" %}: {{ target_user.is_active }}</p>
+<a href="{% url 'accounts:user-update' target_user.pk %}">{% trans "Bearbeiten" %}</a>
+<a href="{% url 'accounts:user-password' target_user.pk %}">{% trans "Passwort setzen" %}</a>
+<a href="{% url 'accounts:user-list' %}">{% trans "Zurück" %}</a>
+{% endblock %}

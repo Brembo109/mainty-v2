@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Benutzer löschen" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Benutzer löschen" %}: {{ target_user.username }}</h1>
+{% if has_audit_entries %}
+  <p>{% trans "Dieser Benutzer kann nicht gelöscht werden, da Audit-Einträge vorhanden sind." %}</p>
+  <form method="post" action="{% url 'accounts:user-toggle-active' target_user.pk %}">
+    {% csrf_token %}
+    <button type="submit">{% trans "Benutzer deaktivieren" %}</button>
+  </form>
+{% else %}
+  <p>{% trans "Möchten Sie diesen Benutzer wirklich löschen?" %}</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">{% trans "Löschen bestätigen" %}</button>
+  </form>
+{% endif %}
+<a href="{% url 'accounts:user-list' %}">{% trans "Abbrechen" %}</a>
+{% endblock %}

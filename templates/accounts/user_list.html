@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Benutzer" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Benutzer" %}</h1>
+<a href="{% url 'accounts:user-create' %}">{% trans "Neuer Benutzer" %}</a>
+<ul>
+{% for u in users %}
+  <li>
+    <a href="{% url 'accounts:user-detail' u.pk %}">{{ u.username }}</a>
+    — {{ u.role }}
+    <a href="{% url 'accounts:user-update' u.pk %}">{% trans "Bearbeiten" %}</a>
+    <form method="post" action="{% url 'accounts:user-toggle-active' u.pk %}" style="display:inline">
+      {% csrf_token %}
+      <button type="submit">{% if u.is_active %}{% trans "Deaktivieren" %}{% else %}{% trans "Aktivieren" %}{% endif %}</button>
+    </form>
+    <a href="{% url 'accounts:user-delete' u.pk %}">{% trans "Löschen" %}</a>
+  </li>
+{% endfor %}
+</ul>
+{% endblock %}
