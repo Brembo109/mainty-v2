@@ -133,3 +133,73 @@ class CollectorTest(TestCase):
         items = collect_critical_items(self.today, 90)
         keys = [(cat, oid) for cat, oid, _ in items]
         self.assertIn((Category.MAINTENANCE_OVERDUE, plan.pk), keys)
+
+
+# ── Context Processor ─────────────────────────────────────────────────────────
+
+class ContextProcessorTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_unauthenticated_returns_empty_dict(self):
+        from apps.notifications.context_processors import notifications as cp
+        from apps.notifications.models import Notification
+        request = self.factory.get("/")
+        request.user = AnonymousUser()
+        result = cp(request)
+        self.assertEqual(result, {})
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_badge_count_equals_unread_notifications(self):
+        from apps.notifications.context_processors import notifications as cp
+        user = _make_user("cp1")
+        Task.objects.create(
+            title="Late",
+            due_date=date.today() - timedelta(days=1),
+            status="open",
+            priority="medium",
+        )
+        request = self.factory.get("/")
+        request.user = user
+        result = cp(request)
+        self.assertIn("notification_unread_count", result)
+        self.assertEqual(result["notification_unread_count"], 1)
+
+    def test_is_read_preserved_on_resync(self):
+        from apps.notifications.context_processors import notifications as cp
+        from apps.notifications.models import Notification
+        user = _make_user("cp2")
+        Task.objects.create(
+            title="Late",
+            due_date=date.today() - timedelta(days=1),
+            status="open",
+            priority="medium",
+        )
+        request = self.factory.get("/")
+        request.user = user
+        cp(request)
+        Notification.objects.filter(user=user).update(is_read=True)
+        cp(request)
+        self.assertEqual(
+            Notification.objects.filter(user=user, is_read=True).count(), 1
+        )
+
+    def test_auto_resolve_deletes_stale_notification(self):
+        from apps.notifications.context_processors import notifications as cp
+        from apps.notifications.models import Notification
+        user = _make_user("cp3")
+        task = Task.objects.create(
+            title="Late",
+            due_date=date.today() - timedelta(days=1),
+            status="open",
+            priority="medium",
+        )
+        request = self.factory.get("/")
+        request.user = user
+        cp(request)
+        self.assertEqual(Notification.objects.filter(user=user).count(), 1)
+        # Resolve: mark task done → no longer critical
+        task.status = "done"
+        task.save()
+        cp(request)
+        self.assertEqual(Notification.objects.filter(user=user).count(), 0)
