@@ -18,3 +18,15 @@ class AssetStatus:
         LOCKED: "badge-warning border border-status-warning",
         OUT_OF_SERVICE: "badge-danger border border-status-danger",
     }
+
+
+class Department:
+    HERSTELLUNG = "herstellung"
+    QUALITAETSKONTROLLE = "qualitaetskontrolle"
+    PROZESSENTWICKLUNG = "prozessentwicklung"
+
+    CHOICES = [
+        (HERSTELLUNG, _("Herstellung")),
+        (QUALITAETSKONTROLLE, _("Qualitätskontrolle")),
+        (PROZESSENTWICKLUNG, _("Prozessentwicklung")),
+    ]

@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from apps.audit.mixins import AuditedModel
 
-from .constants import AssetStatus
+from .constants import AssetStatus, Department
 
 
 class Asset(AuditedModel):
@@ -24,6 +25,42 @@ class Asset(AuditedModel):
         max_length=255,
         blank=True,
         verbose_name=_("Hersteller"),
+    )
+    device_code = models.CharField(
+        max_length=50,
+        default="",
+        verbose_name=_("Gerätekürzel"),
+    )
+    inventory_number = models.CharField(
+        max_length=100,
+        default="",
+        verbose_name=_("Inventarnummer"),
+    )
+    service_provider = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Servicedienstleister"),
+    )
+    department = models.CharField(
+        max_length=30,
+        choices=Department.CHOICES,
+        default=Department.HERSTELLUNG,
+        db_index=True,
+        verbose_name=_("Zugehörigkeit"),
+    )
+    responsible = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="responsible_assets",
+        verbose_name=_("Verantwortlicher"),
+    )
+    deputy = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="deputy_assets",
+        verbose_name=_("Stellvertreter"),
     )
     status = models.CharField(
         max_length=20,
