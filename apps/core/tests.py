@@ -113,3 +113,25 @@ class SettingsViewTest(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["form"].errors)
+
+
+class SendTestEmailViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = _make_user("admin_mail", role=Role.ADMIN)
+        self.admin.email = "admin@example.com"
+        self.admin.save()
+        self.user = _make_user("user_mail", role=Role.USER)
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_admin_sends_test_email(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("core:settings-test-email"))
+        self.assertRedirects(response, reverse("core:settings"), fetch_redirect_response=False)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("admin@example.com", mail.outbox[0].to)
+
+    def test_user_gets_403(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("core:settings-test-email"))
+        self.assertEqual(response.status_code, 403)

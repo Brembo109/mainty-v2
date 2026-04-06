@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.mail import get_connection, send_mail
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Max
@@ -118,3 +119,39 @@ class SettingsView(LoginRequiredMixin, RoleRequiredMixin, View):
             messages.success(request, _("Einstellungen wurden gespeichert."))
             return redirect("core:settings")
         return render(request, self.template_name, {"form": form})
+
+
+class SendTestEmailView(LoginRequiredMixin, RoleRequiredMixin, View):
+    required_role = Role.ADMIN
+
+    def post(self, request):
+        if not request.user.email:
+            messages.error(request, _("Diesem Benutzer ist keine E-Mail-Adresse zugeordnet."))
+            return redirect("core:settings")
+
+        config = SiteConfig.get()
+        try:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+            )
+            send_mail(
+                subject=_("mainty — Test-E-Mail"),
+                message=_("Die E-Mail-Konfiguration funktioniert korrekt."),
+                from_email=config.email_from,
+                recipient_list=[request.user.email],
+                connection=connection,
+            )
+            messages.success(
+                request,
+                _("Test-E-Mail wurde gesendet an %(email)s.") % {"email": request.user.email},
+            )
+        except Exception as exc:
+            messages.error(
+                request,
+                _("Fehler beim Senden: %(error)s") % {"error": str(exc)},
+            )
+        return redirect("core:settings")
