@@ -33,4 +33,8 @@ class MarkReadView(LoginRequiredMixin, View):
 class MarkAllReadView(LoginRequiredMixin, View):
     def post(self, request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
-        return render(request, "notifications/dropdown.html", {"notifications": []})
+        remaining = (
+            Notification.objects.filter(user=request.user, is_read=False)
+            .order_by("-created_at")[:50]
+        )
+        return render(request, "notifications/dropdown.html", {"notifications": remaining})
