@@ -1,5 +1,8 @@
+import datetime
 import itertools
 from datetime import date, timedelta
+
+from django.utils import timezone
 
 from django.contrib.auth.models import AnonymousUser, Group
 from django.db import IntegrityError
@@ -43,7 +46,8 @@ def _make_asset():
 
 class NotificationModelTest(TestCase):
     def test_unique_constraint_prevents_duplicate(self):
-        from apps.notifications.models import Category, Notification
+        from apps.notifications.constants import Category
+        from apps.notifications.models import Notification
         user = _make_user("model1")
         Notification.objects.create(
             user=user, category=Category.TASK_OVERDUE, object_id=1, message="test"
@@ -54,7 +58,8 @@ class NotificationModelTest(TestCase):
             )
 
     def test_different_users_same_category_object_allowed(self):
-        from apps.notifications.models import Category, Notification
+        from apps.notifications.constants import Category
+        from apps.notifications.models import Notification
         u1 = _make_user("model2")
         u2 = _make_user("model3")
         Notification.objects.create(
@@ -121,7 +126,9 @@ class CollectorTest(TestCase):
         )
         # Force created_at 60 days ago → next_due = created_at + 30 = 30 days ago (overdue)
         MaintenancePlan.objects.filter(pk=plan.pk).update(
-            created_at=self.today - timedelta(days=60)
+            created_at=timezone.make_aware(
+                datetime.datetime.combine(self.today - timedelta(days=60), datetime.time.min)
+            )
         )
         items = collect_critical_items(self.today, 90)
         keys = [(cat, oid) for cat, oid, _ in items]

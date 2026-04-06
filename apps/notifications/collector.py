@@ -3,7 +3,9 @@ from datetime import date, timedelta
 from django.db.models import Max
 
 from apps.contracts.models import Contract
+from apps.maintenance.constants import MaintenanceStatus
 from apps.maintenance.models import MaintenancePlan
+from apps.qualification.constants import QualStatus
 from apps.qualification.models import QualificationCycle
 from apps.tasks.models import Task
 
@@ -35,13 +37,13 @@ def collect_critical_items(today: date, contract_warning_days: int) -> list:
     for p in MaintenancePlan.objects.select_related("asset").annotate(
         last_performed_at=Max("records__performed_at")
     ):
-        if p.status == "overdue":
+        if p.status == MaintenanceStatus.OVERDUE:
             items.append((
                 Category.MAINTENANCE_OVERDUE,
                 p.pk,
                 f"Wartung \u201e{p.title}\u201c ({p.asset}) ist \u00fcberf\u00e4llig",
             ))
-        elif p.status == "due_soon":
+        elif p.status == MaintenanceStatus.DUE_SOON:
             items.append((
                 Category.MAINTENANCE_DUE_SOON,
                 p.pk,
@@ -52,19 +54,19 @@ def collect_critical_items(today: date, contract_warning_days: int) -> list:
     for c in QualificationCycle.objects.select_related("asset").annotate(
         last_signed_at=Max("signatures__signed_at")
     ):
-        if c.status == "overdue":
+        if c.status == QualStatus.OVERDUE:
             items.append((
                 Category.QUALIFICATION_OVERDUE,
                 c.pk,
                 f"Qualifizierung \u201e{c.title}\u201c ({c.asset}) ist \u00fcberf\u00e4llig",
             ))
-        elif c.status == "due_soon":
+        elif c.status == QualStatus.DUE_SOON:
             items.append((
                 Category.QUALIFICATION_DUE_SOON,
                 c.pk,
                 f"Qualifizierung \u201e{c.title}\u201c ({c.asset}) ist bald f\u00e4llig",
             ))
-        elif c.status == "never_signed":
+        elif c.status == QualStatus.NEVER_SIGNED:
             items.append((
                 Category.QUALIFICATION_NEVER_SIGNED,
                 c.pk,
