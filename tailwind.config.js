@@ -9,29 +9,28 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Vercel-dark palette
         surface: {
-          DEFAULT: "#000000",
-          card: "#111111",
-          elevated: "#0a0a0a",
+          DEFAULT: "var(--color-surface)",
+          card: "var(--color-surface-card)",
+          elevated: "var(--color-surface-elevated)",
         },
         border: {
-          DEFAULT: "#222222",
-          subtle: "#1a1a1a",
-          strong: "#333333",
+          DEFAULT: "var(--color-border)",
+          subtle: "var(--color-border-subtle)",
+          strong: "var(--color-border-strong)",
         },
         content: {
-          primary: "#ffffff",
-          secondary: "#888888",
-          tertiary: "#555555",
+          primary: "var(--color-content-primary)",
+          secondary: "var(--color-content-secondary)",
+          tertiary: "var(--color-content-tertiary)",
         },
         status: {
-          success: "#00c853",
-          warning: "#ffd600",
-          danger: "#ff1744",
-          "success-bg": "rgba(0, 200, 83, 0.1)",
-          "warning-bg": "rgba(255, 214, 0, 0.1)",
-          "danger-bg": "rgba(255, 23, 68, 0.1)",
+          success: "var(--color-status-success)",
+          warning: "var(--color-status-warning)",
+          danger: "var(--color-status-danger)",
+          "success-bg": "var(--color-status-success-bg)",
+          "warning-bg": "var(--color-status-warning-bg)",
+          "danger-bg": "var(--color-status-danger-bg)",
         },
       },
       fontFamily: {

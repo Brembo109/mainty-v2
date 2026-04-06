@@ -1,3 +1,41 @@
+:root {
+  /* Light Mode */
+  --color-surface: #ffffff;
+  --color-surface-card: #f5f5f5;
+  --color-surface-elevated: #fafafa;
+  --color-border: #e5e5e5;
+  --color-border-subtle: #f0f0f0;
+  --color-border-strong: #d4d4d4;
+  --color-content-primary: #0a0a0a;
+  --color-content-secondary: #737373;
+  --color-content-tertiary: #a3a3a3;
+  --color-status-success: #00c853;
+  --color-status-warning: #ffd600;
+  --color-status-danger: #ff1744;
+  --color-status-success-bg: rgba(0, 200, 83, 0.1);
+  --color-status-warning-bg: rgba(255, 214, 0, 0.1);
+  --color-status-danger-bg: rgba(255, 23, 68, 0.1);
+}
+
+.dark {
+  /* Dark Mode — Vercel-Dark */
+  --color-surface: #000000;
+  --color-surface-card: #111111;
+  --color-surface-elevated: #0a0a0a;
+  --color-border: #222222;
+  --color-border-subtle: #1a1a1a;
+  --color-border-strong: #333333;
+  --color-content-primary: #ffffff;
+  --color-content-secondary: #888888;
+  --color-content-tertiary: #555555;
+  --color-status-success: #00c853;
+  --color-status-warning: #ffd600;
+  --color-status-danger: #ff1744;
+  --color-status-success-bg: rgba(0, 200, 83, 0.1);
+  --color-status-warning-bg: rgba(255, 214, 0, 0.1);
+  --color-status-danger-bg: rgba(255, 23, 68, 0.1);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
