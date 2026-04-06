@@ -44,7 +44,7 @@ class Asset(AuditedModel):
     department = models.CharField(
         max_length=30,
         choices=Department.CHOICES,
-        default=Department.HERSTELLUNG,
+        default=Department.HERSTELLUNG,  # migration default only; form enforces explicit choice
         db_index=True,
         verbose_name=_("Zugehörigkeit"),
     )

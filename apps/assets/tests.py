@@ -9,13 +9,18 @@ def make_user(username):
     return User.objects.create_user(username=username, password="pass")
 
 
+_asset_counter = 0
+
+
 def make_asset(**kwargs):
+    global _asset_counter
+    _asset_counter += 1
     defaults = {
         "name": "Autoklav A1",
-        "serial_number": "SN-001",
+        "serial_number": f"SN-{_asset_counter:04d}",
         "location": "Halle 3",
-        "device_code": "AKL-01",
-        "inventory_number": "INV-2024-001",
+        "device_code": f"AKL-{_asset_counter:02d}",
+        "inventory_number": f"INV-2024-{_asset_counter:03d}",
         "department": Department.HERSTELLUNG,
     }
     defaults.update(kwargs)
