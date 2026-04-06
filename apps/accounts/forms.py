@@ -1,9 +1,13 @@
+from django import forms
 from django.contrib.auth.forms import (
     AuthenticationForm,
     PasswordChangeForm,
     SetPasswordForm,
 )
 from django.utils.translation import gettext_lazy as _
+
+from .constants import Role
+from .models import User
 
 _FORM_INPUT_CLASS = "form-input"
 
@@ -49,3 +53,112 @@ class StyledSetPasswordForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _apply_form_input_class(self)
+
+
+class UserCreateForm(forms.ModelForm):
+    role = forms.ChoiceField(
+        choices=Role.CHOICES,
+        label=_("Rolle"),
+        widget=forms.Select(attrs={"class": _FORM_INPUT_CLASS}),
+    )
+    password1 = forms.CharField(
+        label=_("Passwort"),
+        widget=forms.PasswordInput(attrs={"class": _FORM_INPUT_CLASS}),
+    )
+    password2 = forms.CharField(
+        label=_("Passwort bestätigen"),
+        widget=forms.PasswordInput(attrs={"class": _FORM_INPUT_CLASS}),
+    )
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "first_name", "last_name"]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": _FORM_INPUT_CLASS}),
+            "email": forms.EmailInput(attrs={"class": _FORM_INPUT_CLASS}),
+            "first_name": forms.TextInput(attrs={"class": _FORM_INPUT_CLASS}),
+            "last_name": forms.TextInput(attrs={"class": _FORM_INPUT_CLASS}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("password1")
+        p2 = cleaned_data.get("password2")
+        if p1 and p2 and p1 != p2:
+            self.add_error("password2", _("Die Passwörter stimmen nicht überein."))
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+            user.set_role(self.cleaned_data["role"])
+        else:
+            _role = self.cleaned_data["role"]
+            _orig_save_m2m = self.save_m2m
+
+            def save_m2m():
+                _orig_save_m2m()
+                user.set_role(_role)
+
+            self.save_m2m = save_m2m
+        return user
+
+
+class UserUpdateForm(forms.ModelForm):
+    role = forms.ChoiceField(
+        choices=Role.CHOICES,
+        label=_("Rolle"),
+        widget=forms.Select(attrs={"class": _FORM_INPUT_CLASS}),
+    )
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "first_name", "last_name", "is_active"]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": _FORM_INPUT_CLASS}),
+            "email": forms.EmailInput(attrs={"class": _FORM_INPUT_CLASS}),
+            "first_name": forms.TextInput(attrs={"class": _FORM_INPUT_CLASS}),
+            "last_name": forms.TextInput(attrs={"class": _FORM_INPUT_CLASS}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["role"].initial = self.instance.role
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            user.set_role(self.cleaned_data["role"])
+        else:
+            _role = self.cleaned_data["role"]
+            _orig_save_m2m = self.save_m2m
+
+            def save_m2m():
+                _orig_save_m2m()
+                user.set_role(_role)
+
+            self.save_m2m = save_m2m
+        return user
+
+
+class AdminSetPasswordForm(forms.Form):
+    new_password1 = forms.CharField(
+        label=_("Neues Passwort"),
+        widget=forms.PasswordInput(attrs={"class": _FORM_INPUT_CLASS}),
+    )
+    new_password2 = forms.CharField(
+        label=_("Passwort bestätigen"),
+        widget=forms.PasswordInput(attrs={"class": _FORM_INPUT_CLASS}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("new_password1")
+        p2 = cleaned_data.get("new_password2")
+        if p1 and p2 and p1 != p2:
+            self.add_error("new_password2", _("Die Passwörter stimmen nicht überein."))
+        return cleaned_data
