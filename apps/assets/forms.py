@@ -55,6 +55,8 @@ class AssetForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         active_users = User.objects.filter(is_active=True).order_by("username")
+        # GMP requirement: responsible and deputy must be explicitly set.
+        # ModelChoiceField is required=True by default — do not override without change-control sign-off.
         self.fields["responsible"].queryset = active_users
         self.fields["deputy"].queryset = active_users
 

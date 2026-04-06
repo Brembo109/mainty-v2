@@ -146,3 +146,9 @@ class AssetFormValidationTest(TestCase):
     def test_service_provider_optional(self):
         form = AssetForm(data=self._valid_data(service_provider=""))
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_inactive_user_rejected_for_responsible(self):
+        inactive = User.objects.create_user(username="gone", password="pass", is_active=False)
+        form = AssetForm(data=self._valid_data(responsible=inactive.pk))
+        self.assertFalse(form.is_valid())
+        self.assertIn("responsible", form.errors)
