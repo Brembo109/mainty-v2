@@ -2,21 +2,64 @@
 {% load i18n %}
 
 {% block title %}{% trans "Benutzer löschen" %}{% endblock %}
+{% block page_title %}{% trans "Benutzer löschen" %}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'accounts:user-detail' target_user.pk %}" class="btn-ghost">
+    {% trans "Abbrechen" %}
+  </a>
+{% endblock %}
 
 {% block content %}
-<h1>{% trans "Benutzer löschen" %}: {{ target_user.username }}</h1>
-{% if has_audit_entries %}
-  <p>{% trans "Dieser Benutzer kann nicht gelöscht werden, da Audit-Einträge vorhanden sind." %}</p>
-  <form method="post" action="{% url 'accounts:user-toggle-active' target_user.pk %}">
-    {% csrf_token %}
-    <button type="submit">{% trans "Benutzer deaktivieren" %}</button>
-  </form>
-{% else %}
-  <p>{% trans "Möchten Sie diesen Benutzer wirklich löschen?" %}</p>
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit">{% trans "Löschen bestätigen" %}</button>
-  </form>
-{% endif %}
-<a href="{% url 'accounts:user-list' %}">{% trans "Abbrechen" %}</a>
+  <div class="max-w-2xl">
+    <div class="card p-6">
+
+      {% if has_audit_entries %}
+
+        <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger mb-6">
+          {% blocktrans with username=target_user.username %}
+            <strong>{{ username }}</strong> hat Audit-Einträge und kann nicht gelöscht werden.
+            GMP-konforme Alternative: Benutzer deaktivieren.
+          {% endblocktrans %}
+        </div>
+
+        <div class="flex items-center gap-3">
+          <form method="post" action="{% url 'accounts:user-toggle-active' target_user.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary">
+              {% trans "Stattdessen deaktivieren" %}
+            </button>
+          </form>
+          <a href="{% url 'accounts:user-detail' target_user.pk %}"
+             class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
+            {% trans "Abbrechen" %}
+          </a>
+        </div>
+
+      {% else %}
+
+        <p class="text-sm text-content-secondary mb-6">
+          {% blocktrans with username=target_user.username %}
+            Benutzer <strong>{{ username }}</strong> unwiderruflich löschen?
+          {% endblocktrans %}
+        </p>
+
+        <div class="flex items-center gap-3">
+          <form method="post">
+            {% csrf_token %}
+            <button type="submit"
+              class="px-3 py-1.5 text-xs border border-status-danger/30 rounded text-status-danger hover:bg-status-danger-bg transition-colors">
+              {% trans "Endgültig löschen" %}
+            </button>
+          </form>
+          <a href="{% url 'accounts:user-detail' target_user.pk %}"
+             class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
+            {% trans "Abbrechen" %}
+          </a>
+        </div>
+
+      {% endif %}
+
+    </div>
+  </div>
 {% endblock %}

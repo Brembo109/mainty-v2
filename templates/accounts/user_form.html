@@ -2,12 +2,127 @@
 {% load i18n %}
 
 {% block title %}{{ form_title }}{% endblock %}
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'accounts:user-list' %}" class="btn-ghost">
+    {% trans "Abbrechen" %}
+  </a>
+{% endblock %}
 
 {% block content %}
-<h1>{{ form_title }}</h1>
-<form method="post" novalidate>
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">{{ submit_label }}</button>
-</form>
+  <div class="max-w-2xl">
+    <div class="card p-6">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="space-y-5">
+
+          {% if form.non_field_errors %}
+            <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger">
+              {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+          {% endif %}
+
+          {# ── Benutzerdaten ───────────────────────────────────────── #}
+          <div class="pt-2">
+            <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
+              {% trans "Benutzerdaten" %}
+            </p>
+            <div class="space-y-5">
+
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.username.label }} <span class="text-status-danger">*</span>
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.username.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.first_name.label }}
+                </label>
+                {{ form.first_name }}
+              </div>
+
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.last_name.label }}
+                </label>
+                {{ form.last_name }}
+              </div>
+
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.email.label }}
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.email.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+          {# ── Zugang ──────────────────────────────────────────────── #}
+          <div class="pt-2 border-t border-border">
+            <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
+              {% trans "Zugang" %}
+            </p>
+            <div class="space-y-5">
+
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.role.label }} <span class="text-status-danger">*</span>
+                </label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.role.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {% if 'is_active' in form.fields %}
+              <div class="flex items-center gap-3">
+                {{ form.is_active }}
+                <label class="text-sm text-content-secondary">{{ form.is_active.label }}</label>
+              </div>
+              {% endif %}
+
+              {% if 'password1' in form.fields %}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.password1.label }} <span class="text-status-danger">*</span>
+                </label>
+                {{ form.password1 }}
+              </div>
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.password2.label }} <span class="text-status-danger">*</span>
+                </label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+              </div>
+              {% endif %}
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex items-center gap-3 mt-7 pt-5 border-t border-border">
+          <button type="submit" class="btn-primary">{{ submit_label }}</button>
+          <a href="{% url 'accounts:user-list' %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
+            {% trans "Abbrechen" %}
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
 {% endblock %}
