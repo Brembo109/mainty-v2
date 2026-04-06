@@ -181,11 +181,11 @@
             {{ submit_label }}
           </button>
           {% if object %}
-            <a href="{% url 'assets:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-white transition-colors">
+            <a href="{% url 'assets:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
               {% trans "Abbrechen" %}
             </a>
           {% else %}
-            <a href="{% url 'assets:list' %}" class="text-sm text-content-tertiary hover:text-white transition-colors">
+            <a href="{% url 'assets:list' %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
               {% trans "Abbrechen" %}
             </a>
           {% endif %}

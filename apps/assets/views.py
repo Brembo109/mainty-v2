@@ -21,7 +21,7 @@ class AssetListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return _apply_filters(
-            Asset.objects.select_related("responsible").all(),
+            Asset.objects.select_related("responsible", "deputy").all(),
             self._filter_form(),
         )
 

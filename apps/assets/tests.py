@@ -154,6 +154,12 @@ class AssetFormValidationTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("responsible", form.errors)
 
+    def test_inactive_user_rejected_for_deputy(self):
+        inactive = User.objects.create_user(username="gone_dep", password="pass", is_active=False)
+        form = AssetForm(data=self._valid_data(deputy=inactive.pk))
+        self.assertFalse(form.is_valid())
+        self.assertIn("deputy", form.errors)
+
 
 class AssetFilterViewTest(TestCase):
     def setUp(self):
