@@ -70,3 +70,81 @@ class TaskCreateFormAssetsFieldTest(TestCase):
             "assets": [a1.pk, a2.pk],
         })
         self.assertTrue(form.is_valid(), form.errors)
+
+
+from apps.accounts.constants import Role
+
+
+class TaskCreateViewBulkTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = _make_user(role=Role.USER)
+        self.client.force_login(self.user)
+
+    def test_create_task_no_asset(self):
+        response = self.client.post(reverse("tasks:create"), {
+            "title": "No Asset Task",
+            "priority": "medium",
+            "status": "open",
+            "assets": [],
+        })
+        self.assertEqual(Task.objects.count(), 1)
+        task = Task.objects.first()
+        self.assertIsNone(task.asset)
+        self.assertRedirects(response, reverse("tasks:detail", kwargs={"pk": task.pk}),
+                             fetch_redirect_response=False)
+
+    def test_create_task_single_asset(self):
+        asset = _make_asset()
+        response = self.client.post(reverse("tasks:create"), {
+            "title": "Single Asset Task",
+            "priority": "medium",
+            "status": "open",
+            "assets": [asset.pk],
+        })
+        self.assertEqual(Task.objects.count(), 1)
+        task = Task.objects.first()
+        self.assertEqual(task.asset, asset)
+        self.assertRedirects(response, reverse("tasks:detail", kwargs={"pk": task.pk}),
+                             fetch_redirect_response=False)
+
+    def test_create_task_multiple_assets_creates_one_per_asset(self):
+        a1 = _make_asset()
+        a2 = _make_asset()
+        a3 = _make_asset()
+        response = self.client.post(reverse("tasks:create"), {
+            "title": "Multi Asset Task",
+            "priority": "high",
+            "status": "open",
+            "assets": [a1.pk, a2.pk, a3.pk],
+        })
+        self.assertEqual(Task.objects.count(), 3)
+        asset_pks = set(Task.objects.values_list("asset_id", flat=True))
+        self.assertEqual(asset_pks, {a1.pk, a2.pk, a3.pk})
+        self.assertRedirects(response, reverse("tasks:list"),
+                             fetch_redirect_response=False)
+
+    def test_create_task_multiple_assets_all_have_same_title(self):
+        a1 = _make_asset()
+        a2 = _make_asset()
+        self.client.post(reverse("tasks:create"), {
+            "title": "Jährliche Kalibrierung",
+            "priority": "high",
+            "status": "open",
+            "assets": [a1.pk, a2.pk],
+        })
+        titles = list(Task.objects.values_list("title", flat=True))
+        self.assertEqual(titles, ["Jährliche Kalibrierung", "Jährliche Kalibrierung"])
+
+    def test_create_task_multiple_assets_success_message(self):
+        a1 = _make_asset()
+        a2 = _make_asset()
+        response = self.client.post(reverse("tasks:create"), {
+            "title": "Kalibrierung",
+            "priority": "medium",
+            "status": "open",
+            "assets": [a1.pk, a2.pk],
+        }, follow=True)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertIn("2", str(messages[0]))

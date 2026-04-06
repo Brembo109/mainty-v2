@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -68,7 +69,7 @@ class TaskCreateView(LoginRequiredMixin, WriteAccessMixin, CreateView):
         initial = super().get_initial()
         asset_pk = self.request.GET.get("asset")
         if asset_pk:
-            initial["asset"] = asset_pk
+            initial["assets"] = [asset_pk]
         return initial
 
     def get_context_data(self, **kwargs):
@@ -78,8 +79,29 @@ class TaskCreateView(LoginRequiredMixin, WriteAccessMixin, CreateView):
         return ctx
 
     def form_valid(self, form):
-        messages.success(self.request, _("Aufgabe wurde erfolgreich erstellt."))
-        return super().form_valid(form)
+        assets = list(form.cleaned_data.pop("assets"))
+        base_data = {
+            field: form.cleaned_data[field]
+            for field in form.cleaned_data
+        }
+
+        if not assets:
+            task = Task.objects.create(**base_data, asset=None)
+            self.object = task
+            messages.success(self.request, _("Aufgabe wurde erfolgreich erstellt."))
+            return redirect(self.get_success_url())
+
+        if len(assets) == 1:
+            task = Task.objects.create(**base_data, asset=assets[0])
+            self.object = task
+            messages.success(self.request, _("Aufgabe wurde erfolgreich erstellt."))
+            return redirect(self.get_success_url())
+
+        for asset in assets:
+            Task.objects.create(**base_data, asset=asset)
+        count = len(assets)
+        messages.success(self.request, _(f"{count} Aufgaben wurden erstellt."))
+        return redirect(reverse("tasks:list"))
 
 
 class TaskUpdateView(LoginRequiredMixin, WriteAccessMixin, UpdateView):
