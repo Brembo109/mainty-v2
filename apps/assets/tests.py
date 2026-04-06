@@ -87,3 +87,62 @@ class AssetResponsibilityFieldsTest(TestCase):
         asset.refresh_from_db()
         self.assertIsNone(asset.responsible)
         self.assertIsNone(asset.deputy)
+
+
+from apps.assets.forms import AssetFilterForm, AssetForm
+
+
+class AssetFormValidationTest(TestCase):
+    def setUp(self):
+        self.responsible = User.objects.create_user(username="resp", password="pass")
+        self.deputy = User.objects.create_user(username="dep", password="pass")
+
+    def _valid_data(self, **overrides):
+        data = {
+            "name": "Autoklav A1",
+            "serial_number": "SN-001",
+            "location": "Halle 3",
+            "manufacturer": "",
+            "status": "free",
+            "device_code": "AKL-01",
+            "inventory_number": "INV-001",
+            "service_provider": "",
+            "department": Department.HERSTELLUNG,
+            "responsible": self.responsible.pk,
+            "deputy": self.deputy.pk,
+        }
+        data.update(overrides)
+        return data
+
+    def test_valid_form(self):
+        form = AssetForm(data=self._valid_data())
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_device_code_required(self):
+        form = AssetForm(data=self._valid_data(device_code=""))
+        self.assertFalse(form.is_valid())
+        self.assertIn("device_code", form.errors)
+
+    def test_inventory_number_required(self):
+        form = AssetForm(data=self._valid_data(inventory_number=""))
+        self.assertFalse(form.is_valid())
+        self.assertIn("inventory_number", form.errors)
+
+    def test_department_required(self):
+        form = AssetForm(data=self._valid_data(department=""))
+        self.assertFalse(form.is_valid())
+        self.assertIn("department", form.errors)
+
+    def test_responsible_required(self):
+        form = AssetForm(data=self._valid_data(responsible=""))
+        self.assertFalse(form.is_valid())
+        self.assertIn("responsible", form.errors)
+
+    def test_deputy_required(self):
+        form = AssetForm(data=self._valid_data(deputy=""))
+        self.assertFalse(form.is_valid())
+        self.assertIn("deputy", form.errors)
+
+    def test_service_provider_optional(self):
+        form = AssetForm(data=self._valid_data(service_provider=""))
+        self.assertTrue(form.is_valid(), form.errors)
