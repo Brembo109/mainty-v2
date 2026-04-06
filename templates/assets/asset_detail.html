@@ -68,6 +68,64 @@
 
       </dl>
 
+      {# Stammdaten #}
+      <div class="pt-4 border-t border-border">
+        <h3 class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
+          {% trans "Stammdaten" %}
+        </h3>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+
+          <div>
+            <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
+              {% trans "Gerätekürzel" %}
+            </dt>
+            <dd class="text-sm text-content-primary font-mono">{{ asset.device_code }}</dd>
+          </div>
+
+          <div>
+            <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
+              {% trans "Inventarnummer" %}
+            </dt>
+            <dd class="text-sm text-content-primary font-mono">{{ asset.inventory_number }}</dd>
+          </div>
+
+          <div>
+            <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
+              {% trans "Zugehörigkeit" %}
+            </dt>
+            <dd><span class="badge badge-neutral">{{ asset.get_department_display }}</span></dd>
+          </div>
+
+          {% if asset.service_provider %}
+          <div>
+            <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
+              {% trans "Servicedienstleister" %}
+            </dt>
+            <dd class="text-sm text-content-primary">{{ asset.service_provider }}</dd>
+          </div>
+          {% endif %}
+
+          <div>
+            <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
+              {% trans "Verantwortlicher" %}
+            </dt>
+            <dd class="text-sm text-content-primary">
+              {{ asset.responsible.username|default:"—" }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
+              {% trans "Stellvertreter" %}
+            </dt>
+            <dd class="text-sm text-content-primary">
+              {{ asset.deputy.username|default:"—" }}
+            </dd>
+          </div>
+
+        </dl>
+      </div>
+
     </div>
 
     {# ── Meta card ─────────────────────────────────────────────────── #}

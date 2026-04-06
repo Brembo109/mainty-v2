@@ -10,6 +10,8 @@
         <th>{% trans "Standort" %}</th>
         <th class="hidden md:table-cell">{% trans "Hersteller" %}</th>
         <th>{% trans "Status" %}</th>
+        <th class="hidden lg:table-cell">{% trans "Zugehörigkeit" %}</th>
+        <th class="hidden lg:table-cell">{% trans "Verantwortlicher" %}</th>
         <th class="hidden lg:table-cell">{% trans "Geändert am" %}</th>
         <th class="w-20"></th>
       </tr>
@@ -24,6 +26,9 @@
              class="hover:text-white transition-colors">
             {{ asset.name }}
           </a>
+          {% if asset.device_code %}
+            <span class="text-content-tertiary text-xs ml-1">· {{ asset.device_code }}</span>
+          {% endif %}
         </td>
 
         {# Serial number #}
@@ -46,6 +51,16 @@
           <span class="{{ asset.status_badge_class }}">
             {{ asset.get_status_display }}
           </span>
+        </td>
+
+        {# Department #}
+        <td class="hidden lg:table-cell">
+          <span class="badge badge-neutral">{{ asset.get_department_display }}</span>
+        </td>
+
+        {# Responsible #}
+        <td class="text-sm text-content-secondary hidden lg:table-cell">
+          {{ asset.responsible.username|default:"—" }}
         </td>
 
         {# Updated at #}
