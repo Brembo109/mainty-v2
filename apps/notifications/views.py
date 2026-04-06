@@ -10,7 +10,7 @@ class DropdownView(LoginRequiredMixin, View):
     def get(self, request):
         notifications = (
             Notification.objects.filter(user=request.user, is_read=False)
-            .order_by("-created_at")
+            .order_by("-created_at")[:50]
         )
         return render(
             request,

@@ -214,14 +214,14 @@ class DropdownViewTest(TestCase):
         self.client.force_login(self.user)
 
     def test_returns_200(self):
-        from apps.notifications.models import Category, Notification
+        from apps.notifications.constants import Category
+        from apps.notifications.models import Notification
         response = self.client.get(reverse("notifications:dropdown"))
         self.assertEqual(response.status_code, 200)
 
     def test_only_own_unread_notifications_in_context(self):
         from apps.notifications.models import Notification
         from apps.notifications.constants import Category
-        # Create a real overdue task so the context processor keeps the notification
         task = Task.objects.create(
             title="Overdue",
             due_date=date.today() - timedelta(days=1),
@@ -232,13 +232,14 @@ class DropdownViewTest(TestCase):
         Notification.objects.create(
             user=self.user, category=Category.TASK_OVERDUE, object_id=task.pk, message="mine"
         )
-        # other user's notification won't survive context processor either, but
-        # we only care that self.user sees exactly their own unread items
+        Notification.objects.create(
+            user=other, category=Category.TASK_OVERDUE, object_id=task.pk, message="theirs"
+        )
         response = self.client.get(reverse("notifications:dropdown"))
         self.assertEqual(response.status_code, 200)
         items = list(response.context["notifications"])
-        self.assertGreaterEqual(len(items), 1)
-        self.assertTrue(all(n.user == self.user for n in items))
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0].user, self.user)
 
     def test_unauthenticated_redirects(self):
         self.client.logout()
