@@ -54,6 +54,7 @@ class SiteConfig(models.Model):
 
     class Meta:
         verbose_name = _("Site-Konfiguration")
+        verbose_name_plural = _("Site-Konfiguration")
 
     @classmethod
     def get(cls):
@@ -63,6 +64,7 @@ class SiteConfig(models.Model):
         instance, _ = cls.objects.get_or_create(
             pk=1,
             defaults={
+                "company_name": getattr(django_settings, "COMPANY_NAME", "mainty"),
                 "site_url": getattr(django_settings, "SITE_URL", "http://localhost:8000"),
                 "contract_expiry_warning_days": getattr(
                     django_settings, "CONTRACT_EXPIRY_WARNING_DAYS", 90
