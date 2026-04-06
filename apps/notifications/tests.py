@@ -1,7 +1,7 @@
 import itertools
 from datetime import date, timedelta
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import AnonymousUser, Group
 from django.db import IntegrityError
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
@@ -13,6 +13,8 @@ from apps.assets.models import Asset
 from apps.contracts.models import Contract
 from apps.maintenance.models import MaintenancePlan
 from apps.tasks.models import Task
+
+# Note: many imports above are used by test classes added in Tasks 2–4.
 
 _counter = itertools.count(1)
 
