@@ -64,3 +64,65 @@ class NotificationModelTest(TestCase):
             user=u2, category=Category.TASK_OVERDUE, object_id=1, message="u2"
         )
         self.assertEqual(Notification.objects.count(), 2)
+
+
+# ── Collector ─────────────────────────────────────────────────────────────────
+
+class CollectorTest(TestCase):
+    def setUp(self):
+        self.today = date.today()
+
+    def test_overdue_task_included(self):
+        from apps.notifications.collector import collect_critical_items
+        from apps.notifications.constants import Category
+        task = Task.objects.create(
+            title="Late Task",
+            due_date=self.today - timedelta(days=1),
+            status="open",
+            priority="medium",
+        )
+        items = collect_critical_items(self.today, 90)
+        keys = [(cat, oid) for cat, oid, _ in items]
+        self.assertIn((Category.TASK_OVERDUE, task.pk), keys)
+
+    def test_done_task_not_included(self):
+        from apps.notifications.collector import collect_critical_items
+        from apps.notifications.constants import Category
+        Task.objects.create(
+            title="Done Task",
+            due_date=self.today - timedelta(days=1),
+            status="done",
+            priority="medium",
+        )
+        items = collect_critical_items(self.today, 90)
+        keys = [(cat, oid) for cat, oid, _ in items]
+        task_overdue_ids = [oid for cat, oid in keys if cat == Category.TASK_OVERDUE]
+        self.assertEqual(task_overdue_ids, [])
+
+    def test_expired_contract_included(self):
+        from apps.notifications.collector import collect_critical_items
+        from apps.notifications.constants import Category
+        contract = Contract.objects.create(
+            title="Old Contract",
+            vendor="Vendor X",
+            start_date=self.today - timedelta(days=400),
+            end_date=self.today - timedelta(days=1),
+        )
+        items = collect_critical_items(self.today, 90)
+        keys = [(cat, oid) for cat, oid, _ in items]
+        self.assertIn((Category.CONTRACT_EXPIRED, contract.pk), keys)
+
+    def test_overdue_maintenance_included(self):
+        from apps.notifications.collector import collect_critical_items
+        from apps.notifications.constants import Category
+        asset = _make_asset()
+        plan = MaintenancePlan.objects.create(
+            asset=asset, title="Test Plan", interval_days=30, responsible="",
+        )
+        # Force created_at 60 days ago → next_due = created_at + 30 = 30 days ago (overdue)
+        MaintenancePlan.objects.filter(pk=plan.pk).update(
+            created_at=self.today - timedelta(days=60)
+        )
+        items = collect_critical_items(self.today, 90)
+        keys = [(cat, oid) for cat, oid, _ in items]
+        self.assertIn((Category.MAINTENANCE_OVERDUE, plan.pk), keys)
