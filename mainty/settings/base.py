@@ -30,6 +30,7 @@ LOCAL_APPS = [
     "apps.maintenance",
     "apps.qualification",
     "apps.tasks",
+    "apps.notifications",
 ]
 
 THIRD_PARTY_APPS = [
