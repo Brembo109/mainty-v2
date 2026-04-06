@@ -28,12 +28,10 @@ class Asset(AuditedModel):
     )
     device_code = models.CharField(
         max_length=50,
-        default="",
         verbose_name=_("Gerätekürzel"),
     )
     inventory_number = models.CharField(
         max_length=100,
-        default="",
         verbose_name=_("Inventarnummer"),
     )
     service_provider = models.CharField(
