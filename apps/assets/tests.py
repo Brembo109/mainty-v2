@@ -213,6 +213,7 @@ class AssetFilterViewTest(TestCase):
             HTTP_HX_REQUEST="true",
         )
         self.assertEqual(response.status_code, 200)
+        # asset_h and asset_q both have responsible=self.responsible (set in setUp)
         self.assertContains(response, "Anlage Herstellung")
         self.assertContains(response, "Anlage QK")
         self.assertNotContains(response, "Anlage Andere")

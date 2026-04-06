@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Max, Q
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -59,7 +59,6 @@ class AssetDetailView(LoginRequiredMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
         ctx["contracts"] = self.object.contracts.order_by("end_date")
-        from django.db.models import Max
         ctx["maintenance_plans"] = (
             self.object.maintenance_plans
             .annotate(last_performed_at=Max("records__performed_at"))
