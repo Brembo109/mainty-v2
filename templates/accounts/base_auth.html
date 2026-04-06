@@ -1,19 +1,19 @@
 {% load i18n static %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" class="h-full">
+<html lang="{{ LANGUAGE_CODE }}" class="{% if not user.is_authenticated or user.theme == 'dark' %}dark {% endif %}h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{% endblock %} — mainty</title>
   <link rel="stylesheet" href="{% static 'main.css' %}">
 </head>
-<body class="bg-black text-white min-h-full flex flex-col items-center justify-center p-4">
+<body class="bg-surface text-content-primary min-h-full flex flex-col items-center justify-center p-4">
 
   <div class="w-full max-w-sm">
 
     {# Logo #}
     <div class="text-center mb-8">
-      <span class="text-white font-semibold text-base tracking-tight">mainty</span>
+      <span class="text-content-primary font-semibold text-base tracking-tight">mainty</span>
     </div>
 
     {% block content %}{% endblock %}
@@ -31,7 +31,7 @@
           class="bg-transparent text-content-tertiary text-xs border-0 focus:outline-none cursor-pointer"
         >
           {% for code, name in lang_list %}
-            <option value="{{ code }}" {% if code == current_lang %}selected{% endif %} class="bg-black">
+            <option value="{{ code }}" {% if code == current_lang %}selected{% endif %} class="bg-surface">
               {{ name }}
             </option>
           {% endfor %}

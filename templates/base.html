@@ -32,11 +32,11 @@
         <input name="next" type="hidden" value="{{ request.get_full_path }}">
         <div class="flex rounded border border-border overflow-hidden text-xs">
           <button name="theme" value="dark" type="submit"
-            class="flex-1 py-1.5 transition-colors {% if user.theme == 'dark' %}bg-white text-black font-medium{% else %}text-content-secondary hover:text-content-primary{% endif %}">
+            class="flex-1 py-1.5 transition-colors {% if user.theme == 'dark' %}bg-content-primary text-surface font-medium{% else %}text-content-secondary hover:text-content-primary{% endif %}">
             Dark
           </button>
           <button name="theme" value="light" type="submit"
-            class="flex-1 py-1.5 transition-colors {% if user.theme == 'light' %}bg-white text-black font-medium{% else %}text-content-secondary hover:text-content-primary{% endif %}">
+            class="flex-1 py-1.5 transition-colors {% if user.theme == 'light' %}bg-content-primary text-surface font-medium{% else %}text-content-secondary hover:text-content-primary{% endif %}">
             Light
           </button>
         </div>

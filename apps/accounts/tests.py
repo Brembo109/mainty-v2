@@ -68,3 +68,7 @@ class SetThemeViewTest(TestCase):
             {"theme": "light", "next": "https://evil.com"},
         )
         self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_get_returns_405(self):
+        response = self.client.get(reverse("accounts:set_theme"))
+        self.assertEqual(response.status_code, 405)
