@@ -27,7 +27,7 @@
     {# Theme + Language #}
     <div class="px-3 py-4 border-t border-border shrink-0">
       {% if user.is_authenticated %}
-      <form action="{% url 'accounts:set_theme' %}" method="post" class="mb-2">
+      <form action="{% url 'accounts:set_theme' %}" method="post" class="mb-2" hx-boost="false">
         {% csrf_token %}
         <input name="next" type="hidden" value="{{ request.get_full_path }}">
         <div class="flex rounded border border-border overflow-hidden text-xs">
