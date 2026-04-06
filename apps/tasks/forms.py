@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from apps.assets.models import Asset
 from .models import Task
 
 _INPUT_CLASS = "form-input"
@@ -27,10 +28,17 @@ _TASK_WIDGETS = {
 
 
 class TaskCreateForm(forms.ModelForm):
+    assets = forms.ModelMultipleChoiceField(
+        queryset=Asset.objects.order_by("name"),
+        required=False,
+        label=_("Anlagen"),
+        widget=forms.CheckboxSelectMultiple(),
+    )
+
     class Meta:
         model = Task
-        fields = _TASK_FIELDS
-        widgets = _TASK_WIDGETS
+        fields = ["title", "description", "assigned_to", "due_date", "priority", "status"]
+        widgets = {k: v for k, v in _TASK_WIDGETS.items() if k != "asset"}
 
 
 class TaskUpdateForm(forms.ModelForm):
