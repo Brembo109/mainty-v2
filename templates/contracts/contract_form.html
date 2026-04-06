@@ -78,7 +78,7 @@
           </label>
           <div class="max-h-48 overflow-y-auto rounded border border-border bg-surface-card px-3 py-2 space-y-1.5">
             {% for checkbox in form.assets %}
-              <label class="flex items-center gap-2.5 text-sm text-content-secondary hover:text-white cursor-pointer py-0.5">
+              <label class="flex items-center gap-2.5 text-sm text-content-secondary hover:text-content-primary cursor-pointer py-0.5">
                 {{ checkbox.tag }}
                 <span>{{ checkbox.choice_label }}</span>
               </label>
@@ -104,9 +104,9 @@
       <div class="flex items-center gap-3 mt-7 pt-5 border-t border-border">
         <button type="submit" class="btn-primary">{{ submit_label }}</button>
         {% if object %}
-          <a href="{% url 'contracts:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-white transition-colors">{% trans "Abbrechen" %}</a>
+          <a href="{% url 'contracts:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">{% trans "Abbrechen" %}</a>
         {% else %}
-          <a href="{% url 'contracts:list' %}" class="text-sm text-content-tertiary hover:text-white transition-colors">{% trans "Abbrechen" %}</a>
+          <a href="{% url 'contracts:list' %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">{% trans "Abbrechen" %}</a>
         {% endif %}
       </div>
 

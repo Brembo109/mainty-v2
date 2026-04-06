@@ -20,13 +20,13 @@
       <tr>
 
         <td class="font-medium">
-          <a href="{% url 'qualification:detail' cycle.pk %}" class="hover:text-white transition-colors">
+          <a href="{% url 'qualification:detail' cycle.pk %}" class="hover:text-content-primary transition-colors">
             {{ cycle.title }}
           </a>
         </td>
 
         <td class="text-sm text-content-secondary">
-          <a href="{% url 'assets:detail' cycle.asset.pk %}" class="hover:text-white transition-colors">
+          <a href="{% url 'assets:detail' cycle.asset.pk %}" class="hover:text-content-primary transition-colors">
             {{ cycle.asset.name }}
           </a>
         </td>
@@ -67,7 +67,7 @@
         <td>
           {% if can_write %}
           <a href="{% url 'qualification:update' cycle.pk %}"
-             class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+             class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
             {% trans "Bearbeiten" %}
           </a>
           {% endif %}

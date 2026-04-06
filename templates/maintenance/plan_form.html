@@ -91,9 +91,9 @@
       <div class="flex items-center gap-3 mt-7 pt-5 border-t border-border">
         <button type="submit" class="btn-primary">{{ submit_label }}</button>
         {% if object %}
-          <a href="{% url 'maintenance:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-white transition-colors">{% trans "Abbrechen" %}</a>
+          <a href="{% url 'maintenance:detail' object.pk %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">{% trans "Abbrechen" %}</a>
         {% else %}
-          <a href="{% url 'maintenance:list' %}" class="text-sm text-content-tertiary hover:text-white transition-colors">{% trans "Abbrechen" %}</a>
+          <a href="{% url 'maintenance:list' %}" class="text-sm text-content-tertiary hover:text-content-primary transition-colors">{% trans "Abbrechen" %}</a>
         {% endif %}
       </div>
 

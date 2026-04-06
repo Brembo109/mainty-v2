@@ -19,7 +19,7 @@
       <tr>
 
         <td class="font-medium">
-          <a href="{% url 'tasks:detail' task.pk %}" class="hover:text-white transition-colors">
+          <a href="{% url 'tasks:detail' task.pk %}" class="hover:text-content-primary transition-colors">
             {{ task.title }}
           </a>
           {% if task.is_overdue %}
@@ -41,7 +41,7 @@
 
         <td class="hidden md:table-cell">
           {% if task.asset %}
-          <a href="{% url 'assets:detail' task.asset.pk %}" class="text-xs text-content-secondary hover:text-white transition-colors">
+          <a href="{% url 'assets:detail' task.asset.pk %}" class="text-xs text-content-secondary hover:text-content-primary transition-colors">
             {{ task.asset.name }}
           </a>
           {% else %}
@@ -57,7 +57,7 @@
         <td>
           {% if can_write %}
           <a href="{% url 'tasks:update' task.pk %}"
-             class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+             class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
             {% trans "Bearbeiten" %}
           </a>
           {% endif %}

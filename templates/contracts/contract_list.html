@@ -37,12 +37,12 @@
       {{ filter_form.status }}
     </div>
     <button type="submit"
-      class="px-3 py-1.5 text-xs border border-border rounded text-content-secondary hover:bg-surface-card hover:text-white transition-colors self-end">
+      class="px-3 py-1.5 text-xs border border-border rounded text-content-secondary hover:bg-surface-card hover:text-content-primary transition-colors self-end">
       {% trans "Filtern" %}
     </button>
     {% if request.GET %}
       <a href="{% url 'contracts:list' %}"
-         class="px-3 py-1.5 text-xs text-content-tertiary hover:text-white transition-colors self-end">
+         class="px-3 py-1.5 text-xs text-content-tertiary hover:text-content-primary transition-colors self-end">
         {% trans "Zurücksetzen" %}
       </a>
     {% endif %}

@@ -19,13 +19,13 @@
       <tr>
 
         <td class="font-medium">
-          <a href="{% url 'maintenance:detail' plan.pk %}" class="hover:text-white transition-colors">
+          <a href="{% url 'maintenance:detail' plan.pk %}" class="hover:text-content-primary transition-colors">
             {{ plan.title }}
           </a>
         </td>
 
         <td class="text-sm text-content-secondary">
-          <a href="{% url 'assets:detail' plan.asset.pk %}" class="hover:text-white transition-colors">
+          <a href="{% url 'assets:detail' plan.asset.pk %}" class="hover:text-content-primary transition-colors">
             {{ plan.asset.name }}
           </a>
         </td>
@@ -57,7 +57,7 @@
         <td>
           {% if can_write %}
           <a href="{% url 'maintenance:update' plan.pk %}"
-             class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+             class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
             {% trans "Bearbeiten" %}
           </a>
           {% endif %}

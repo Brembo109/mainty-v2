@@ -21,7 +21,7 @@
         {# Title #}
         <td class="font-medium">
           <a href="{% url 'contracts:detail' contract.pk %}"
-             class="hover:text-white transition-colors">
+             class="hover:text-content-primary transition-colors">
             {{ contract.title }}
           </a>
         </td>
@@ -66,7 +66,7 @@
         <td>
           {% if can_write %}
           <a href="{% url 'contracts:update' contract.pk %}"
-             class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+             class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
             {% trans "Bearbeiten" %}
           </a>
           {% endif %}

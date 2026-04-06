@@ -23,7 +23,7 @@
         {# Name #}
         <td class="font-medium">
           <a href="{% url 'assets:detail' asset.pk %}"
-             class="hover:text-white transition-colors">
+             class="hover:text-content-primary transition-colors">
             {{ asset.name }}
           </a>
           {% if asset.device_code %}
@@ -73,7 +73,7 @@
           <div class="flex items-center gap-2 justify-end">
             {% if can_write %}
             <a href="{% url 'assets:update' asset.pk %}"
-               class="text-xs text-content-tertiary hover:text-white transition-colors px-2 py-1 rounded hover:bg-surface-card">
+               class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
               {% trans "Bearbeiten" %}
             </a>
             {% endif %}
