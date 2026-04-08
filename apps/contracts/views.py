@@ -4,16 +4,17 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 
-from .forms import ContractFilterForm, ContractForm
-from .models import Contract
+from .forms import ContractFilterForm, ContractForm, ContractRenewalForm
+from .models import Contract, ContractRenewal
 
 _EXPIRY_WARNING_DAYS = getattr(settings, "CONTRACT_EXPIRY_WARNING_DAYS", 90)
 
@@ -63,7 +64,37 @@ class ContractDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        ctx["renewals"] = self.object.renewals.select_related("renewed_by").all()
         return ctx
+
+
+class ContractRenewView(LoginRequiredMixin, WriteAccessMixin, CreateView):
+    model = ContractRenewal
+    form_class = ContractRenewalForm
+    template_name = "contracts/contract_renew.html"
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.contract = Contract.objects.get(pk=kwargs["pk"])
+
+    def get_initial(self):
+        return {"previous_end_date": self.contract.end_date}
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["contract"] = self.contract
+        return ctx
+
+    def form_valid(self, form):
+        renewal = form.save(commit=False)
+        renewal.contract = self.contract
+        renewal.previous_end_date = self.contract.end_date
+        renewal.renewed_by = self.request.user
+        renewal.save()
+        self.contract.end_date = renewal.new_end_date
+        self.contract.save()
+        messages.success(self.request, _("Vertrag wurde erfolgreich verlängert."))
+        return redirect(reverse("contracts:detail", kwargs={"pk": self.contract.pk}))
 
 
 class ContractCreateView(LoginRequiredMixin, WriteAccessMixin, CreateView):

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Vertrag verlängern" %} — {{ contract.title }}{% endblock %}
+{% block page_title %}{% trans "Vertrag verlängern" %}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'contracts:detail' contract.pk %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="card p-6">
+
+    {# Current contract info #}
+    <div class="mb-6 rounded border border-border bg-surface-elevated px-4 py-3 space-y-1">
+      <p class="text-xs text-content-tertiary uppercase tracking-wider font-medium">{% trans "Aktueller Vertrag" %}</p>
+      <p class="text-sm text-content-primary font-medium">{{ contract.title }}</p>
+      <p class="text-xs text-content-secondary">
+        {% trans "Aktuelles Vertragsende:" %}
+        <span class="font-mono ml-1">{{ contract.end_date|date:"Y-m-d" }}</span>
+      </p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="space-y-5">
+
+        {% if form.non_field_errors %}
+          <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        {# New end date #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.new_end_date.label }} <span class="text-status-danger">*</span>
+          </label>
+          {{ form.new_end_date }}
+          {% if form.new_end_date.errors %}
+            <p class="mt-1 text-xs text-status-danger">{{ form.new_end_date.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        {# Notes #}
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.notes.label }}
+            <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+          </label>
+          {{ form.notes }}
+          {% if form.notes.errors %}
+            <p class="mt-1 text-xs text-status-danger">{{ form.notes.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <div class="flex items-center gap-3 mt-7 pt-5 border-t border-border">
+        <button type="submit" class="btn-primary">{% trans "Vertrag verlängern" %}</button>
+        <a href="{% url 'contracts:detail' contract.pk %}"
+           class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
+          {% trans "Abbrechen" %}
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -112,6 +112,11 @@
   .form-input {
     @apply w-full bg-surface-card border border-border rounded px-3 py-2 text-sm text-content-primary placeholder-content-tertiary focus:outline-none focus:border-content-tertiary transition-colors;
   }
+
+  /* Date picker icon — invert in dark mode so it's visible on dark backgrounds */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
   .form-label {
     @apply block text-xs font-medium text-content-secondary mb-1.5;
   }

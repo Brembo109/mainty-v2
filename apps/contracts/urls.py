@@ -10,4 +10,5 @@ urlpatterns = [
     path("<int:pk>/", views.ContractDetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", views.ContractUpdateView.as_view(), name="update"),
     path("<int:pk>/delete/", views.ContractDeleteView.as_view(), name="delete"),
+    path("<int:pk>/renew/", views.ContractRenewView.as_view(), name="renew"),
 ]

@@ -71,6 +71,26 @@
           </div>
         </div>
 
+        {# Contact — side by side #}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.contact_name.label }}
+              <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+            </label>
+            {{ form.contact_name }}
+            {% if form.contact_name.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.contact_name.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.contact_details.label }}
+              <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+            </label>
+            {{ form.contact_details }}
+            {% if form.contact_details.errors %}<p class="mt-1 text-xs text-status-danger">{{ form.contact_details.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
         {# Assets checkboxes #}
         <div>
           <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-2">

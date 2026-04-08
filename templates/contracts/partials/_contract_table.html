@@ -39,10 +39,12 @@
         {# End date #}
         <td class="font-mono text-xs text-content-secondary whitespace-nowrap">
           {{ contract.end_date|date:"Y-m-d" }}
-          {% if contract.days_remaining >= 0 and contract.days_remaining <= 90 %}
-            <span class="ml-1 text-status-warning">({{ contract.days_remaining }}d)</span>
-          {% elif contract.days_remaining < 0 %}
+          {% if contract.days_remaining < 0 %}
             <span class="ml-1 text-status-danger">({{ contract.days_remaining }}d)</span>
+          {% elif contract.days_remaining <= 90 %}
+            <span class="ml-1 text-status-warning">({{ contract.days_remaining }}d)</span>
+          {% elif contract.days_remaining <= 180 %}
+            <span class="ml-1 text-status-success">({{ contract.days_remaining }}d)</span>
           {% endif %}
         </td>
 
