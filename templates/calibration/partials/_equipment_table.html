@@ -10,7 +10,7 @@
         <th class="hidden lg:table-cell">{% trans "Anlage" %}</th>
         <th>{% trans "Nächste Fälligkeit" %}</th>
         <th>{% trans "Status" %}</th>
-        <th class="w-20"></th>
+        <th class="w-10"></th>
       </tr>
     </thead>
     <tbody>
@@ -46,6 +46,8 @@
                 <span class="ml-1 text-status-danger">({{ eq.days_until_due }}d)</span>
               {% elif eq.days_until_due <= 30 %}
                 <span class="ml-1 text-status-warning">({{ eq.days_until_due }}d)</span>
+              {% elif eq.days_until_due <= 90 %}
+                <span class="ml-1 text-status-success">({{ eq.days_until_due }}d)</span>
               {% endif %}
             {% endif %}
           {% else %}
@@ -60,8 +62,12 @@
         <td>
           {% if can_write %}
           <a href="{% url 'calibration:update' eq.pk %}"
-             class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
-            {% trans "Bearbeiten" %}
+             class="inline-flex items-center justify-center w-7 h-7 rounded text-content-tertiary hover:text-content-primary hover:bg-surface-card transition-colors"
+             title="{% trans 'Bearbeiten' %}">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+            </svg>
           </a>
           {% endif %}
         </td>

@@ -12,7 +12,7 @@
         <th>{% trans "Nächste Fälligkeit" %}</th>
         <th>{% trans "Status" %}</th>
         <th class="hidden lg:table-cell">{% trans "Verantwortlich" %}</th>
-        <th class="w-20"></th>
+        <th class="w-10"></th>
       </tr>
     </thead>
     <tbody>
@@ -25,7 +25,7 @@
           </a>
         </td>
 
-        <td class="text-sm text-content-secondary">
+        <td class="text-xs text-content-secondary">
           <a href="{% url 'assets:detail' cycle.asset.pk %}" class="hover:text-content-primary transition-colors">
             {{ cycle.asset.name }}
           </a>
@@ -49,9 +49,9 @@
           {{ cycle.next_due|date:"Y-m-d" }}
           {% if cycle.status != 'never_signed' %}
             {% if cycle.days_until_due < 0 %}
-              <span class="ml-1">({{ cycle.days_until_due }}d)</span>
+              <span class="ml-1 text-status-danger">({{ cycle.days_until_due }}d)</span>
             {% elif cycle.days_until_due <= 60 %}
-              <span class="ml-1">({{ cycle.days_until_due }}d)</span>
+              <span class="ml-1 text-status-warning">({{ cycle.days_until_due }}d)</span>
             {% elif cycle.days_until_due <= 120 %}
               <span class="ml-1 text-status-success">({{ cycle.days_until_due }}d)</span>
             {% endif %}
@@ -69,8 +69,12 @@
         <td>
           {% if can_write %}
           <a href="{% url 'qualification:update' cycle.pk %}"
-             class="text-xs text-content-tertiary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-card">
-            {% trans "Bearbeiten" %}
+             class="inline-flex items-center justify-center w-7 h-7 rounded text-content-tertiary hover:text-content-primary hover:bg-surface-card transition-colors"
+             title="{% trans 'Bearbeiten' %}">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+            </svg>
           </a>
           {% endif %}
         </td>
