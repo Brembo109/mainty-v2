@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Wartungsdurchführung bearbeiten" %}{% endblock %}
+{% block page_title %}{% trans "Wartungsdurchführung bearbeiten" %}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'maintenance:detail' record.plan.pk %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+  <div class="card p-6">
+    <p class="text-sm text-content-secondary mb-5">
+      {% trans "Plan" %}: <span class="font-medium text-content-primary">{{ record.plan.title }}</span>
+    </p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="space-y-4">
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.performed_at.label }} <span class="text-status-danger">*</span>
+          </label>
+          {{ form.performed_at }}
+          {% if form.performed_at.errors %}
+            <p class="text-2xs text-status-danger mt-1">{{ form.performed_at.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.performed_by.label }}
+          </label>
+          {{ form.performed_by }}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.notes.label }}
+          </label>
+          {{ form.notes }}
+        </div>
+
+      </div>
+      <div class="flex items-center gap-3 mt-6">
+        <button type="submit" class="btn-primary">{% trans "Änderungen speichern" %}</button>
+        <a href="{% url 'maintenance:detail' record.plan.pk %}"
+           class="text-sm text-content-tertiary hover:text-content-primary transition-colors">
+          {% trans "Abbrechen" %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

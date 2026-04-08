@@ -126,3 +126,53 @@ class CalibrationRecordForm(forms.ModelForm):
             self.add_error("result", _("Ergebnis ist erforderlich wenn ein Kalibrierungsdatum angegeben wird."))
 
         return cleaned_data
+
+
+class ReturnFromLabForm(forms.ModelForm):
+    """Focused form to record the result when equipment returns from an external lab."""
+
+    class Meta:
+        model = CalibrationRecord
+        fields = ["returned_at", "calibrated_at", "result", "certificate_number", "next_due_override", "notes"]
+        widgets = {
+            "returned_at": forms.DateInput(
+                attrs={"type": "date", "class": _INPUT_CLASS},
+                format="%Y-%m-%d",
+            ),
+            "calibrated_at": forms.DateInput(
+                attrs={"type": "date", "class": _INPUT_CLASS},
+                format="%Y-%m-%d",
+            ),
+            "result": forms.Select(attrs={"class": _INPUT_CLASS}),
+            "certificate_number": forms.TextInput(attrs={
+                "class": _INPUT_CLASS,
+                "placeholder": _("z.B. CAL-2024-0042"),
+            }),
+            "next_due_override": forms.DateInput(
+                attrs={"type": "date", "class": _INPUT_CLASS},
+                format="%Y-%m-%d",
+            ),
+            "notes": forms.Textarea(attrs={
+                "class": _INPUT_CLASS,
+                "rows": 2,
+                "placeholder": _("Optionale Notizen…"),
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["result"].choices = [("", "---------")] + list(CalibrationResult.CHOICES)
+        self.fields["next_due_override"].required = False
+        self.fields["certificate_number"].required = False
+        self.fields["notes"].required = False
+        self.fields["returned_at"].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        calibrated_at = cleaned_data.get("calibrated_at")
+        result = cleaned_data.get("result")
+
+        if calibrated_at and not result:
+            self.add_error("result", _("Ergebnis ist erforderlich wenn ein Kalibrierungsdatum angegeben wird."))
+
+        return cleaned_data

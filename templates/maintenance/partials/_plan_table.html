@@ -43,6 +43,8 @@
             <span class="ml-1">({{ plan.days_until_due }}d)</span>
           {% elif plan.days_until_due <= 30 %}
             <span class="ml-1">({{ plan.days_until_due }}d)</span>
+          {% elif plan.days_until_due <= 90 %}
+            <span class="ml-1 text-status-success">({{ plan.days_until_due }}d)</span>
           {% endif %}
         </td>
 

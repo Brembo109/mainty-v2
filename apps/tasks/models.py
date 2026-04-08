@@ -77,3 +77,10 @@ class Task(AuditedModel):
             and self.due_date < date.today()
             and self.status != TaskStatus.DONE
         )
+
+    @property
+    def days_remaining(self):
+        from datetime import date
+        if self.due_date is None:
+            return None
+        return (self.due_date - date.today()).days

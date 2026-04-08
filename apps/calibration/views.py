@@ -8,9 +8,9 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, View
 
 from apps.accounts.constants import Role
-from apps.accounts.mixins import WriteAccessMixin
+from apps.accounts.mixins import RoleRequiredMixin, WriteAccessMixin
 
-from .forms import CalibrationRecordForm, TestEquipmentForm
+from .forms import CalibrationRecordForm, ReturnFromLabForm, TestEquipmentForm
 from .models import CalibrationRecord, TestEquipment
 
 
@@ -55,13 +55,17 @@ class TestEquipmentDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        ctx["can_admin"] = self.request.user.has_role(Role.ADMIN)
         ctx["records"] = self.object.records.select_related(
             "performed_by"
         ).order_by("-calibrated_at", "-sent_at", "-created_at")
         ctx["record_form"] = CalibrationRecordForm(
             initial={"performed_by": self.request.user}
         )
-        ctx["open_record"] = self.object.open_record
+        open_record = self.object.open_record
+        ctx["open_record"] = open_record
+        if open_record:
+            ctx["return_form"] = ReturnFromLabForm(instance=open_record)
         return ctx
 
 
@@ -137,6 +141,85 @@ class CalibrationRecordCreateView(LoginRequiredMixin, WriteAccessMixin, View):
             ),
             "record_form": form,
             "open_record": equipment.open_record,
+        }
+        return TemplateResponse(request, "calibration/equipment_detail.html", ctx)
+
+
+class CalibrationRecordUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = CalibrationRecord
+    form_class = CalibrationRecordForm
+    template_name = "calibration/record_form.html"
+    context_object_name = "record"
+    required_role = Role.ADMIN
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            CalibrationRecord.objects.select_related("equipment"),
+            pk=self.kwargs["record_pk"],
+            equipment_id=self.kwargs["pk"],
+        )
+
+    def get_success_url(self):
+        return reverse("calibration:detail", kwargs={"pk": self.kwargs["pk"]})
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Kalibrierungseintrag wurde aktualisiert."))
+        return super().form_valid(form)
+
+
+class CalibrationRecordDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = CalibrationRecord
+    template_name = "calibration/record_confirm_delete.html"
+    context_object_name = "record"
+    required_role = Role.ADMIN
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            CalibrationRecord.objects.select_related("equipment"),
+            pk=self.kwargs["record_pk"],
+            equipment_id=self.kwargs["pk"],
+        )
+
+    def get_success_url(self):
+        return reverse("calibration:detail", kwargs={"pk": self.kwargs["pk"]})
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Kalibrierungseintrag wurde gelöscht."))
+        return super().form_valid(form)
+
+
+class CalibrationReturnFromLabView(LoginRequiredMixin, WriteAccessMixin, View):
+    """Record the result when equipment returns from an external lab.
+
+    Updates the existing open CalibrationRecord (sent_at set, calibrated_at NULL)
+    instead of creating a second record.
+    """
+
+    def post(self, request, pk):
+        equipment = get_object_or_404(
+            TestEquipment.objects.select_related("asset", "responsible"), pk=pk
+        )
+        open_record = equipment.open_record
+        if open_record is None:
+            messages.error(request, _("Kein offener Laboreinsendung gefunden."))
+            return redirect(reverse("calibration:detail", kwargs={"pk": pk}))
+
+        form = ReturnFromLabForm(request.POST, instance=open_record)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Ergebnis wurde erfolgreich erfasst."))
+            return redirect(reverse("calibration:detail", kwargs={"pk": pk}))
+
+        # Re-render detail with the bound return_form so errors are visible
+        ctx = {
+            "equipment": equipment,
+            "can_write": request.user.has_role(Role.ADMIN, Role.USER),
+            "records": equipment.records.select_related("performed_by").order_by(
+                "-calibrated_at", "-sent_at", "-created_at"
+            ),
+            "record_form": CalibrationRecordForm(initial={"performed_by": request.user}),
+            "open_record": open_record,
+            "return_form": form,
         }
         return TemplateResponse(request, "calibration/equipment_detail.html", ctx)
 

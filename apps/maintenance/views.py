@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, View
 
 from apps.accounts.constants import Role
-from apps.accounts.mixins import WriteAccessMixin
+from apps.accounts.mixins import RoleRequiredMixin, WriteAccessMixin
 
 from .forms import MaintenancePlanCreateForm, MaintenancePlanUpdateForm, MaintenanceRecordForm
 from .models import MaintenancePlan, MaintenanceRecord
@@ -59,6 +59,7 @@ class MaintenancePlanDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        ctx["can_admin"] = self.request.user.has_role(Role.ADMIN)
         ctx["records"] = self.object.records.select_related("performed_by").order_by("-performed_at")
         ctx["record_form"] = MaintenanceRecordForm(
             initial={"performed_at": date.today(), "performed_by": self.request.user}
@@ -131,6 +132,49 @@ class MaintenanceRecordCreateView(LoginRequiredMixin, WriteAccessMixin, View):
         else:
             messages.error(request, _("Fehler beim Speichern — bitte Eingaben prüfen."))
         return redirect(reverse("maintenance:detail", kwargs={"pk": pk}))
+
+
+class MaintenanceRecordUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = MaintenanceRecord
+    form_class = MaintenanceRecordForm
+    template_name = "maintenance/record_form.html"
+    context_object_name = "record"
+    required_role = Role.ADMIN
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            MaintenanceRecord.objects.select_related("plan"),
+            pk=self.kwargs["record_pk"],
+            plan_id=self.kwargs["pk"],
+        )
+
+    def get_success_url(self):
+        return reverse("maintenance:detail", kwargs={"pk": self.kwargs["pk"]})
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Wartungsdurchführung wurde aktualisiert."))
+        return super().form_valid(form)
+
+
+class MaintenanceRecordDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = MaintenanceRecord
+    template_name = "maintenance/record_confirm_delete.html"
+    context_object_name = "record"
+    required_role = Role.ADMIN
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            MaintenanceRecord.objects.select_related("plan"),
+            pk=self.kwargs["record_pk"],
+            plan_id=self.kwargs["pk"],
+        )
+
+    def get_success_url(self):
+        return reverse("maintenance:detail", kwargs={"pk": self.kwargs["pk"]})
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Wartungsdurchführung wurde gelöscht."))
+        return super().form_valid(form)
 
 
 # ---------------------------------------------------------------------------

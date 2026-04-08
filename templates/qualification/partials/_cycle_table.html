@@ -52,6 +52,8 @@
               <span class="ml-1">({{ cycle.days_until_due }}d)</span>
             {% elif cycle.days_until_due <= 60 %}
               <span class="ml-1">({{ cycle.days_until_due }}d)</span>
+            {% elif cycle.days_until_due <= 120 %}
+              <span class="ml-1 text-status-success">({{ cycle.days_until_due }}d)</span>
             {% endif %}
           {% endif %}
         </td>
