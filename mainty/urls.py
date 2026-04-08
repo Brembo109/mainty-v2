@@ -20,6 +20,7 @@ urlpatterns += i18n_patterns(
     path("qualification/", include("apps.qualification.urls")),
     path("tasks/", include("apps.tasks.urls")),
     path("notifications/", include("apps.notifications.urls")),
+    path("calibration/", include("apps.calibration.urls")),
     path("", include("apps.core.urls")),
     prefix_default_language=False,
 )

@@ -31,6 +31,7 @@ LOCAL_APPS = [
     "apps.qualification",
     "apps.tasks",
     "apps.notifications",
+    "apps.calibration",
 ]
 
 THIRD_PARTY_APPS = [

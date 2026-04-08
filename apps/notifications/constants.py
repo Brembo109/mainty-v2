@@ -10,6 +10,8 @@ class Category:
     CONTRACT_EXPIRING = "contract_expiring"
     CONTRACT_EXPIRED = "contract_expired"
     TASK_OVERDUE = "task_overdue"
+    CALIBRATION_OVERDUE = "calibration_overdue"
+    CALIBRATION_DUE_SOON = "calibration_due_soon"
 
     CHOICES = [
         (MAINTENANCE_OVERDUE, _("Wartung überfällig")),
@@ -20,4 +22,6 @@ class Category:
         (CONTRACT_EXPIRING, _("Vertrag läuft aus")),
         (CONTRACT_EXPIRED, _("Vertrag abgelaufen")),
         (TASK_OVERDUE, _("Aufgabe überfällig")),
+        (CALIBRATION_OVERDUE, _("Kalibrierung überfällig")),
+        (CALIBRATION_DUE_SOON, _("Kalibrierung bald fällig")),
     ]

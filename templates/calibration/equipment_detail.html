@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ equipment.name }}{% endblock %}
+{% block page_title %}{{ equipment.name }}{% endblock %}
+
+{% block header_actions %}
+  {% if can_write %}
+  <a href="{% url 'calibration:update' equipment.pk %}" class="btn-ghost">
+    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+    </svg>
+    {% trans "Bearbeiten" %}
+  </a>
+  <a href="{% url 'calibration:delete' equipment.pk %}"
+     class="px-3 py-1.5 text-xs border border-status-danger/30 rounded text-status-danger hover:bg-status-danger-bg transition-colors flex items-center gap-1.5">
+    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>
+    {% trans "Löschen" %}
+  </a>
+  {% endif %}
+  <a href="{% url 'calibration:list' %}" class="btn-ghost">← {% trans "Zurück" %}</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  {# ── Equipment info ────────────────────────────────────────────── #}
+  <div class="lg:col-span-2 space-y-5">
+
+    <div class="card p-6 space-y-5">
+
+      {# At-lab banner #}
+      {% if open_record %}
+      <div class="flex items-start gap-3 rounded border border-border bg-surface-elevated px-4 py-3">
+        <svg class="w-4 h-4 mt-0.5 shrink-0 text-content-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+        </svg>
+        <div>
+          <p class="text-sm font-medium text-content-primary">{% trans "Prüfmittel beim externen Labor" %}</p>
+          <p class="text-xs text-content-secondary mt-0.5">
+            {% trans "Eingesendet am" %}: <span class="font-mono">{{ open_record.sent_at|date:"Y-m-d" }}</span>
+            {% if open_record.external_lab %}
+              · {{ open_record.external_lab }}
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="flex items-start justify-between gap-4">
+        <h2 class="text-lg font-semibold text-content-primary">{{ equipment.name }}</h2>
+        <span class="{{ equipment.status_badge_class }} shrink-0">{{ equipment.status_label }}</span>
+      </div>
+
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Seriennummer" %}</dt>
+          <dd class="font-mono text-sm text-content-primary">{{ equipment.serial_number }}</dd>
+        </div>
+
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Kalibrierintervall" %}</dt>
+          <dd class="text-sm text-content-primary">{{ equipment.calibration_interval_days }} {% trans "Tage" %}</dd>
+        </div>
+
+        {% if equipment.next_due %}
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Nächste Fälligkeit" %}</dt>
+          <dd class="font-mono text-sm {% if equipment.status == 'overdue' %}text-status-danger{% elif equipment.status == 'due_soon' %}text-status-warning{% else %}text-content-primary{% endif %}">
+            {{ equipment.next_due|date:"Y-m-d" }}
+            {% if equipment.days_until_due is not None %}
+              {% if equipment.days_until_due < 0 %}
+                <span class="text-xs ml-1">({{ equipment.days_until_due }}d)</span>
+              {% else %}
+                <span class="text-xs ml-1 text-content-tertiary">({% blocktrans with d=equipment.days_until_due %}noch {{ d }} Tage{% endblocktrans %})</span>
+              {% endif %}
+            {% endif %}
+          </dd>
+        </div>
+        {% endif %}
+
+        {% if equipment.tolerance %}
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Toleranz" %}</dt>
+          <dd class="text-sm text-content-primary">{{ equipment.tolerance }}</dd>
+        </div>
+        {% endif %}
+
+        {% if equipment.manufacturer %}
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Hersteller" %}</dt>
+          <dd class="text-sm text-content-primary">{{ equipment.manufacturer }}</dd>
+        </div>
+        {% endif %}
+
+        {% if equipment.location %}
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Standort" %}</dt>
+          <dd class="text-sm text-content-primary">{{ equipment.location }}</dd>
+        </div>
+        {% endif %}
+
+        {% if equipment.asset %}
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Zugehörige Anlage" %}</dt>
+          <dd class="text-sm">
+            <a href="{% url 'assets:detail' equipment.asset.pk %}"
+               class="text-content-primary hover:underline">
+              {{ equipment.asset.name }}
+            </a>
+          </dd>
+        </div>
+        {% endif %}
+
+        {% if equipment.responsible %}
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Verantwortlicher" %}</dt>
+          <dd class="text-sm text-content-primary">{{ equipment.responsible.username }}</dd>
+        </div>
+        {% endif %}
+
+      </dl>
+    </div>
+
+    {# ── Calibration history ───────────────────────────────────────── #}
+    <div>
+      <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider mb-3">
+        {% trans "Kalibrierungsprotokoll" %}
+      </h3>
+      {% if records %}
+      <div class="overflow-x-auto rounded border border-border">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{% trans "Kalibriert am" %}</th>
+              <th>{% trans "Ergebnis" %}</th>
+              <th class="hidden md:table-cell">{% trans "Zertifikat" %}</th>
+              <th class="hidden md:table-cell">{% trans "Durchgeführt von / Labor" %}</th>
+              <th class="hidden lg:table-cell">{% trans "Eingesendet" %}</th>
+              <th class="hidden lg:table-cell">{% trans "Zurück" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in records %}
+            <tr {% if record.is_open %}class="bg-surface-elevated/50"{% endif %}>
+              <td class="font-mono text-xs whitespace-nowrap">
+                {% if record.calibrated_at %}
+                  {{ record.calibrated_at|date:"Y-m-d" }}
+                {% else %}
+                  <span class="text-content-tertiary italic">{% trans "ausstehend" %}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if record.result %}
+                  <span class="{{ record.result_badge_class }}">{{ record.result_label }}</span>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td class="font-mono text-xs text-content-tertiary hidden md:table-cell">
+                {{ record.certificate_number|default:"—" }}
+              </td>
+              <td class="text-xs text-content-secondary hidden md:table-cell">
+                {% if record.performed_by %}{{ record.performed_by.username }}
+                {% elif record.external_lab %}{{ record.external_lab }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="font-mono text-xs text-content-secondary hidden lg:table-cell">
+                {{ record.sent_at|date:"Y-m-d"|default:"—" }}
+              </td>
+              <td class="font-mono text-xs text-content-secondary hidden lg:table-cell">
+                {{ record.returned_at|date:"Y-m-d"|default:"—" }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-xs text-content-tertiary py-4">{% trans "Noch keine Kalibrierungen erfasst." %}</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {# ── Right column ──────────────────────────────────────────────── #}
+  <div class="space-y-5">
+
+    {# Record form #}
+    {% if can_write %}
+    <div class="card p-5">
+      <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider mb-4">
+        {% trans "Kalibrierung erfassen" %}
+      </h3>
+      <p class="text-2xs text-content-tertiary mb-4 leading-relaxed">
+        {% trans "Intern: Datum + Ergebnis + Durchführender. Extern: Einsenddatum + Labor; Ergebnis nach Rückkehr ergänzen." %}
+      </p>
+      <form method="post" action="{% url 'calibration:record_create' equipment.pk %}" novalidate>
+        {% csrf_token %}
+        <div class="space-y-3">
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ record_form.calibrated_at.label }}
+            </label>
+            {{ record_form.calibrated_at }}
+          </div>
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ record_form.result.label }}
+            </label>
+            {{ record_form.result }}
+          </div>
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ record_form.performed_by.label }}
+            </label>
+            {{ record_form.performed_by }}
+          </div>
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ record_form.certificate_number.label }}
+            </label>
+            {{ record_form.certificate_number }}
+          </div>
+
+          <div class="pt-2 border-t border-border">
+            <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-3">{% trans "Externe Kalibrierung" %}</p>
+
+            <div class="space-y-3">
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ record_form.external_lab.label }}
+                </label>
+                {{ record_form.external_lab }}
+              </div>
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ record_form.sent_at.label }}
+                </label>
+                {{ record_form.sent_at }}
+              </div>
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ record_form.returned_at.label }}
+                </label>
+                {{ record_form.returned_at }}
+              </div>
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ record_form.next_due_override.label }}
+                </label>
+                {{ record_form.next_due_override }}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ record_form.notes.label }}
+            </label>
+            {{ record_form.notes }}
+          </div>
+
+        </div>
+        <button type="submit" class="btn-primary mt-4 w-full justify-center">
+          {% trans "Eintrag speichern" %}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    {# Meta #}
+    <div class="card p-5 space-y-3">
+      <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider">{% trans "Metadaten" %}</h3>
+      <dl class="space-y-3">
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Erstellt am" %}</dt>
+          <dd class="font-mono text-xs text-content-secondary">{{ equipment.created_at|date:"Y-m-d H:i" }}</dd>
+        </div>
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Geändert am" %}</dt>
+          <dd class="font-mono text-xs text-content-secondary">{{ equipment.updated_at|date:"Y-m-d H:i" }}</dd>
+        </div>
+        <div>
+          <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "ID" %}</dt>
+          <dd class="font-mono text-xs text-content-tertiary">#{{ equipment.pk }}</dd>
+        </div>
+      </dl>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

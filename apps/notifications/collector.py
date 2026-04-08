@@ -2,6 +2,8 @@ from datetime import date, timedelta
 
 from django.db.models import Max
 
+from apps.calibration.constants import CalibrationStatus
+from apps.calibration.models import TestEquipment
 from apps.contracts.models import Contract
 from apps.maintenance.constants import MaintenanceStatus
 from apps.maintenance.models import MaintenancePlan
@@ -80,5 +82,20 @@ def collect_critical_items(today: date, contract_warning_days: int) -> list:
             t.pk,
             f"Aufgabe \u201e{t.title}\u201c ist \u00fcberf\u00e4llig",
         ))
+
+    # Calibration (status is a Python property — must iterate in Python)
+    for eq in TestEquipment.objects.prefetch_related("records"):
+        if eq.status == CalibrationStatus.OVERDUE:
+            items.append((
+                Category.CALIBRATION_OVERDUE,
+                eq.pk,
+                f"Prüfmittel \u201e{eq.name}\u201c ({eq.serial_number}) ist überfällig",
+            ))
+        elif eq.status == CalibrationStatus.DUE_SOON:
+            items.append((
+                Category.CALIBRATION_DUE_SOON,
+                eq.pk,
+                f"Prüfmittel \u201e{eq.name}\u201c ({eq.serial_number}) ist bald fällig",
+            ))
 
     return items
