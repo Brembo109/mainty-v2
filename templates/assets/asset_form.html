@@ -86,6 +86,17 @@
             {% endif %}
           </div>
 
+          {# Sperrgrund (nur bei Status = Gesperrt) #}
+          <div id="lock-reason-section">
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.lock_reason.label }} <span class="text-status-danger">*</span>
+            </label>
+            {{ form.lock_reason }}
+            {% if form.lock_reason.errors %}
+              <p class="mt-1 text-xs text-status-danger">{{ form.lock_reason.errors.0 }}</p>
+            {% endif %}
+          </div>
+
           {# ── Identifikation ──────────────────────────────────────── #}
           <div class="pt-2 border-t border-border">
             <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
@@ -138,6 +149,18 @@
                 {% endif %}
               </div>
 
+              {# Eigentümer #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.owner.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.owner }}
+                {% if form.owner.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.owner.errors.0 }}</p>
+                {% endif %}
+              </div>
+
             </div>
           </div>
 
@@ -173,6 +196,136 @@
             </div>
           </div>
 
+          {# ── Dokumente ───────────────────────────────────────────── #}
+          <div class="pt-2 border-t border-border">
+            <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
+              {% trans "Dokumente" %}
+            </p>
+            <div class="space-y-5">
+
+              {# Logbuch #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.log_number.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.log_number }}
+                {% if form.log_number.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.log_number.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# Bedienungsanleitung #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.manual_number.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.manual_number }}
+                {% if form.manual_number.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.manual_number.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+          {# ── Computer ────────────────────────────────────────────── #}
+          <div class="pt-2 border-t border-border">
+            <div class="flex items-center gap-2.5 mb-4">
+              {{ form.has_computer }}
+              <label for="{{ form.has_computer.id_for_label }}"
+                     class="text-2xs text-content-tertiary uppercase tracking-wider font-medium cursor-pointer">
+                {{ form.has_computer.label }}
+              </label>
+            </div>
+
+            <div id="computer-section" class="space-y-5">
+
+              {# Computername #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.computer_name.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.computer_name }}
+                {% if form.computer_name.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.computer_name.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# IP-Adresse #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.computer_ip.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.computer_ip }}
+                {% if form.computer_ip.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.computer_ip.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# Netzwerkdose #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.computer_network_port.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.computer_network_port }}
+                {% if form.computer_network_port.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.computer_network_port.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# Windows-Version #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.computer_windows_version.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.computer_windows_version }}
+                {% if form.computer_windows_version.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.computer_windows_version.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# Software-Version #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.computer_software_version.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.computer_software_version }}
+                {% if form.computer_software_version.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.computer_software_version.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# Backups #}
+              <div class="flex items-center gap-2.5">
+                {{ form.computer_backups_enabled }}
+                <label for="{{ form.computer_backups_enabled.id_for_label }}"
+                       class="text-2xs text-content-tertiary uppercase tracking-wider font-medium cursor-pointer">
+                  {{ form.computer_backups_enabled.label }}
+                </label>
+              </div>
+
+              {# Backup-Beschreibung (nur wenn Backups aktiviert) #}
+              <div id="computer-backups-description-section">
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.computer_backups_description.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.computer_backups_description }}
+                {% if form.computer_backups_description.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.computer_backups_description.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         {# Submit row #}
@@ -194,4 +347,41 @@
       </form>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // ── Sperrgrund ──────────────────────────────────────────────────
+      var statusSelect = document.getElementById('id_status');
+      var lockReasonSection = document.getElementById('lock-reason-section');
+
+      function toggleLockReason() {
+        lockReasonSection.style.display = statusSelect.value === 'locked' ? '' : 'none';
+      }
+
+      statusSelect.addEventListener('change', toggleLockReason);
+      toggleLockReason();
+
+      // ── Computer-Sektion ────────────────────────────────────────────
+      var hasComputerCheckbox = document.getElementById('id_has_computer');
+      var computerSection = document.getElementById('computer-section');
+
+      function toggleComputerSection() {
+        computerSection.style.display = hasComputerCheckbox.checked ? '' : 'none';
+      }
+
+      hasComputerCheckbox.addEventListener('change', toggleComputerSection);
+      toggleComputerSection();
+
+      // ── Backup-Beschreibung ─────────────────────────────────────────
+      var backupsCheckbox = document.getElementById('id_computer_backups_enabled');
+      var backupsDescSection = document.getElementById('computer-backups-description-section');
+
+      function toggleBackupsDescription() {
+        backupsDescSection.style.display = backupsCheckbox.checked ? '' : 'none';
+      }
+
+      backupsCheckbox.addEventListener('change', toggleBackupsDescription);
+      toggleBackupsDescription();
+    });
+  </script>
 {% endblock %}

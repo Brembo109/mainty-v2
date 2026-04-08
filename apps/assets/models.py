@@ -67,6 +67,64 @@ class Asset(AuditedModel):
         db_index=True,
         verbose_name=_("Status"),
     )
+    lock_reason = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name=_("Sperrgrund"),
+    )
+    owner = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Eigentümer"),
+    )
+    log_number = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Logbuch (LOG)"),
+    )
+    manual_number = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Bedienungsanleitung (BAL)"),
+    )
+    has_computer = models.BooleanField(
+        default=False,
+        verbose_name=_("Hat zugehörigen Computer"),
+    )
+    computer_name = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Computername"),
+    )
+    computer_ip = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_("IP-Adresse"),
+    )
+    computer_network_port = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Netzwerkdose"),
+    )
+    computer_windows_version = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Windows-Version"),
+    )
+    computer_software_version = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Software-Version"),
+    )
+    computer_backups_enabled = models.BooleanField(
+        default=False,
+        verbose_name=_("Backups eingerichtet"),
+    )
+    computer_backups_description = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name=_("Backup-Beschreibung"),
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name=_("Erstellt am"),
@@ -83,6 +141,10 @@ class Asset(AuditedModel):
 
     def __str__(self):
         return f"{self.name} ({self.serial_number})"
+
+    @property
+    def is_locked(self):
+        return self.status == AssetStatus.LOCKED
 
     @property
     def status_badge_class(self):
