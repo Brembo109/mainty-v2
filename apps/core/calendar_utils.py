@@ -79,6 +79,10 @@ def build_month_events(year: int, month: int, types: list) -> dict:
             })
 
     if "calibration" in types:
+        # TestEquipment.status and .next_due are Python properties that each issue
+        # their own DB query; prefetch_related("records") does not cover filtered
+        # sub-queries inside those properties. At GMP scale (< 500 items) this is
+        # acceptable. If N grows, replace with Exists()/Max() annotations.
         equipment_list = TestEquipment.objects.prefetch_related("records")
         for eq in equipment_list:
             if eq.status in (CalibrationStatus.AT_LAB, CalibrationStatus.NEVER):

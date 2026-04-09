@@ -50,7 +50,7 @@ function applyCalendarFilters() {
   const checked = [...document.querySelectorAll('#calendar-filters input[name="types"]:checked')]
     .map(cb => cb.value);
   const params = new URLSearchParams();
-  const month = new URLSearchParams(window.location.search).get('month');
+  const month = document.getElementById('calendar-grid')?.dataset.month;
   if (month) params.set('month', month);
   checked.forEach(t => params.append('types', t));
 

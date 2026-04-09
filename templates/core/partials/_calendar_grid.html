@@ -1,5 +1,5 @@
 {% load i18n calendar_tags %}
-<div id="calendar-grid">
+<div id="calendar-grid" data-month="{{ year }}-{{ month|stringformat:'02d' }}">
   {# Month navigation header #}
   <div class="flex items-center justify-between mb-4">
     <button
