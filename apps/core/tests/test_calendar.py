@@ -1,5 +1,6 @@
 import pytest
 from datetime import date
+from django.template.exceptions import TemplateDoesNotExist
 from apps.core.calendar_utils import build_month_events, ALL_TYPES
 
 
@@ -77,3 +78,53 @@ def test_build_month_events_calibration_skips_at_lab_and_never(db):
     result = build_month_events(2026, 4, ["calibration"])
     all_labels = [e["label"] for events in result.values() for e in events]
     assert "Waage" not in all_labels
+
+
+@pytest.mark.django_db
+def test_calendar_view_get_full_page(client):
+    """View is reachable and calls the correct template (template created in Task 4)."""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user = User.objects.create_user(
+        username="testuser", password="testpass123"
+    )
+    client.force_login(user)
+    # Templates don't exist until Task 4 — verify view logic is reached, not a 404
+    with pytest.raises(TemplateDoesNotExist, match="core/calendar.html"):
+        client.get("/calendar/")
+
+
+@pytest.mark.django_db
+def test_calendar_view_htmx_returns_partial(client):
+    """HTMX request routes to the partial template (template created in Task 4)."""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user = User.objects.create_user(
+        username="testuser2", password="testpass123"
+    )
+    client.force_login(user)
+    with pytest.raises(TemplateDoesNotExist, match="core/partials/_calendar_grid.html"):
+        client.get(
+            "/calendar/?month=2026-05",
+            HTTP_HX_REQUEST="true",
+        )
+
+
+@pytest.mark.django_db
+def test_calendar_day_view_returns_partial(client):
+    """Day view routes to the day partial template (template created in Task 4)."""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user = User.objects.create_user(
+        username="testuser3", password="testpass123"
+    )
+    client.force_login(user)
+    with pytest.raises(TemplateDoesNotExist, match="core/partials/_calendar_day.html"):
+        client.get("/calendar/day/?date=2026-04-15")
+
+
+@pytest.mark.django_db
+def test_calendar_view_redirects_unauthenticated(client):
+    response = client.get("/calendar/")
+    assert response.status_code == 302
+    assert "/accounts/login/" in response["Location"]

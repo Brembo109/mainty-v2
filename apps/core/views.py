@@ -152,3 +152,89 @@ class SendTestEmailView(LoginRequiredMixin, RoleRequiredMixin, View):
                 _("Fehler beim Senden: %(error)s") % {"error": str(exc)},
             )
         return redirect("core:settings")
+
+
+import calendar as _calendar
+from apps.core.calendar_utils import build_month_events, build_day_events, ALL_TYPES
+
+
+def _parse_month(month_str):
+    """Parse 'YYYY-MM' string; fall back to today's month."""
+    if month_str:
+        try:
+            year, month = month_str.split("-")
+            return int(year), int(month)
+        except (ValueError, AttributeError):
+            pass
+    today = date.today()
+    return today.year, today.month
+
+
+class CalendarView(LoginRequiredMixin, View):
+    def get(self, request):
+        year, month = _parse_month(request.GET.get("month"))
+        types = request.GET.getlist("types") or ALL_TYPES
+
+        first_day = date(year, month, 1)
+        cal = _calendar.Calendar(firstweekday=0)  # Monday first
+        weeks = cal.monthdatescalendar(year, month)
+        events_by_date = build_month_events(year, month, types)
+
+        # Build dots dict: {date: {type: dot_color}} — unique type per day
+        dots_by_date = {}
+        for d, evts in events_by_date.items():
+            seen = {}
+            for e in evts:
+                if e["type"] not in seen:
+                    seen[e["type"]] = e["dot_color"]
+            dots_by_date[d] = seen
+
+        today = date.today()
+        # Prev/next month strings for HTMX nav links
+        if month == 1:
+            prev_month = f"{year - 1}-12"
+        else:
+            prev_month = f"{year}-{month - 1:02d}"
+        if month == 12:
+            next_month = f"{year + 1}-01"
+        else:
+            next_month = f"{year}-{month + 1:02d}"
+
+        ctx = {
+            "year": year,
+            "month": month,
+            "first_day": first_day,
+            "weeks": weeks,
+            "events_by_date": events_by_date,
+            "dots_by_date": dots_by_date,
+            "today": today,
+            "selected_types": types,
+            "all_types": ALL_TYPES,
+            "prev_month": prev_month,
+            "next_month": next_month,
+            "weekday_names": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+        }
+
+        if request.headers.get("HX-Request"):
+            return render(request, "core/partials/_calendar_grid.html", ctx)
+        return render(request, "core/calendar.html", ctx)
+
+
+class CalendarDayView(LoginRequiredMixin, View):
+    def get(self, request):
+        date_str = request.GET.get("date", "")
+        types = request.GET.getlist("types") or ALL_TYPES
+        selected_date = None
+        day_events = []
+
+        if date_str:
+            try:
+                selected_date = date.fromisoformat(date_str)
+                day_events = build_day_events(selected_date, types)
+            except ValueError:
+                pass
+
+        return render(request, "core/partials/_calendar_day.html", {
+            "selected_date": selected_date,
+            "day_events": day_events,
+        })
