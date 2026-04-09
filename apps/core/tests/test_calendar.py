@@ -67,7 +67,7 @@ def test_build_month_events_done_tasks_excluded():
 
 @pytest.mark.django_db
 def test_build_month_events_calibration_skips_at_lab_and_never(db):
-    from apps.calibration.models import TestEquipment, CalibrationRecord
+    from apps.calibration.models import TestEquipment
     # Equipment with no records → status NEVER → excluded
     eq = TestEquipment.objects.create(
         name="Waage",

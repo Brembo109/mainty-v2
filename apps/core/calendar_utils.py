@@ -1,6 +1,6 @@
 import calendar
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 
 from django.urls import reverse
 from django.db.models import Max
@@ -110,6 +110,9 @@ def build_month_events(year: int, month: int, types: list) -> dict:
 
 def build_day_events(target_date: date, types: list) -> list:
     """Returns list of event_dicts for a single date."""
+    # Delegates to build_month_events (full month query) — acceptable for
+    # calendar sizes typical in GMP (< 500 records/month). For high-frequency
+    # polling, consider per-date DB filters instead.
     return build_month_events(target_date.year, target_date.month, types).get(
         target_date, []
     )
