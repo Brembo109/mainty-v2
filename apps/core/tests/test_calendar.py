@@ -1,6 +1,7 @@
 import pytest
 from datetime import date
 from django.template.exceptions import TemplateDoesNotExist
+from django.urls import reverse
 from apps.core.calendar_utils import build_month_events, ALL_TYPES
 
 
@@ -91,7 +92,7 @@ def test_calendar_view_get_full_page(client):
     client.force_login(user)
     # Templates don't exist until Task 4 — verify view logic is reached, not a 404
     with pytest.raises(TemplateDoesNotExist, match="core/calendar.html"):
-        client.get("/calendar/")
+        client.get(reverse("core:calendar"))
 
 
 @pytest.mark.django_db
@@ -105,7 +106,7 @@ def test_calendar_view_htmx_returns_partial(client):
     client.force_login(user)
     with pytest.raises(TemplateDoesNotExist, match="core/partials/_calendar_grid.html"):
         client.get(
-            "/calendar/?month=2026-05",
+            reverse("core:calendar") + "?month=2026-05",
             HTTP_HX_REQUEST="true",
         )
 
@@ -120,11 +121,11 @@ def test_calendar_day_view_returns_partial(client):
     )
     client.force_login(user)
     with pytest.raises(TemplateDoesNotExist, match="core/partials/_calendar_day.html"):
-        client.get("/calendar/day/?date=2026-04-15")
+        client.get(reverse("core:calendar-day") + "?date=2026-04-15")
 
 
 @pytest.mark.django_db
 def test_calendar_view_redirects_unauthenticated(client):
-    response = client.get("/calendar/")
+    response = client.get(reverse("core:calendar"))
     assert response.status_code == 302
     assert "/accounts/login/" in response["Location"]
