@@ -45,7 +45,7 @@
         <button
           hx-get="{% url 'core:calendar-day' %}?date={{ day|date:'Y-m-d' }}{% for t in selected_types %}&types={{ t }}{% endfor %}"
           hx-target="#calendar-day"
-          hx-swap="innerHTML"
+          hx-swap="outerHTML"
           class="aspect-square flex flex-col items-center justify-start pt-1 rounded text-xs transition-colors hover:bg-surface-elevated cursor-pointer
             {% if day == today %}bg-content-primary text-surface font-bold{% elif day.month == month %}text-content-primary{% else %}text-content-tertiary{% endif %}">
           <span>{{ day.day }}</span>
