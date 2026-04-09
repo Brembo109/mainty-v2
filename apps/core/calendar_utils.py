@@ -43,7 +43,7 @@ def build_month_events(year: int, month: int, types: list) -> dict:
         )
         for plan in plans:
             nd = plan.next_due
-            if first_day <= nd <= last_day:
+            if nd is not None and first_day <= nd <= last_day:
                 events[nd].append({
                     "type": "maintenance",
                     "label": str(plan),
@@ -57,7 +57,7 @@ def build_month_events(year: int, month: int, types: list) -> dict:
         )
         for cycle in cycles:
             nd = cycle.next_due
-            if first_day <= nd <= last_day:
+            if nd is not None and first_day <= nd <= last_day:
                 events[nd].append({
                     "type": "qualification",
                     "label": str(cycle),

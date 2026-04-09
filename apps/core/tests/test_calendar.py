@@ -16,6 +16,7 @@ def test_build_month_events_returns_dict():
             assert "label" in event
             assert "url" in event
             assert "dot_color" in event
+            assert "text_color" in event
 
 
 @pytest.mark.django_db
