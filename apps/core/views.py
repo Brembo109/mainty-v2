@@ -1,3 +1,4 @@
+import calendar as _calendar
 from datetime import date, timedelta
 
 from django.contrib import messages
@@ -13,6 +14,7 @@ from django.views import View
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin
 from apps.assets.models import Asset
+from apps.core.calendar_utils import build_month_events, build_day_events, ALL_TYPES
 from apps.core.forms import SiteConfigForm
 from apps.core.models import SiteConfig
 from apps.contracts.models import Contract
@@ -154,16 +156,14 @@ class SendTestEmailView(LoginRequiredMixin, RoleRequiredMixin, View):
         return redirect("core:settings")
 
 
-import calendar as _calendar
-from apps.core.calendar_utils import build_month_events, build_day_events, ALL_TYPES
-
-
 def _parse_month(month_str):
     """Parse 'YYYY-MM' string; fall back to today's month."""
     if month_str:
         try:
             year, month = month_str.split("-")
-            return int(year), int(month)
+            year, month = int(year), int(month)
+            date(year, month, 1)  # validate range
+            return year, month
         except (ValueError, AttributeError):
             pass
     today = date.today()
