@@ -213,6 +213,13 @@ class CalendarView(LoginRequiredMixin, View):
             "prev_month": prev_month,
             "next_month": next_month,
             "weekday_names": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+            "filter_types": [
+                ("maintenance", "Wartung", "bg-status-danger"),
+                ("qualification", "Qualifizierung", "bg-status-warning"),
+                ("task", "Aufgaben", "bg-status-success"),
+                ("calibration", "Kalibrierung", "bg-blue-400"),
+                ("contract", "Verträge", "bg-purple-400"),
+            ],
         }
 
         if request.headers.get("HX-Request"):

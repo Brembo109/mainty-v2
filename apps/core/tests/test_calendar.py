@@ -1,6 +1,5 @@
 import pytest
 from datetime import date
-from django.template.exceptions import TemplateDoesNotExist
 from django.urls import reverse
 from apps.core.calendar_utils import build_month_events, ALL_TYPES
 
@@ -83,45 +82,45 @@ def test_build_month_events_calibration_skips_at_lab_and_never(db):
 
 @pytest.mark.django_db
 def test_calendar_view_get_full_page(client):
-    """View is reachable and calls the correct template (template created in Task 4)."""
     from django.contrib.auth import get_user_model
+    from django.urls import reverse
     User = get_user_model()
-    user = User.objects.create_user(
-        username="testuser", password="testpass123"
-    )
+    user = User.objects.create_user(username="testuser", password="testpass123")
     client.force_login(user)
-    # Templates don't exist until Task 4 — verify view logic is reached, not a 404
-    with pytest.raises(TemplateDoesNotExist, match="core/calendar.html"):
-        client.get(reverse("core:calendar"))
+    response = client.get(reverse("core:calendar"))
+    assert response.status_code == 200
+    assert response.context["year"] == date.today().year
+    assert response.context["month"] == date.today().month
+    assert "weeks" in response.context
+    assert "dots_by_date" in response.context
 
 
 @pytest.mark.django_db
 def test_calendar_view_htmx_returns_partial(client):
-    """HTMX request routes to the partial template (template created in Task 4)."""
     from django.contrib.auth import get_user_model
+    from django.urls import reverse
     User = get_user_model()
-    user = User.objects.create_user(
-        username="testuser2", password="testpass123"
-    )
+    user = User.objects.create_user(username="testuser2", password="testpass123")
     client.force_login(user)
-    with pytest.raises(TemplateDoesNotExist, match="core/partials/_calendar_grid.html"):
-        client.get(
-            reverse("core:calendar") + "?month=2026-05",
-            HTTP_HX_REQUEST="true",
-        )
+    response = client.get(
+        reverse("core:calendar") + "?month=2026-05",
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    assert b"calendar-grid" in response.content
+    assert b"<!DOCTYPE" not in response.content
 
 
 @pytest.mark.django_db
 def test_calendar_day_view_returns_partial(client):
-    """Day view routes to the day partial template (template created in Task 4)."""
     from django.contrib.auth import get_user_model
+    from django.urls import reverse
     User = get_user_model()
-    user = User.objects.create_user(
-        username="testuser3", password="testpass123"
-    )
+    user = User.objects.create_user(username="testuser3", password="testpass123")
     client.force_login(user)
-    with pytest.raises(TemplateDoesNotExist, match="core/partials/_calendar_day.html"):
-        client.get(reverse("core:calendar-day") + "?date=2026-04-15")
+    response = client.get(reverse("core:calendar-day") + "?date=2026-04-15")
+    assert response.status_code == 200
+    assert b"calendar-day" in response.content
 
 
 @pytest.mark.django_db

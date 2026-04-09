@@ -1,0 +1,79 @@
+{% load i18n calendar_tags %}
+<div id="calendar-grid">
+  {# Month navigation header #}
+  <div class="flex items-center justify-between mb-4">
+    <button
+      hx-get="{% url 'core:calendar' %}?month={{ prev_month }}{% for t in selected_types %}&types={{ t }}{% endfor %}"
+      hx-target="#calendar-grid"
+      hx-swap="outerHTML"
+      class="p-1.5 rounded hover:bg-surface-elevated text-content-secondary hover:text-content-primary transition-colors"
+      title="{% trans "Vorheriger Monat" %}">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+      </svg>
+    </button>
+
+    <span class="text-sm font-semibold text-content-primary">
+      {{ first_day|date:"F Y" }}
+    </span>
+
+    <button
+      hx-get="{% url 'core:calendar' %}?month={{ next_month }}{% for t in selected_types %}&types={{ t }}{% endfor %}"
+      hx-target="#calendar-grid"
+      hx-swap="outerHTML"
+      class="p-1.5 rounded hover:bg-surface-elevated text-content-secondary hover:text-content-primary transition-colors"
+      title="{% trans "Nächster Monat" %}">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+      </svg>
+    </button>
+  </div>
+
+  {# Weekday headers #}
+  <div class="grid grid-cols-7 mb-1">
+    {% for name in weekday_names %}
+    <div class="text-center text-2xs font-medium text-content-tertiary py-1">{{ name }}</div>
+    {% endfor %}
+  </div>
+
+  {# Calendar grid #}
+  <div class="grid grid-cols-7 gap-px">
+    {% for week in weeks %}
+      {% for day in week %}
+        {% with day_dots=dots_by_date|get_item:day %}
+        {% if day_dots %}
+        <button
+          hx-get="{% url 'core:calendar-day' %}?date={{ day|date:'Y-m-d' }}{% for t in selected_types %}&types={{ t }}{% endfor %}"
+          hx-target="#calendar-day"
+          hx-swap="innerHTML"
+          class="aspect-square flex flex-col items-center justify-start pt-1 rounded text-xs transition-colors hover:bg-surface-elevated cursor-pointer
+            {% if day == today %}bg-content-primary text-surface font-bold{% elif day.month == month %}text-content-primary{% else %}text-content-tertiary{% endif %}">
+          <span>{{ day.day }}</span>
+          <div class="flex gap-0.5 mt-0.5 flex-wrap justify-center">
+            {% for type, color in day_dots.items %}
+            <span class="w-1 h-1 rounded-full {{ color }} {% if day == today %}opacity-60{% endif %}"></span>
+            {% endfor %}
+          </div>
+        </button>
+        {% else %}
+        <div class="aspect-square flex items-center justify-center rounded text-xs
+            {% if day == today %}bg-content-primary text-surface font-bold{% elif day.month == month %}text-content-primary{% else %}text-content-tertiary{% endif %}">
+          {{ day.day }}
+        </div>
+        {% endif %}
+        {% endwith %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  {# Heute button #}
+  <div class="mt-3">
+    <button
+      hx-get="{% url 'core:calendar' %}?month={{ today|date:'Y-m' }}{% for t in selected_types %}&types={{ t }}{% endfor %}"
+      hx-target="#calendar-grid"
+      hx-swap="outerHTML"
+      class="text-xs text-content-secondary hover:text-content-primary transition-colors px-2 py-1 rounded hover:bg-surface-elevated">
+      {% trans "Heute" %}
+    </button>
+  </div>
+</div>
