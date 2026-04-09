@@ -2,16 +2,12 @@
 {% load i18n %}
 
 {% block title %}{% trans "Kalender" %}{% endblock %}
+{% block page_title %}{% trans "Kalender" %}{% endblock %}
 
 {% block content %}
-<div class="p-6 max-w-5xl mx-auto">
 
-  {# Page header + filter bar #}
-  <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-    <h1 class="text-lg font-semibold text-content-primary">{% trans "Kalender" %}</h1>
-
-    {# Type filter toggles #}
-    <div class="flex flex-wrap gap-2 sm:ml-auto" id="calendar-filters">
+  {# Filter bar #}
+  <div class="flex flex-wrap gap-2 mb-5" id="calendar-filters">
       {% for type_key, type_label, type_dot_class in filter_types %}
       <label class="flex items-center gap-1.5 cursor-pointer select-none">
         <input type="checkbox"
@@ -32,18 +28,17 @@
   </div>
 
   {# Two-column layout: grid + day detail #}
-  <div class="flex flex-col lg:flex-row gap-6">
+  <div class="flex gap-6">
     {# Calendar grid — left column #}
-    <div class="lg:w-80 shrink-0 bg-surface-elevated rounded-lg border border-border p-4">
+    <div class="w-72 shrink-0 bg-surface-elevated rounded-lg border border-border p-4">
       {% include "core/partials/_calendar_grid.html" %}
     </div>
 
     {# Day detail — right column #}
-    <div class="flex-1 bg-surface-elevated rounded-lg border border-border p-4 min-h-48">
+    <div class="flex-1 bg-surface-elevated rounded-lg border border-border p-4">
       {% include "core/partials/_calendar_day.html" %}
     </div>
   </div>
-</div>
 
 <script>
 function applyCalendarFilters() {
