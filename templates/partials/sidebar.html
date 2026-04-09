@@ -35,8 +35,9 @@
     <span>{% trans "Dashboard" %}</span>
   </a>
 
-  {# Calendar #}
+  {# Calendar — hx-boost="false" to ensure full page load (page has inline script) #}
   <a href="{% url 'core:calendar' %}"
+     hx-boost="false"
      class="nav-item {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'calendar' %}active{% endif %}">
     <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
       <path stroke-linecap="round" stroke-linejoin="round"
