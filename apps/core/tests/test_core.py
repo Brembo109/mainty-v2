@@ -11,6 +11,7 @@ from django.urls import reverse
 from apps.accounts.constants import Role
 from apps.accounts.models import User
 from apps.contracts.models import Contract
+from apps.core.backends import SiteConfigEmailBackend
 from apps.core.models import SiteConfig
 
 
@@ -197,7 +198,6 @@ class SiteConfigEmailBackendTest(TestCase):
             email_host_password="secret",
             email_use_tls=False,
         )
-        from apps.core.backends import SiteConfigEmailBackend
         backend = SiteConfigEmailBackend()
         self.assertEqual(backend.host, "smtp.example.com")
         self.assertEqual(backend.port, 465)
@@ -207,7 +207,6 @@ class SiteConfigEmailBackendTest(TestCase):
 
     def test_explicit_kwargs_override_siteconfig(self):
         SiteConfig.objects.create(pk=1, email_host="smtp.example.com", email_port=587)
-        from apps.core.backends import SiteConfigEmailBackend
         backend = SiteConfigEmailBackend(host="other.host.com")
         self.assertEqual(backend.host, "other.host.com")  # explicit wins
         self.assertEqual(backend.port, 587)               # siteconfig fallback

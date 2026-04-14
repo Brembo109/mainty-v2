@@ -18,4 +18,8 @@ class SiteConfigEmailBackend(SmtpEmailBackend):
         kwargs.setdefault("username", cfg.email_host_user)
         kwargs.setdefault("password", cfg.email_host_password)
         kwargs.setdefault("use_tls", cfg.email_use_tls)
+        # use_ssl is intentionally omitted — SiteConfig does not expose it.
+        # If SiteConfig gains an email_use_ssl field in future, add:
+        #   kwargs.setdefault("use_ssl", cfg.email_use_ssl)
+        # Any caller can still pass use_ssl=True explicitly via **kwargs.
         super().__init__(**kwargs)
