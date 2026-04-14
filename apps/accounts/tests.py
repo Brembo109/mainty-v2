@@ -1,9 +1,11 @@
 from django.contrib.auth.models import Group
-from django.test import TestCase, Client
+from django.core import mail
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 
 from apps.accounts.constants import Role
 from apps.accounts.models import User
+from apps.core.models import SiteConfig
 
 
 class UserThemeDefaultTest(TestCase):
@@ -347,12 +349,6 @@ class UserDeleteViewTest(TestCase):
         AuditLog.objects.create(actor=target, actor_username="audited2", action="CREATE")
         response = self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
         self.assertContains(response, "toggle-active", status_code=409)
-
-
-from django.core import mail
-from django.test import override_settings
-
-from apps.core.models import SiteConfig
 
 
 class PasswordResetFromEmailTest(TestCase):
