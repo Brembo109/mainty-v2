@@ -23,8 +23,10 @@ BACKUP_DIR="${BACKUP_DIR:-/backup}"
 BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-30}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_FILE="$BACKUP_DIR/mainty-$TIMESTAMP.sql.gz"
+trap 'rm -f "$BACKUP_FILE"' ERR
 
 # ── Validate required vars ──────────────────────────────────────────────────
+[[ -n "$BACKUP_DIR" ]] || { echo "BACKUP_DIR must not be empty" >&2; exit 1; }
 : "${POSTGRES_USER:?POSTGRES_USER is not set}"
 : "${POSTGRES_DB:?POSTGRES_DB is not set}"
 : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set}"
