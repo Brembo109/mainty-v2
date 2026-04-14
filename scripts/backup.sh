@@ -19,7 +19,7 @@ fi
 
 # ── Config (overridable via env) ────────────────────────────────────────────
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-BACKUP_DIR="${BACKUP_DIR:-/backup}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/mainty}"
 BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-30}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_FILE="$BACKUP_DIR/mainty-$TIMESTAMP.sql.gz"
