@@ -189,9 +189,10 @@
                   </a>
                 </td>
                 <td class="text-xs text-content-secondary">{{ plan.asset.name }}</td>
-                <td class="font-mono text-xs
+                <td class="font-mono text-xs whitespace-nowrap
                   {% if plan.status == 'overdue' %}text-status-danger{% else %}text-status-warning{% endif %}">
                   {{ plan.next_due|date:"Y-m-d" }}
+                  <span class="ml-1">({{ plan.days_until_due }}d)</span>
                 </td>
                 <td><span class="{{ plan.status_badge_class }}">{{ plan.status_label }}</span></td>
               </tr>
@@ -224,6 +225,7 @@
                 <th>{% trans "Typ" %}</th>
                 <th>{% trans "Bezeichnung" %}</th>
                 <th>{% trans "Anlage" %}</th>
+                <th>{% trans "Fällig" %}</th>
                 <th>{% trans "Status" %}</th>
               </tr>
             </thead>
@@ -241,6 +243,13 @@
                   </a>
                 </td>
                 <td class="text-xs text-content-secondary">{{ cycle.asset.name }}</td>
+                <td class="font-mono text-xs whitespace-nowrap
+                  {% if cycle.status == 'overdue' %}text-status-danger{% else %}text-status-warning{% endif %}">
+                  {{ cycle.next_due|date:"Y-m-d" }}
+                  {% if cycle.status != 'never_signed' %}
+                    <span class="ml-1">({{ cycle.days_until_due }}d)</span>
+                  {% endif %}
+                </td>
                 <td><span class="{{ cycle.status_badge_class }}">{{ cycle.status_label }}</span></td>
               </tr>
               {% endfor %}
@@ -283,7 +292,12 @@
               <p class="text-xs text-content-tertiary mt-0.5">
                 <span class="{{ task.status_badge_class }} text-2xs">{{ task.status_label }}</span>
                 {% if task.due_date %}
-                  · <span class="font-mono {% if task.is_overdue %}text-status-danger{% endif %}">{{ task.due_date|date:"Y-m-d" }}</span>
+                  · <span class="font-mono {% if task.is_overdue %}text-status-danger{% elif task.days_remaining <= 7 %}text-status-warning{% endif %}">
+                    {{ task.due_date|date:"Y-m-d" }}
+                    {% if task.status != 'done' %}
+                      <span class="ml-0.5">({{ task.days_remaining }}d)</span>
+                    {% endif %}
+                  </span>
                 {% endif %}
               </p>
             </a>
