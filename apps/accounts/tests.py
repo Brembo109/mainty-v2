@@ -347,3 +347,26 @@ class UserDeleteViewTest(TestCase):
         AuditLog.objects.create(actor=target, actor_username="audited2", action="CREATE")
         response = self.client.post(reverse("accounts:user-delete", kwargs={"pk": target.pk}))
         self.assertContains(response, "toggle-active", status_code=409)
+
+
+from django.core import mail
+from django.test import override_settings
+
+from apps.core.models import SiteConfig
+
+
+class PasswordResetFromEmailTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_password_reset_uses_siteconfig_from_email(self):
+        SiteConfig.objects.create(pk=1, email_from="noreply@mycompany.com")
+        User.objects.create_user(
+            username="resetuser", email="resetuser@test.com", password="pass123"
+        )
+        self.client.post(
+            reverse("accounts:password_reset"), {"email": "resetuser@test.com"}
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].from_email, "noreply@mycompany.com")

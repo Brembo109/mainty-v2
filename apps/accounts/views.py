@@ -51,6 +51,11 @@ class PasswordResetView(auth_views.PasswordResetView):
     subject_template_name = "accounts/emails/password_reset_subject.txt"
     success_url = reverse_lazy("accounts:password_reset_done")
 
+    @property
+    def from_email(self):
+        from apps.core.models import SiteConfig
+        return SiteConfig.get().email_from
+
 
 class PasswordResetDoneView(auth_views.PasswordResetDoneView):
     template_name = "accounts/password_reset_done.html"
