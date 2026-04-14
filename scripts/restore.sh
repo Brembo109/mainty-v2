@@ -30,6 +30,19 @@ COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 
 cd "$PROJECT_DIR"
 
+_on_error() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] RESTORE FAILED — attempting to restart web container..." >&2
+    docker compose -f "$COMPOSE_FILE" start web || true
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Database may be empty. Verify before serving traffic." >&2
+}
+trap _on_error ERR
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: This will DESTROY all data in $POSTGRES_DB and replace it with:"
+echo "  Backup file: $BACKUP_FILE"
+echo "  Compose:     $COMPOSE_FILE"
+echo "  Press Ctrl-C within 5 seconds to abort."
+sleep 5
+
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restoring from: $BACKUP_FILE"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stopping web container..."
@@ -45,7 +58,8 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restoring dump..."
 gunzip -c "$BACKUP_FILE" \
     | docker compose -f "$COMPOSE_FILE" exec -T \
         -e PGPASSWORD="$POSTGRES_PASSWORD" \
-        db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+        db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+        -v ON_ERROR_STOP=1
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restarting web container..."
 docker compose -f "$COMPOSE_FILE" start web
