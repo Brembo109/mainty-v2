@@ -43,6 +43,9 @@ echo "  Compose:     $COMPOSE_FILE"
 echo "  Press Ctrl-C within 5 seconds to abort."
 sleep 5
 
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Verifying backup integrity..."
+gunzip -t "$BACKUP_FILE"
+
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restoring from: $BACKUP_FILE"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stopping web container..."
