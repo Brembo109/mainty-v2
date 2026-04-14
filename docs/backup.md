@@ -29,7 +29,7 @@ BACKUP_RETENTION_DAYS=30
 
 | Variable               | Standard                   | Beschreibung                                 |
 |------------------------|----------------------------|----------------------------------------------|
-| `BACKUP_DIR`           | `/backup`                  | Zielverzeichnis für Dump-Dateien             |
+| `BACKUP_DIR`           | `/var/backups/mainty`      | Zielverzeichnis für Dump-Dateien             |
 | `BACKUP_RETENTION_DAYS`| `30`                       | Dumps älter als N Tage werden gelöscht       |
 | `COMPOSE_FILE`         | `docker-compose.prod.yml`  | Docker-Compose-Datei (optional überschreibbar) |
 
@@ -40,8 +40,8 @@ bash scripts/restore.sh /var/backups/mainty/mainty-20260414-030000.sql.gz
 ```
 
 Der Restore-Prozess:
-1. Prüft Gzip-Integrität der Backup-Datei
-2. Zeigt eine Warnung und wartet 5 Sekunden (Ctrl-C zum Abbrechen)
+1. Zeigt eine Warnung und wartet 5 Sekunden (Ctrl-C zum Abbrechen)
+2. Prüft Gzip-Integrität der Backup-Datei
 3. Stoppt den Web-Container
 4. Wischt das öffentliche Datenbankschema
 5. Spielt den Dump ein
