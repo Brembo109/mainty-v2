@@ -11,14 +11,19 @@ GMP-compliant maintenance management system built with Django 5.1.
 - **Role-based access control** — Admin / User / Viewer via Django Groups
 - **Brute-force protection** — django-axes (5 failed attempts → 15 min lockout)
 - **Password rotation** — mandatory change after 90 days (configurable)
+- **Password reset** — self-service email reset using configured SMTP settings
 - **GMP audit trail** — automatic logging of all model changes + login/logout events, exportable as CSV/XLSX
 - **Asset management** — CRUD for equipment with location, serial number, manufacturer and status (Frei / Gesperrt / Außer Betrieb); HTMX-powered live filter
 - **Service contracts** — CRUD with dynamic status calculation (Aktiv / Läuft aus / Abgelaufen) based on configurable warning threshold; M2M assignment to assets
 - **Maintenance plans** — configurable interval-based plans with next-due calculation, mandatory change-reason field, performed-record log
 - **Qualification cycles** — IQ/OQ/PQ per asset with recurrence intervals; CFR 21 Part 11 electronic signatures via re-authentication password modal; immutable signature records
 - **Tasks** — action item management with priority (Niedrig/Mittel/Hoch), status (Offen/In Bearbeitung/Erledigt), due date and optional asset assignment
-- **Dashboard** — KPI tiles for all modules, critical item widgets (overdue/due-soon), expiring contracts and open tasks at a glance
+- **Calendar view** — monthly overview of all due dates (maintenance, qualification, tasks) with HTMX day-detail popover
+- **Dashboard** — KPI tiles for all modules, critical item widgets (overdue/due-soon) with remaining-days display, expiring contracts and open tasks at a glance
+- **In-app notifications** — auto-generated alerts for overdue items; HTMX dropdown panel with bell-icon badge; bulk dismiss
 - **Reminder emails** — daily management command (`send_reminders`) with HTML email, once-per-day dedup guard, `--dry-run` and `--force` flags
+- **Admin settings page** — `SiteConfig` singleton for SMTP, reminder intervals and site URL; includes send-test-email button; all changes take effect immediately without restart
+- **Dark / Light mode** — toggle in sidebar, persisted per user account
 - **Bilingual UI** — German (default) and English via Django i18n
 
 ---
@@ -117,15 +122,17 @@ All variables are documented in [`.env.example`](.env.example).
 | `DJANGO_ADMIN_USER` | | — | Initial admin username |
 | `DJANGO_ADMIN_EMAIL` | | — | Initial admin email |
 | `DJANGO_ADMIN_PASSWORD` | | — | Initial admin password — **change in production** |
-| `EMAIL_BACKEND` | | `console.EmailBackend` | Django email backend (use `smtp.EmailBackend` in production) |
-| `EMAIL_HOST` | | `mailhog` | SMTP host |
-| `EMAIL_PORT` | | `1025` | SMTP port |
-| `EMAIL_USE_TLS` | | `False` | Enable STARTTLS |
-| `EMAIL_HOST_USER` | | — | SMTP username |
+| `EMAIL_BACKEND` | | `SiteConfigEmailBackend` | Django email backend — reads SMTP settings from DB at runtime |
+| `EMAIL_HOST` | | `mailhog` | SMTP host (dev seed value for SiteConfig) |
+| `EMAIL_PORT` | | `1025` | SMTP port (dev seed value for SiteConfig) |
+| `EMAIL_USE_TLS` | | `False` | Enable STARTTLS (dev seed value for SiteConfig) |
+| `EMAIL_HOST_USER` | | — | SMTP username (dev seed value for SiteConfig) |
 | `EMAIL_HOST_PASSWORD` | | — | SMTP password |
-| `DEFAULT_FROM_EMAIL` | | `mainty@localhost` | Sender address for system emails |
+| `DEFAULT_FROM_EMAIL` | | `mainty@localhost` | Sender address (dev seed value for SiteConfig) |
 | `SITE_URL` | | `http://localhost:8000` | Base URL included in reminder emails |
 | `REMINDER_EMAIL_SUBJECT` | | `[mainty] GMP-Erinnerung…` | Subject line for reminder emails |
+| `BACKUP_DIR` | | `/var/backups/mainty` | Directory for database dump files |
+| `BACKUP_RETENTION_DAYS` | | `30` | Days to keep backup files before deletion |
 
 ---
 
@@ -164,6 +171,12 @@ docker compose exec web python manage.py send_reminders --dry-run
 
 # Force send even if already sent today
 docker compose exec web python manage.py send_reminders --force
+
+# Create a database backup
+bash scripts/backup.sh
+
+# Restore from a backup
+bash scripts/restore.sh /var/backups/mainty/mainty-20260414-030000.sql.gz
 ```
 
 ### Scheduling reminder emails (production)
@@ -182,14 +195,15 @@ Add to crontab (`crontab -e`) on the host or inside the container:
 ```
 mainty-v2/
 ├── apps/
-│   ├── accounts/          # Custom user model, roles, authentication
+│   ├── accounts/          # Custom user model, roles, authentication, password reset
 │   ├── audit/             # GMP audit trail (signals, views, export)
 │   ├── assets/            # Equipment management (CRUD, status, HTMX filter)
 │   ├── contracts/         # Service contracts (CRUD, dynamic status, M2M assets)
 │   ├── maintenance/       # Maintenance plans (intervals, records, next-due)
+│   ├── notifications/     # In-app notifications (model, context processor, HTMX panel)
 │   ├── qualification/     # Qualification cycles (IQ/OQ/PQ, CFR 21 Part 11 signatures)
 │   ├── tasks/             # Task management (priority, status, asset assignment)
-│   └── core/              # Dashboard, health check, ReminderLog, send_reminders command
+│   └── core/              # Dashboard, calendar, SiteConfig, SiteConfigEmailBackend, send_reminders
 ├── mainty/
 │   ├── settings/
 │   │   ├── base.py        # Shared settings
@@ -207,6 +221,9 @@ mainty-v2/
 │   ├── qualification/     # Qualification pages + sign modal
 │   ├── tasks/             # Task pages + HTMX partials
 │   └── core/              # Dashboard
+├── scripts/
+│   ├── backup.sh          # PostgreSQL dump + gzip + retention
+│   └── restore.sh         # Stop web, wipe schema, restore dump, restart web
 ├── static/src/main.css    # Tailwind source
 ├── docker-compose.yml     # Development stack
 ├── docker-compose.prod.yml # Production stack
@@ -241,15 +258,14 @@ ALLOWED_HOSTS=yourdomain.com
 SECRET_KEY=<long-random-string>
 POSTGRES_PASSWORD=<strong-password>
 DJANGO_ADMIN_PASSWORD=<strong-password>
-
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=your-smtp-host
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your@email.com
-EMAIL_HOST_PASSWORD=your-smtp-password
 SITE_URL=https://yourdomain.com
+
+# Backup
+BACKUP_DIR=/var/backups/mainty
+BACKUP_RETENTION_DAYS=30
 ```
+
+> **SMTP configuration** is managed via the admin settings page (`/settings/`) after first login — not via `.env`. The `SiteConfigEmailBackend` reads host, port, credentials and TLS settings from the database at runtime, so changes take effect immediately without a restart.
 
 ### 2. Start the production stack
 
@@ -266,8 +282,21 @@ docker compose -f docker-compose.prod.yml exec web python manage.py bootstrap_ro
 docker compose -f docker-compose.prod.yml exec web python manage.py create_initial_admin
 ```
 
+### 4. Set up daily backups
+
+```bash
+crontab -e
+```
+
+```cron
+0 3 * * * cd /opt/mainty-v2 && bash scripts/backup.sh >> /var/log/mainty-backup.log 2>&1
+```
+
+See [docs/backup.md](docs/backup.md) for restore instructions and NAS configuration.
+
 ### Notes
 
 - HTTPS is enforced via `SECURE_SSL_REDIRECT` — put a TLS-terminating reverse proxy (e.g. Caddy, Traefik, or cloud load balancer) in front of Nginx
 - Sessions expire after 1 hour of inactivity
 - Audit logs are stored in the database and can be exported from the UI at `/audit/`
+- SMTP settings are configured via the admin settings page (`/settings/`), not via `.env`

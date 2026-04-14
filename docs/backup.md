@@ -1,64 +1,64 @@
 # Backup & Restore
 
-## Backup manuell erstellen
+## Run a manual backup
 
 ```bash
 bash scripts/backup.sh
 ```
 
-## Cron-Job einrichten (täglich 03:00 Uhr)
+## Schedule daily backups (cron)
 
 ```bash
 crontab -e
 ```
 
-Eintrag hinzufügen (Pfad anpassen):
+Add the following entry (adjust the path):
 
 ```cron
 0 3 * * * cd /opt/mainty-v2 && bash scripts/backup.sh >> /var/log/mainty-backup.log 2>&1
 ```
 
-## Konfiguration
+## Configuration
 
-In `.env` (Werte nach Bedarf anpassen):
+In `.env` (adjust values as needed):
 
 ```
 BACKUP_DIR=/var/backups/mainty
 BACKUP_RETENTION_DAYS=30
 ```
 
-| Variable               | Standard                   | Beschreibung                                 |
-|------------------------|----------------------------|----------------------------------------------|
-| `BACKUP_DIR`           | `/var/backups/mainty`      | Zielverzeichnis für Dump-Dateien             |
-| `BACKUP_RETENTION_DAYS`| `30`                       | Dumps älter als N Tage werden gelöscht       |
-| `COMPOSE_FILE`         | `docker-compose.prod.yml`  | Docker-Compose-Datei (optional überschreibbar) |
+| Variable                | Default                    | Description                                      |
+|-------------------------|----------------------------|--------------------------------------------------|
+| `BACKUP_DIR`            | `/var/backups/mainty`      | Directory where dump files are written           |
+| `BACKUP_RETENTION_DAYS` | `30`                       | Dumps older than N days are automatically deleted |
+| `COMPOSE_FILE`          | `docker-compose.prod.yml`  | Docker Compose file (optional override)          |
 
-## Datenbank wiederherstellen
+## Restore the database
 
 ```bash
 bash scripts/restore.sh /var/backups/mainty/mainty-20260414-030000.sql.gz
 ```
 
-Der Restore-Prozess:
-1. Zeigt eine Warnung und wartet 5 Sekunden (Ctrl-C zum Abbrechen)
-2. Prüft Gzip-Integrität der Backup-Datei
-3. Stoppt den Web-Container
-4. Wischt das öffentliche Datenbankschema
-5. Spielt den Dump ein
-6. Startet den Web-Container wieder
+The restore process:
+1. Displays a warning and waits 5 seconds (press Ctrl-C to abort)
+2. Verifies gzip integrity of the backup file
+3. Stops the web container
+4. Wipes the public database schema
+5. Restores the dump
+6. Restarts the web container
 
-**Erwartete Downtime:** 1–3 Minuten.
-**Datenverlust:** Alles seit dem Backup-Zeitstempel (max. 24 h bei täglichem Backup).
+**Expected downtime:** 1–3 minutes.  
+**Data loss:** Everything since the backup timestamp (max. 24 h with daily backups).
 
-## Auf NAS umstellen
+## Switching to NAS storage
 
-1. NAS-Share auf dem Server mounten (NFS oder SMB):
+1. Mount the NAS share on the server (NFS or SMB):
    ```bash
-   # Beispiel NFS
+   # NFS example
    mount -t nfs nas-server:/mainty /mnt/nas/mainty-backups
    ```
-2. In `.env` anpassen:
+2. Update `.env`:
    ```
    BACKUP_DIR=/mnt/nas/mainty-backups
    ```
-3. Kein weiterer Eingriff nötig — das Skript schreibt in den angegebenen Pfad.
+3. No further changes needed — the script writes to the configured path.
