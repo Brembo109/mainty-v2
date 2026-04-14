@@ -187,6 +187,34 @@ class SendRemindersIntegrationTest(TestCase):
         # Dry-run reports "No action items found" because 50 days > 30-day window
         self.assertIn("No action items found", output)
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_sends_email_to_admins_when_items_found(self):
+        from django.contrib.auth.models import Group
+        SiteConfig.objects.create(
+            pk=1,
+            contract_expiry_warning_days=30,
+            email_from="mainty@example.com",
+            reminder_email_subject="Test Reminder",
+        )
+        Group.objects.get_or_create(name="Admin")
+        admin = _make_user("reminder_admin", role=Role.ADMIN)
+        admin.email = "admin@reminder.com"
+        admin.save()
+
+        # Abgelaufener Vertrag erzeugt einen Action-Item
+        Contract.objects.create(
+            title="Expired",
+            vendor="Vendor",
+            start_date=date.today() - timedelta(days=100),
+            end_date=date.today() - timedelta(days=10),
+        )
+
+        out = StringIO()
+        call_command("send_reminders", "--force", stdout=out)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("admin@reminder.com", mail.outbox[0].to)
+        self.assertEqual(mail.outbox[0].from_email, "mainty@example.com")
+
 
 class SiteConfigEmailBackendTest(TestCase):
     def test_reads_smtp_settings_from_siteconfig(self):

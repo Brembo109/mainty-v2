@@ -13,7 +13,7 @@ Or via systemd timer (see docs/reminders-systemd.md).
 from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand
 from django.db.models import Max
 from django.template.loader import render_to_string
@@ -99,19 +99,11 @@ class Command(BaseCommand):
         html_body = render_to_string("emails/reminder.html", context)
         text_body = self._text_body(items, config.site_url)
 
-        connection = get_connection(
-            host=config.email_host,
-            port=config.email_port,
-            username=config.email_host_user,
-            password=config.email_host_password,
-            use_tls=config.email_use_tls,
-        )
         msg = EmailMultiAlternatives(
             subject=config.reminder_email_subject,
             body=text_body,
             from_email=config.email_from,
             to=recipients,
-            connection=connection,
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send()
