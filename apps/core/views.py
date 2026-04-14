@@ -2,7 +2,7 @@ import calendar as _calendar
 from datetime import date, timedelta
 
 from django.contrib import messages
-from django.core.mail import get_connection, send_mail
+from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Max
@@ -130,19 +130,11 @@ class SendTestEmailView(LoginRequiredMixin, RoleRequiredMixin, View):
 
         config = SiteConfig.get()
         try:
-            connection = get_connection(
-                host=config.email_host,
-                port=config.email_port,
-                username=config.email_host_user,
-                password=config.email_host_password,
-                use_tls=config.email_use_tls,
-            )
             send_mail(
                 subject=_("mainty — Test-E-Mail"),
                 message=_("Die E-Mail-Konfiguration funktioniert korrekt."),
                 from_email=config.email_from,
                 recipient_list=[request.user.email],
-                connection=connection,
             )
             messages.success(
                 request,
