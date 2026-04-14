@@ -189,7 +189,6 @@ class SendRemindersIntegrationTest(TestCase):
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_sends_email_to_admins_when_items_found(self):
-        from django.contrib.auth.models import Group
         SiteConfig.objects.create(
             pk=1,
             contract_expiry_warning_days=30,
