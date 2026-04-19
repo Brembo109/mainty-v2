@@ -13,9 +13,9 @@ class ContractStatus:
     ]
 
     BADGE_CLASS = {
-        ACTIVE: "badge-success border border-status-success",
-        EXPIRING: "badge-warning border border-status-warning",
-        EXPIRED: "badge-danger border border-status-danger",
+        ACTIVE: "status-dot status-dot-ok",
+        EXPIRING: "status-dot status-dot-warn",
+        EXPIRED: "status-dot status-dot-danger",
     }
 
     LABEL = {

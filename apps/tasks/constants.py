@@ -13,9 +13,9 @@ class TaskStatus:
     ]
 
     BADGE_CLASS = {
-        OPEN: "badge-neutral border border-border",
-        IN_PROGRESS: "badge-warning border border-status-warning",
-        DONE: "badge-success border border-status-success",
+        OPEN: "status-dot status-dot-info",
+        IN_PROGRESS: "status-dot status-dot-warn",
+        DONE: "status-dot status-dot-ok",
     }
 
     LABEL = {
@@ -37,9 +37,9 @@ class TaskPriority:
     ]
 
     BADGE_CLASS = {
-        LOW: "badge-neutral border border-border",
-        MEDIUM: "badge-warning border border-status-warning",
-        HIGH: "badge-danger border border-status-danger",
+        LOW: "status-dot status-dot-idle",
+        MEDIUM: "status-dot status-dot-warn",
+        HIGH: "status-dot status-dot-danger",
     }
 
     LABEL = {

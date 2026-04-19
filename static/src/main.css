@@ -78,9 +78,10 @@
            hover:bg-surface-card hover:text-content-primary transition-colors;
   }
 
-  /* ── Status dot + label ─────────────────────────────────────────── */
+  /* ── Status dots — primary status language ─────────────────────────
+     Status → dot. Use `chip-neutral` for categories (department, type, role). */
   .status-dot {
-    @apply inline-flex items-center gap-1.5 text-xs whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 text-xs whitespace-nowrap leading-none;
   }
   .status-dot::before {
     content: '';
@@ -89,24 +90,23 @@
     height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
+    background: currentColor;
   }
-  .status-dot-danger  { @apply text-status-danger; }
-  .status-dot-danger::before  { background: var(--color-status-danger);  box-shadow: 0 0 0 3px rgba(220,38,38,.15); }
-  .status-dot-warn    { @apply text-status-warning; }
-  .status-dot-warn::before    { background: var(--color-status-warning); }
-  .status-dot-info    { @apply text-content-secondary; }
-  .status-dot-info::before    { background: var(--color-accent); }
   .status-dot-ok      { @apply text-status-success; }
-  .status-dot-ok::before      { background: var(--color-status-success); }
-
-  /* ── Legacy pill badges (kept for non-dashboard pages) ───────────── */
-  .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium;
+  .status-dot-warn    { @apply text-status-warning; }
+  .status-dot-danger  { @apply text-status-danger; }
+  .status-dot-info    { @apply text-accent; }
+  .status-dot-idle    { @apply text-content-tertiary; }
+  /* Danger gets a soft pulse-ring for genuine alarm */
+  .status-dot-danger::before {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-status-danger) 18%, transparent);
   }
-  .badge-success { @apply badge bg-status-success-bg text-status-success; }
-  .badge-warning { @apply badge bg-status-warning-bg text-status-warning; }
-  .badge-danger  { @apply badge bg-status-danger-bg  text-status-danger; }
-  .badge-neutral { @apply badge bg-border text-content-secondary; }
+
+  /* ── Neutral chip — categories (NOT status) ───────────────────────── */
+  .chip-neutral {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded-[3px] font-mono text-[11px]
+           leading-4 text-content-secondary bg-surface-card border border-border whitespace-nowrap;
+  }
 
   /* ── Tables ─────────────────────────────────────────────────────── */
   .data-table { @apply w-full text-sm; }

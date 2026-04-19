@@ -34,9 +34,9 @@
       <div class="flex items-start justify-between gap-4">
         <h2 class="text-lg font-semibold text-content-primary">{{ target_user.username }}</h2>
         {% if target_user.is_active %}
-          <span class="badge badge-success shrink-0">{% trans "Aktiv" %}</span>
+          <span class="status-dot status-dot-ok shrink-0">{% trans "Aktiv" %}</span>
         {% else %}
-          <span class="badge badge-neutral shrink-0">{% trans "Inaktiv" %}</span>
+          <span class="status-dot status-dot-idle shrink-0">{% trans "Inaktiv" %}</span>
         {% endif %}
       </div>
 
@@ -55,7 +55,7 @@
         </div>
         <div>
           <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Rolle" %}</dt>
-          <dd><span class="badge badge-neutral">{{ target_user.role|default:"—" }}</span></dd>
+          <dd><span class="chip-neutral">{{ target_user.role|default:"—" }}</span></dd>
         </div>
         <div>
           <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">{% trans "Passwort zuletzt geändert" %}</dt>

@@ -148,4 +148,4 @@ class Asset(AuditedModel):
 
     @property
     def status_badge_class(self):
-        return AssetStatus.BADGE_CLASS.get(self.status, "badge-neutral")
+        return AssetStatus.BADGE_CLASS.get(self.status, "status-dot status-dot-idle")

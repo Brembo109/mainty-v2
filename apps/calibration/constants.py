@@ -27,11 +27,11 @@ class CalibrationStatus:
     }
 
     BADGE_CLASS = {
-        NEVER: "badge-neutral",
-        AT_LAB: "badge-neutral border border-border",
-        VALID: "badge-success border border-status-success",
-        DUE_SOON: "badge-warning border border-status-warning",
-        OVERDUE: "badge-danger border border-status-danger",
+        NEVER: "status-dot status-dot-idle",
+        AT_LAB: "status-dot status-dot-info",
+        VALID: "status-dot status-dot-ok",
+        DUE_SOON: "status-dot status-dot-warn",
+        OVERDUE: "status-dot status-dot-danger",
     }
 
 
@@ -53,7 +53,7 @@ class CalibrationResult:
     }
 
     BADGE_CLASS = {
-        PASS: "badge-success border border-status-success",
-        FAIL: "badge-danger border border-status-danger",
-        CONDITIONAL: "badge-warning border border-status-warning",
+        PASS: "status-dot status-dot-ok",
+        FAIL: "status-dot status-dot-danger",
+        CONDITIONAL: "status-dot status-dot-warn",
     }

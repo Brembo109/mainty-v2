@@ -107,7 +107,7 @@
             <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
               {% trans "Zugehörigkeit" %}
             </dt>
-            <dd><span class="badge badge-neutral">{{ asset.get_department_display }}</span></dd>
+            <dd><span class="chip-neutral">{{ asset.get_department_display }}</span></dd>
           </div>
 
           {% if asset.service_provider %}
@@ -238,12 +238,12 @@
             </dt>
             <dd>
               {% if asset.computer_backups_enabled %}
-              <span class="badge badge-success border border-status-success">{% trans "Ja" %}</span>
+              <span class="status-dot status-dot-ok">{% trans "Ja" %}</span>
               {% if asset.computer_backups_description %}
               <span class="ml-2 text-xs text-content-secondary">{{ asset.computer_backups_description }}</span>
               {% endif %}
               {% else %}
-              <span class="badge badge-neutral">{% trans "Nein" %}</span>
+              <span class="status-dot status-dot-idle">{% trans "Nein" %}</span>
               {% endif %}
             </dd>
           </div>
