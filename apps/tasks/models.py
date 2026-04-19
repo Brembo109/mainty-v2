@@ -59,7 +59,7 @@ class Task(AuditedModel):
 
     @property
     def status_badge_class(self):
-        return TaskStatus.BADGE_CLASS.get(self.status, "badge-neutral")
+        return TaskStatus.BADGE_CLASS.get(self.status, "status-dot status-dot-idle")
 
     @property
     def priority_label(self):
@@ -67,7 +67,7 @@ class Task(AuditedModel):
 
     @property
     def priority_badge_class(self):
-        return TaskPriority.BADGE_CLASS.get(self.priority, "badge-neutral")
+        return TaskPriority.BADGE_CLASS.get(self.priority, "status-dot status-dot-idle")
 
     @property
     def is_overdue(self):

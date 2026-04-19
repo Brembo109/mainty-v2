@@ -30,17 +30,17 @@
         {# Action badge #}
         <td>
           {% if entry.action == 'CREATE' %}
-            <span class="badge-success border border-status-success">{% trans "Erstellt" %}</span>
+            <span class="status-dot status-dot-ok">{% trans "Erstellt" %}</span>
           {% elif entry.action == 'UPDATE' %}
-            <span class="badge-neutral border border-border">{% trans "Geändert" %}</span>
+            <span class="status-dot status-dot-info">{% trans "Geändert" %}</span>
           {% elif entry.action == 'DELETE' %}
-            <span class="badge-danger border border-status-danger">{% trans "Gelöscht" %}</span>
+            <span class="status-dot status-dot-danger">{% trans "Gelöscht" %}</span>
           {% elif entry.action == 'LOGIN' %}
-            <span class="badge-success border border-status-success">{% trans "Angemeldet" %}</span>
+            <span class="status-dot status-dot-ok">{% trans "Angemeldet" %}</span>
           {% elif entry.action == 'LOGOUT' %}
-            <span class="badge-neutral border border-border">{% trans "Abgemeldet" %}</span>
+            <span class="status-dot status-dot-idle">{% trans "Abgemeldet" %}</span>
           {% elif entry.action == 'LOGIN_FAILED' %}
-            <span class="badge-warning border border-status-warning">{% trans "Fehlgeschlagen" %}</span>
+            <span class="status-dot status-dot-warn">{% trans "Fehlgeschlagen" %}</span>
           {% endif %}
         </td>
 

@@ -29,10 +29,10 @@ class QualStatus:
     NEVER_SIGNED = "never_signed"
 
     BADGE_CLASS = {
-        OK: "badge-success border border-status-success",
-        DUE_SOON: "badge-warning border border-status-warning",
-        OVERDUE: "badge-danger border border-status-danger",
-        NEVER_SIGNED: "badge-neutral border border-border",
+        OK: "status-dot status-dot-ok",
+        DUE_SOON: "status-dot status-dot-warn",
+        OVERDUE: "status-dot status-dot-danger",
+        NEVER_SIGNED: "status-dot status-dot-idle",
     }
 
     LABEL = {

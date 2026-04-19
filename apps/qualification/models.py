@@ -88,7 +88,7 @@ class QualificationCycle(AuditedModel):
 
     @property
     def status_badge_class(self):
-        return QualStatus.BADGE_CLASS.get(self.status, "badge-neutral")
+        return QualStatus.BADGE_CLASS.get(self.status, "status-dot status-dot-idle")
 
     @property
     def days_until_due(self):

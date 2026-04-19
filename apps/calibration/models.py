@@ -197,7 +197,7 @@ class CalibrationRecord(AuditedModel):
 
     @property
     def result_badge_class(self):
-        return CalibrationResult.BADGE_CLASS.get(self.result, "badge-neutral")
+        return CalibrationResult.BADGE_CLASS.get(self.result, "status-dot status-dot-idle")
 
     @property
     def result_label(self):

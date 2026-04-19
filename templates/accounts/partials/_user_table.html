@@ -26,13 +26,13 @@
           {{ u.email|default:"—" }}
         </td>
         <td>
-          <span class="badge badge-neutral">{{ u.role|default:"—" }}</span>
+          <span class="chip-neutral">{{ u.role|default:"—" }}</span>
         </td>
         <td>
           {% if u.is_active %}
-            <span class="badge badge-success">{% trans "Aktiv" %}</span>
+            <span class="status-dot status-dot-ok">{% trans "Aktiv" %}</span>
           {% else %}
-            <span class="badge badge-neutral">{% trans "Inaktiv" %}</span>
+            <span class="status-dot status-dot-idle">{% trans "Inaktiv" %}</span>
           {% endif %}
         </td>
         <td>
