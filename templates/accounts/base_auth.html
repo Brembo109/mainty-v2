@@ -12,8 +12,12 @@
   <div class="w-full max-w-sm">
 
     {# Logo #}
-    <div class="text-center mb-8">
-      <span class="text-content-primary font-semibold text-base tracking-tight">mainty</span>
+    <div class="flex flex-col items-center gap-3 mb-8 text-content-primary">
+      <span class="w-24 h-24" aria-hidden="true">
+        {% include "partials/_mainty_hero.svg" %}
+      </span>
+      <h1 class="text-xl font-semibold tracking-tight">mainty</h1>
+      <p class="text-sm text-content-secondary">Brembo GmbH · Werk Stuttgart</p>
     </div>
 
     {% block content %}{% endblock %}
