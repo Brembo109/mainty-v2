@@ -4,350 +4,376 @@
 {% block title %}{% trans "Dashboard" %}{% endblock %}
 {% block page_title %}{% trans "Dashboard" %}{% endblock %}
 
+{% block header_actions %}
+  <a href="{% url 'core:calendar' %}" class="btn-ghost" hx-boost="false">{% trans "Kalender" %}</a>
+{% endblock %}
+
 {% block content %}
 
-  {# ── KPI row ─────────────────────────────────────────────────────── #}
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+{# ── 4 counter tiles ────────────────────────────────────────────────── #}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
 
-    {# Assets #}
-    <a href="{% url 'assets:list' %}"
-       class="card p-5 hover:border-white/20 transition-colors group">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
-            {% trans "Anlagen" %}
-          </p>
-          <p class="text-2xl font-bold text-content-primary tabular-nums">{{ asset_count }}</p>
-        </div>
-        <div class="w-8 h-8 rounded bg-surface-elevated border border-border flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors">
-          <svg class="w-4 h-4 text-content-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Z" />
-          </svg>
+  {# Anlagen #}
+  <a href="{% url 'assets:list' %}"
+     class="bg-surface-card border border-border rounded-md p-4 hover:border-border-strong transition-colors">
+    <div class="text-[11px] text-content-tertiary uppercase tracking-[0.06em] mb-2">{% trans "Anlagen" %}</div>
+    <div class="flex items-baseline justify-between gap-2">
+      <div class="text-[28px] font-medium text-content-primary leading-none tabular-nums" style="letter-spacing:-0.02em">{{ asset_count }}</div>
+    </div>
+  </a>
+
+  {# Aufgaben #}
+  <a href="{% url 'tasks:list' %}?status=open"
+     class="bg-surface-card border border-border rounded-md p-4 hover:border-border-strong transition-colors">
+    <div class="text-[11px] text-content-tertiary uppercase tracking-[0.06em] mb-2">{% trans "Offene Aufgaben" %}</div>
+    <div class="flex items-baseline justify-between gap-2">
+      <div class="text-[28px] font-medium leading-none tabular-nums {% if tasks_overdue_total > 0 %}text-status-danger{% else %}text-content-primary{% endif %}" style="letter-spacing:-0.02em">{{ open_tasks_total }}</div>
+      {% if tasks_overdue_total > 0 %}
+      <div class="text-[11px] text-status-danger font-mono">{{ tasks_overdue_total }} {% trans "überf." %}</div>
+      {% endif %}
+    </div>
+  </a>
+
+  {# Verträge #}
+  <a href="{% url 'contracts:list' %}"
+     class="bg-surface-card border border-border rounded-md p-4 hover:border-border-strong transition-colors">
+    <div class="text-[11px] text-content-tertiary uppercase tracking-[0.06em] mb-2">{% trans "Verträge aktiv" %}</div>
+    <div class="flex items-baseline justify-between gap-2">
+      <div class="text-[28px] font-medium leading-none tabular-nums {% if contracts_expired > 0 %}text-status-danger{% elif contracts_expiring > 0 %}text-status-warning{% else %}text-content-primary{% endif %}" style="letter-spacing:-0.02em">
+        {{ contracts_active|add:contracts_expiring }}
+      </div>
+      {% if contracts_expiring > 0 %}
+      <div class="text-[11px] text-status-warning font-mono">{{ contracts_expiring }} {% trans "laufen aus" %}</div>
+      {% elif contracts_expired > 0 %}
+      <div class="text-[11px] text-status-danger font-mono">{{ contracts_expired }} {% trans "abgel." %}</div>
+      {% endif %}
+    </div>
+  </a>
+
+  {# Qualifizierungen #}
+  <a href="{% url 'qualification:list' %}"
+     class="bg-surface-card border border-border rounded-md p-4 hover:border-border-strong transition-colors">
+    <div class="text-[11px] text-content-tertiary uppercase tracking-[0.06em] mb-2">{% trans "Qualifizierungen" %}</div>
+    <div class="flex items-baseline justify-between gap-2">
+      <div class="text-[28px] font-medium leading-none tabular-nums {% if qual_overdue > 0 %}text-status-danger{% elif qual_due_soon > 0 or qual_never > 0 %}text-status-warning{% else %}text-content-primary{% endif %}" style="letter-spacing:-0.02em">
+        {{ qual_overdue|add:qual_due_soon|add:qual_never }}
+      </div>
+      {% if qual_overdue > 0 %}
+      <div class="text-[11px] text-status-danger font-mono">{{ qual_overdue }} {% trans "überf." %}</div>
+      {% elif qual_never > 0 %}
+      <div class="text-[11px] text-status-warning font-mono">{{ qual_never }} {% trans "nie sign." %}</div>
+      {% endif %}
+    </div>
+  </a>
+
+</div>
+
+{# ── Timeline header ────────────────────────────────────────────────── #}
+<div class="flex items-baseline justify-between mb-3">
+  <div>
+    <div class="text-[16px] font-medium text-content-primary" style="letter-spacing:-0.01em">{% trans "Nächste 30 Tage" %}</div>
+    <div class="text-[12px] text-content-secondary mt-0.5">
+      {{ timeline_total }} {% trans "Ereignisse" %}
+      {% if timeline_overdue_count > 0 %}· <span class="text-status-danger">{{ timeline_overdue_count }} {% trans "überfällig" %}</span>{% endif %}
+      {% if timeline_thisweek_count > 0 %}· <span>{{ timeline_thisweek_count }} {% trans "diese Woche" %}</span>{% endif %}
+    </div>
+  </div>
+  <div class="flex items-center gap-4 text-[11px] text-content-secondary">
+    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-0.5 rounded-sm bg-accent"></span>{% trans "Wartung" %}</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-0.5 rounded-sm bg-purple-500"></span>{% trans "Qual." %}</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-0.5 rounded-sm bg-status-warning"></span>{% trans "Vertrag" %}</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-0.5 rounded-sm bg-status-success"></span>{% trans "Aufgabe" %}</span>
+  </div>
+</div>
+
+{# ── 30-day strip ───────────────────────────────────────────────────── #}
+<div class="bg-surface-card border border-border rounded-md p-3.5 mb-5">
+  <div class="grid gap-0.5" style="grid-template-columns: repeat(30, minmax(0, 1fr))">
+    {% for day in timeline_days %}
+    <div class="flex flex-col items-center gap-1">
+      <div class="text-[9px] text-content-tertiary font-mono">{{ day.weekday }}</div>
+      <div class="w-full h-7 rounded-[3px] flex items-center justify-center relative
+        {% if day.is_today %}bg-accent-soft border border-accent{% elif day.is_weekend %}bg-surface border border-border{% else %}bg-surface-elevated border border-border{% endif %}
+        text-[11px] font-mono
+        {% if day.is_today %}text-accent font-medium{% else %}text-content-primary{% endif %}">
+        {{ day.day_num }}
+        {% if day.dot_status %}
+        <span class="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full
+          {% if day.dot_status == 'danger' %}bg-status-danger{% elif day.dot_status == 'warn' %}bg-status-warning{% else %}bg-accent{% endif %}"></span>
+        {% endif %}
+      </div>
+      <div class="text-[9px] text-content-tertiary font-mono h-2.5">
+        {% if day.event_count > 0 %}{{ day.event_count }}{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{# ── Main 2-col: event list + right rail ─────────────────────────────── #}
+<div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+
+  {# ── Event list ────────────────────────────────────────────────────── #}
+  <div class="bg-surface-card border border-border rounded-md overflow-hidden">
+
+    {% with groups=1 %}
+
+    {# ─ Überfällig ─ #}
+    {% if overdue_events %}
+    <div>
+      <div class="px-4 py-2.5 flex items-center gap-2 bg-surface border-b border-border">
+        <span class="text-[11px] font-medium text-status-danger uppercase tracking-[0.06em]">{% trans "Überfällig" %}</span>
+        <span class="text-[11px] text-content-tertiary font-mono">{{ overdue_events|length }}</span>
+      </div>
+      {% for event in overdue_events %}
+      <div class="grid items-center px-4 h-9 border-b border-border-subtle text-[13px]
+                  hover:bg-surface transition-colors"
+           style="grid-template-columns:70px 90px 1fr 72px 88px">
+        <span class="text-[11px] text-content-secondary font-mono">
+          {% if event.day == -1 %}−1 {% trans "Tag" %}{% else %}{{ event.day|stringformat:"d" }} {% trans "Tage" %}{% endif %}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1 h-3.5 rounded-sm shrink-0
+            {% if event.type == 'Wartung' %}bg-accent
+            {% elif event.type == 'Qual.' %}bg-purple-500
+            {% elif event.type == 'Vertrag' %}bg-status-warning
+            {% else %}bg-status-success{% endif %}"></span>
+          <span class="text-[11px] text-content-secondary">{{ event.type }}</span>
+        </span>
+        <span class="truncate text-content-primary">
+          {% if event.type_key == 'maint' %}<a href="{% url 'maintenance:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'qual' %}<a href="{% url 'qualification:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'contract' %}<a href="{% url 'contracts:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'task' %}<a href="{% url 'tasks:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% else %}{{ event.title }}{% endif %}
+        </span>
+        <span class="text-[11px] text-content-tertiary font-mono truncate">{{ event.asset }}</span>
+        <span class="flex justify-end"><span class="status-dot status-dot-danger">{% trans "Überfällig" %}</span></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ─ Heute ─ #}
+    {% if today_events %}
+    <div>
+      <div class="px-4 py-2.5 flex items-center gap-2 bg-surface border-b border-border">
+        <span class="text-[11px] font-medium text-accent uppercase tracking-[0.06em]">{% trans "Heute" %}</span>
+        <span class="text-[11px] text-content-tertiary font-mono">{{ today_events|length }}</span>
+      </div>
+      {% for event in today_events %}
+      <div class="grid items-center px-4 h-9 border-b border-border-subtle text-[13px]
+                  hover:bg-surface transition-colors"
+           style="grid-template-columns:70px 90px 1fr 72px 88px">
+        <span class="text-[11px] text-content-secondary font-mono">{% trans "Heute" %}</span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1 h-3.5 rounded-sm shrink-0
+            {% if event.type == 'Wartung' %}bg-accent
+            {% elif event.type == 'Qual.' %}bg-purple-500
+            {% elif event.type == 'Vertrag' %}bg-status-warning
+            {% else %}bg-status-success{% endif %}"></span>
+          <span class="text-[11px] text-content-secondary">{{ event.type }}</span>
+        </span>
+        <span class="truncate text-content-primary">
+          {% if event.type_key == 'maint' %}<a href="{% url 'maintenance:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'qual' %}<a href="{% url 'qualification:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'contract' %}<a href="{% url 'contracts:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'task' %}<a href="{% url 'tasks:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% else %}{{ event.title }}{% endif %}
+        </span>
+        <span class="text-[11px] text-content-tertiary font-mono truncate">{{ event.asset }}</span>
+        <span class="flex justify-end"><span class="status-dot status-dot-warn">{% trans "Heute" %}</span></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ─ Diese Woche ─ #}
+    {% if thisweek_events %}
+    <div>
+      <div class="px-4 py-2.5 flex items-center gap-2 bg-surface border-b border-border">
+        <span class="text-[11px] font-medium text-content-secondary uppercase tracking-[0.06em]">{% trans "Diese Woche" %}</span>
+        <span class="text-[11px] text-content-tertiary font-mono">{{ thisweek_events|length }}</span>
+      </div>
+      {% for event in thisweek_events %}
+      <div class="grid items-center px-4 h-9 border-b border-border-subtle text-[13px]
+                  hover:bg-surface transition-colors"
+           style="grid-template-columns:70px 90px 1fr 72px 88px">
+        <span class="text-[11px] text-content-secondary font-mono">+{{ event.day }} {% trans "T" %}</span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1 h-3.5 rounded-sm shrink-0
+            {% if event.type == 'Wartung' %}bg-accent
+            {% elif event.type == 'Qual.' %}bg-purple-500
+            {% elif event.type == 'Vertrag' %}bg-status-warning
+            {% else %}bg-status-success{% endif %}"></span>
+          <span class="text-[11px] text-content-secondary">{{ event.type }}</span>
+        </span>
+        <span class="truncate text-content-primary">
+          {% if event.type_key == 'maint' %}<a href="{% url 'maintenance:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'qual' %}<a href="{% url 'qualification:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'contract' %}<a href="{% url 'contracts:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'task' %}<a href="{% url 'tasks:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% else %}{{ event.title }}{% endif %}
+        </span>
+        <span class="text-[11px] text-content-tertiary font-mono truncate">{{ event.asset }}</span>
+        <span class="flex justify-end"><span class="status-dot status-dot-warn">{% trans "Bald fällig" %}</span></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ─ Nächste Woche ─ #}
+    {% if nextweek_events %}
+    <div>
+      <div class="px-4 py-2.5 flex items-center gap-2 bg-surface border-b border-border">
+        <span class="text-[11px] font-medium text-content-secondary uppercase tracking-[0.06em]">{% trans "Nächste Woche" %}</span>
+        <span class="text-[11px] text-content-tertiary font-mono">{{ nextweek_events|length }}</span>
+      </div>
+      {% for event in nextweek_events %}
+      <div class="grid items-center px-4 h-9 border-b border-border-subtle text-[13px]
+                  hover:bg-surface transition-colors"
+           style="grid-template-columns:70px 90px 1fr 72px 88px">
+        <span class="text-[11px] text-content-secondary font-mono">+{{ event.day }} {% trans "T" %}</span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1 h-3.5 rounded-sm shrink-0
+            {% if event.type == 'Wartung' %}bg-accent
+            {% elif event.type == 'Qual.' %}bg-purple-500
+            {% elif event.type == 'Vertrag' %}bg-status-warning
+            {% else %}bg-status-success{% endif %}"></span>
+          <span class="text-[11px] text-content-secondary">{{ event.type }}</span>
+        </span>
+        <span class="truncate text-content-primary">
+          {% if event.type_key == 'maint' %}<a href="{% url 'maintenance:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'qual' %}<a href="{% url 'qualification:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'contract' %}<a href="{% url 'contracts:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'task' %}<a href="{% url 'tasks:detail' event.pk %}" class="hover:text-accent transition-colors">{{ event.title }}</a>
+          {% else %}{{ event.title }}{% endif %}
+        </span>
+        <span class="text-[11px] text-content-tertiary font-mono truncate">{{ event.asset }}</span>
+        <span class="flex justify-end"><span class="status-dot status-dot-info">{% trans "Geplant" %}</span></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ─ Später ─ #}
+    {% if later_events %}
+    <div>
+      <div class="px-4 py-2.5 flex items-center gap-2 bg-surface border-b border-border">
+        <span class="text-[11px] font-medium text-content-tertiary uppercase tracking-[0.06em]">{% trans "Später" %}</span>
+        <span class="text-[11px] text-content-tertiary font-mono">{{ later_events|length }}</span>
+      </div>
+      {% for event in later_events %}
+      <div class="grid items-center px-4 h-9 {% if not forloop.last %}border-b border-border-subtle{% endif %} text-[13px]
+                  hover:bg-surface transition-colors"
+           style="grid-template-columns:70px 90px 1fr 72px 88px">
+        <span class="text-[11px] text-content-tertiary font-mono">+{{ event.day }} {% trans "T" %}</span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1 h-3.5 rounded-sm shrink-0
+            {% if event.type == 'Wartung' %}bg-accent
+            {% elif event.type == 'Qual.' %}bg-purple-500
+            {% elif event.type == 'Vertrag' %}bg-status-warning
+            {% else %}bg-status-success{% endif %}"></span>
+          <span class="text-[11px] text-content-tertiary">{{ event.type }}</span>
+        </span>
+        <span class="truncate text-content-secondary">
+          {% if event.type_key == 'maint' %}<a href="{% url 'maintenance:detail' event.pk %}" class="hover:text-content-primary transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'qual' %}<a href="{% url 'qualification:detail' event.pk %}" class="hover:text-content-primary transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'contract' %}<a href="{% url 'contracts:detail' event.pk %}" class="hover:text-content-primary transition-colors">{{ event.title }}</a>
+          {% elif event.type_key == 'task' %}<a href="{% url 'tasks:detail' event.pk %}" class="hover:text-content-primary transition-colors">{{ event.title }}</a>
+          {% else %}{{ event.title }}{% endif %}
+        </span>
+        <span class="text-[11px] text-content-tertiary font-mono truncate">{{ event.asset }}</span>
+        <span class="flex justify-end"><span class="status-dot status-dot-info">{% trans "Geplant" %}</span></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not overdue_events and not today_events and not thisweek_events and not nextweek_events and not later_events %}
+    <div class="px-4 py-12 text-center text-[13px] text-content-tertiary">
+      {% trans "Keine Ereignisse in den nächsten 30 Tagen." %}
+    </div>
+    {% endif %}
+
+    {% endwith %}
+  </div>
+
+  {# ── Right rail ───────────────────────────────────────────────────── #}
+  <div class="flex flex-col gap-4">
+
+    {# GMP Compliance #}
+    <div class="bg-surface-card border border-border rounded-md p-3.5">
+      <div class="text-[11px] text-content-tertiary uppercase tracking-[0.06em] mb-2.5">{% trans "GMP-Compliance" %}</div>
+      <div class="flex items-baseline gap-2">
+        <div class="text-[28px] font-medium text-content-primary leading-none" style="letter-spacing:-0.02em">
+          {{ gmp_compliance }}<span class="text-[16px] text-content-secondary">%</span>
         </div>
       </div>
-    </a>
-
-    {# Contracts #}
-    <a href="{% url 'contracts:list' %}"
-       class="card p-5 hover:border-white/20 transition-colors group">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
-            {% trans "Serviceverträge" %}
-          </p>
-          <p class="text-2xl font-bold tabular-nums
-            {% if contracts_expired > 0 %}text-status-danger
-            {% elif contracts_expiring > 0 %}text-status-warning
-            {% else %}text-content-primary{% endif %}">
-            {{ contracts_expired|add:contracts_expiring|add:contracts_active }}
-          </p>
-          <div class="flex items-center gap-2 mt-1.5">
-            {% if contracts_expired > 0 %}
-            <span class="text-2xs text-status-danger">{{ contracts_expired }} {% trans "abgel." %}</span>
-            {% endif %}
-            {% if contracts_expiring > 0 %}
-            <span class="text-2xs text-status-warning">{{ contracts_expiring }} {% trans "ablauf." %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="w-8 h-8 rounded bg-surface-elevated border border-border flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors">
-          <svg class="w-4 h-4 text-content-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-          </svg>
-        </div>
+      <div class="mt-2.5 h-1 bg-surface rounded-full overflow-hidden">
+        <div class="h-full bg-status-success rounded-full transition-all" style="width: {{ gmp_compliance }}%"></div>
       </div>
-    </a>
-
-    {# Maintenance #}
-    <a href="{% url 'maintenance:list' %}"
-       class="card p-5 hover:border-white/20 transition-colors group">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
-            {% trans "Wartungspläne" %}
-          </p>
-          <p class="text-2xl font-bold tabular-nums
-            {% if maint_overdue > 0 %}text-status-danger
-            {% elif maint_due_soon > 0 %}text-status-warning
-            {% else %}text-content-primary{% endif %}">
-            {{ maint_overdue|add:maint_due_soon|add:maint_ok }}
-          </p>
-          <div class="flex items-center gap-2 mt-1.5">
-            {% if maint_overdue > 0 %}
-            <span class="text-2xs text-status-danger">{{ maint_overdue }} {% trans "überf." %}</span>
-            {% endif %}
-            {% if maint_due_soon > 0 %}
-            <span class="text-2xs text-status-warning">{{ maint_due_soon }} {% trans "fällig" %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="w-8 h-8 rounded bg-surface-elevated border border-border flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors">
-          <svg class="w-4 h-4 text-content-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.654-4.654m5.598-2.167 3.214-3.214a.75.75 0 0 1 1.058 0l1.5 1.5a.75.75 0 0 1 0 1.058L18.88 12.75" />
-          </svg>
-        </div>
+      <div class="mt-2 flex justify-between text-[11px] text-content-tertiary">
+        <span>{{ maint_overdue|add:qual_overdue }} {% trans "überfällig" %}</span>
+        <span class="font-mono">{% now "Y" %}</span>
       </div>
-    </a>
+    </div>
 
-    {# Tasks #}
-    <a href="{% url 'tasks:list' %}?status=open"
-       class="card p-5 hover:border-white/20 transition-colors group">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
-            {% trans "Offene Aufgaben" %}
-          </p>
-          <p class="text-2xl font-bold tabular-nums
-            {% if tasks_overdue > 0 %}text-status-danger{% else %}text-content-primary{% endif %}">
-            {{ open_tasks|length }}
-          </p>
-          {% if tasks_overdue > 0 %}
-          <div class="mt-1.5">
-            <span class="text-2xs text-status-danger">{{ tasks_overdue }} {% trans "überf." %}</span>
+    {# Expiring contracts #}
+    <div class="bg-surface-card border border-border rounded-md overflow-hidden">
+      <div class="px-3.5 py-2.5 border-b border-border flex items-center justify-between">
+        <span class="text-[11px] text-content-tertiary uppercase tracking-[0.06em]">{% trans "Verträge laufen aus" %}</span>
+        <span class="text-[11px] text-content-tertiary font-mono">{{ expiring_contracts|length }}</span>
+      </div>
+      {% if expiring_contracts %}
+      {% for contract in expiring_contracts %}
+      <a href="{% url 'contracts:detail' contract.pk %}"
+         class="flex items-center justify-between px-3.5 py-2 border-b border-border-subtle last:border-0 hover:bg-surface transition-colors">
+        <span class="text-[12px] text-content-primary truncate mr-2">{{ contract.title }}</span>
+        <span class="text-[11px] font-mono text-content-secondary whitespace-nowrap {% if contract.days_remaining < 14 %}text-status-warning{% endif %}">
+          {{ contract.end_date|date:"Y-m-d" }}
+        </span>
+      </a>
+      {% endfor %}
+      {% else %}
+      <div class="px-3.5 py-6 text-center text-[12px] text-content-tertiary">
+        {% trans "Keine ablaufenden Verträge." %}
+      </div>
+      {% endif %}
+    </div>
+
+    {# Open tasks #}
+    <div class="bg-surface-card border border-border rounded-md overflow-hidden">
+      <div class="px-3.5 py-2.5 border-b border-border flex items-center justify-between">
+        <span class="text-[11px] text-content-tertiary uppercase tracking-[0.06em]">{% trans "Aufgaben" %}</span>
+        <a href="{% url 'tasks:list' %}?status=open" class="text-[11px] text-content-tertiary hover:text-content-primary transition-colors">{% trans "Alle" %} →</a>
+      </div>
+      {% if open_tasks %}
+      {% for task in open_tasks %}
+      <a href="{% url 'tasks:detail' task.pk %}"
+         class="flex items-start justify-between px-3.5 py-2 border-b border-border-subtle last:border-0 hover:bg-surface transition-colors gap-2">
+        <div class="min-w-0">
+          <div class="text-[12px] text-content-primary truncate">{{ task.title }}</div>
+          {% if task.due_date %}
+          <div class="text-[10px] font-mono mt-0.5 {% if task.is_overdue %}text-status-danger{% elif task.days_remaining <= 7 %}text-status-warning{% else %}text-content-tertiary{% endif %}">
+            {{ task.due_date|date:"Y-m-d" }}
           </div>
           {% endif %}
         </div>
-        <div class="w-8 h-8 rounded bg-surface-elevated border border-border flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors">
-          <svg class="w-4 h-4 text-content-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" />
-          </svg>
-        </div>
+        <span class="text-[10px] font-mono shrink-0 {% if task.priority == 'high' %}text-status-danger{% elif task.priority == 'medium' %}text-status-warning{% else %}text-content-tertiary{% endif %}">
+          {{ task.priority_label }}
+        </span>
+      </a>
+      {% endfor %}
+      {% else %}
+      <div class="px-3.5 py-6 text-center text-[12px] text-content-tertiary">
+        {% trans "Keine offenen Aufgaben." %}
       </div>
-    </a>
-
-    {# Qualification #}
-    <a href="{% url 'qualification:list' %}"
-       class="card p-5 hover:border-white/20 transition-colors group">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
-            {% trans "Qualifizierungen" %}
-          </p>
-          <p class="text-2xl font-bold tabular-nums
-            {% if qual_overdue > 0 %}text-status-danger
-            {% elif qual_due_soon > 0 or qual_never > 0 %}text-status-warning
-            {% else %}text-content-primary{% endif %}">
-            {{ qual_overdue|add:qual_due_soon|add:qual_never }}
-          </p>
-          <div class="flex items-center gap-2 mt-1.5">
-            {% if qual_overdue > 0 %}
-            <span class="text-2xs text-status-danger">{{ qual_overdue }} {% trans "überf." %}</span>
-            {% endif %}
-            {% if qual_never > 0 %}
-            <span class="text-2xs text-status-warning">{{ qual_never }} {% trans "nie sign." %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="w-8 h-8 rounded bg-surface-elevated border border-border flex items-center justify-center shrink-0 group-hover:border-white/20 transition-colors">
-          <svg class="w-4 h-4 text-content-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-          </svg>
-        </div>
-      </div>
-    </a>
-
-  </div>
-
-  {# ── Main grid ────────────────────────────────────────────────────── #}
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    {# ── Critical items (left, 2/3 width) ─────────────────────────── #}
-    <div class="lg:col-span-2 space-y-5">
-
-      {# Maintenance — overdue / due soon #}
-      <div class="card">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-border">
-          <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider">
-            {% trans "Wartung — Handlungsbedarf" %}
-          </h3>
-          <a href="{% url 'maintenance:list' %}?status=overdue" class="text-2xs text-content-tertiary hover:text-content-primary transition-colors">
-            {% trans "Alle anzeigen" %} →
-          </a>
-        </div>
-        {% if critical_maintenance %}
-        <div class="overflow-x-auto">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>{% trans "Bezeichnung" %}</th>
-                <th>{% trans "Anlage" %}</th>
-                <th>{% trans "Fällig" %}</th>
-                <th>{% trans "Status" %}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for plan in critical_maintenance %}
-              <tr>
-                <td class="font-medium">
-                  <a href="{% url 'maintenance:detail' plan.pk %}" class="hover:text-content-primary transition-colors">
-                    {{ plan.title }}
-                  </a>
-                </td>
-                <td class="text-xs text-content-secondary">{{ plan.asset.name }}</td>
-                <td class="font-mono text-xs whitespace-nowrap
-                  {% if plan.status == 'overdue' %}text-status-danger{% else %}text-status-warning{% endif %}">
-                  {{ plan.next_due|date:"Y-m-d" }}
-                  <span class="ml-1">({{ plan.days_until_due }}d)</span>
-                </td>
-                <td><span class="{{ plan.status_badge_class }}">{{ plan.status_label }}</span></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="px-5 py-8 text-center">
-          <p class="text-xs text-content-tertiary">{% trans "Keine überfälligen oder bald fälligen Wartungen." %}</p>
-        </div>
-        {% endif %}
-      </div>
-
-      {# Qualification — critical #}
-      <div class="card">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-border">
-          <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider">
-            {% trans "Qualifizierung — Handlungsbedarf" %}
-          </h3>
-          <a href="{% url 'qualification:list' %}?status=overdue" class="text-2xs text-content-tertiary hover:text-content-primary transition-colors">
-            {% trans "Alle anzeigen" %} →
-          </a>
-        </div>
-        {% if critical_qualification %}
-        <div class="overflow-x-auto">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>{% trans "Typ" %}</th>
-                <th>{% trans "Bezeichnung" %}</th>
-                <th>{% trans "Anlage" %}</th>
-                <th>{% trans "Fällig" %}</th>
-                <th>{% trans "Status" %}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for cycle in critical_qualification %}
-              <tr>
-                <td>
-                  <span class="font-mono text-xs font-semibold text-content-secondary px-1.5 py-0.5 rounded bg-surface-card border border-border">
-                    {{ cycle.qual_type }}
-                  </span>
-                </td>
-                <td class="font-medium">
-                  <a href="{% url 'qualification:detail' cycle.pk %}" class="hover:text-content-primary transition-colors">
-                    {{ cycle.title }}
-                  </a>
-                </td>
-                <td class="text-xs text-content-secondary">{{ cycle.asset.name }}</td>
-                <td class="font-mono text-xs whitespace-nowrap
-                  {% if cycle.status == 'overdue' %}text-status-danger{% else %}text-status-warning{% endif %}">
-                  {{ cycle.next_due|date:"Y-m-d" }}
-                  {% if cycle.status != 'never_signed' %}
-                    <span class="ml-1">({{ cycle.days_until_due }}d)</span>
-                  {% endif %}
-                </td>
-                <td><span class="{{ cycle.status_badge_class }}">{{ cycle.status_label }}</span></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="px-5 py-8 text-center">
-          <p class="text-xs text-content-tertiary">{% trans "Keine kritischen Qualifizierungszyklen." %}</p>
-        </div>
-        {% endif %}
-      </div>
-
+      {% endif %}
     </div>
 
-    {# ── Right column ──────────────────────────────────────────────── #}
-    <div class="space-y-5">
+  </div>{# /right rail #}
 
-      {# Open tasks #}
-      <div class="card">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-border">
-          <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider">
-            {% trans "Aufgaben" %}
-          </h3>
-          <a href="{% url 'tasks:list' %}?status=open" class="text-2xs text-content-tertiary hover:text-content-primary transition-colors">
-            {% trans "Alle" %} →
-          </a>
-        </div>
-        {% if open_tasks %}
-        <ul class="divide-y divide-border">
-          {% for task in open_tasks %}
-          <li class="px-5 py-3">
-            <a href="{% url 'tasks:detail' task.pk %}" class="block group">
-              <div class="flex items-start justify-between gap-2">
-                <p class="text-sm font-medium text-content-primary group-hover:text-content-primary transition-colors truncate">
-                  {{ task.title }}
-                </p>
-                <span class="{{ task.priority_badge_class }} shrink-0">{{ task.priority_label }}</span>
-              </div>
-              <p class="text-xs text-content-tertiary mt-0.5">
-                <span class="{{ task.status_badge_class }} text-2xs">{{ task.status_label }}</span>
-                {% if task.due_date %}
-                  · <span class="font-mono {% if task.is_overdue %}text-status-danger{% elif task.days_remaining <= 7 %}text-status-warning{% endif %}">
-                    {{ task.due_date|date:"Y-m-d" }}
-                    {% if task.status != 'done' %}
-                      <span class="ml-0.5">({{ task.days_remaining }}d)</span>
-                    {% endif %}
-                  </span>
-                {% endif %}
-              </p>
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="px-5 py-8 text-center">
-          <p class="text-xs text-content-tertiary">{% trans "Keine offenen Aufgaben." %}</p>
-        </div>
-        {% endif %}
-      </div>
-
-      {# Expiring contracts #}
-      <div class="card">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-border">
-          <h3 class="text-xs font-medium text-content-secondary uppercase tracking-wider">
-            {% trans "Verträge ablaufend" %}
-          </h3>
-          <a href="{% url 'contracts:list' %}?status=expiring" class="text-2xs text-content-tertiary hover:text-content-primary transition-colors">
-            {% trans "Alle" %} →
-          </a>
-        </div>
-        {% if expiring_contracts %}
-        <ul class="divide-y divide-border">
-          {% for contract in expiring_contracts %}
-          <li class="px-5 py-3">
-            <a href="{% url 'contracts:detail' contract.pk %}" class="block group">
-              <div class="flex items-start justify-between gap-2">
-                <p class="text-sm font-medium text-content-primary group-hover:text-content-primary transition-colors truncate">
-                  {{ contract.title }}
-                </p>
-                <span class="{{ contract.status_badge_class }} shrink-0">{{ contract.status_label }}</span>
-              </div>
-              <p class="text-xs text-content-tertiary mt-0.5">
-                {{ contract.vendor }} · {% trans "bis" %} <span class="font-mono">{{ contract.end_date|date:"Y-m-d" }}</span>
-              </p>
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="px-5 py-8 text-center">
-          <p class="text-xs text-content-tertiary">{% trans "Keine ablaufenden Verträge." %}</p>
-        </div>
-        {% endif %}
-      </div>
-
-    </div>
-
-  </div>
+</div>{# /2-col grid #}
 
 {% endblock %}

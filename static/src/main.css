@@ -1,39 +1,45 @@
 :root {
-  /* Light Mode */
-  --color-surface: #ffffff;
-  --color-surface-card: #f5f5f5;
-  --color-surface-elevated: #efefef;
-  --color-border: #e5e5e5;
-  --color-border-subtle: #f0f0f0;
-  --color-border-strong: #d4d4d4;
-  --color-content-primary: #0a0a0a;
-  --color-content-secondary: #737373;
-  --color-content-tertiary: #a3a3a3;
-  --color-status-success: #00c853;
-  --color-status-warning: #ffd600;
-  --color-status-danger: #ff1744;
-  --color-status-success-bg: rgba(0, 200, 83, 0.1);
-  --color-status-warning-bg: rgba(255, 214, 0, 0.1);
-  --color-status-danger-bg: rgba(255, 23, 68, 0.1);
+  /* Light */
+  --color-surface:          #FAFAFA;
+  --color-surface-card:     #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-border:           #EAEAEA;
+  --color-border-subtle:    #F4F4F4;
+  --color-border-strong:    #D4D4D4;
+  --color-content-primary:   #0A0A0A;
+  --color-content-secondary: #555555;
+  --color-content-tertiary:  #8A8A8A;
+  --color-accent:            #2563EB;
+  --color-accent-fg:         #FFFFFF;
+  --color-accent-soft:       rgba(37, 99, 235, 0.08);
+  --color-status-success:    #059669;
+  --color-status-warning:    #B45309;
+  --color-status-danger:     #DC2626;
+  --color-status-success-bg: rgba(5, 150, 105, 0.08);
+  --color-status-warning-bg: rgba(180, 83, 9, 0.08);
+  --color-status-danger-bg:  rgba(220, 38, 38, 0.08);
 }
 
 .dark {
-  /* Dark Mode — Vercel-Dark */
-  --color-surface: #000000;
-  --color-surface-card: #111111;
-  --color-surface-elevated: #0a0a0a;
-  --color-border: #222222;
-  --color-border-subtle: #1a1a1a;
-  --color-border-strong: #333333;
-  --color-content-primary: #ffffff;
-  --color-content-secondary: #888888;
-  --color-content-tertiary: #555555;
-  --color-status-success: #00c853;
-  --color-status-warning: #ffd600;
-  --color-status-danger: #ff1744;
-  --color-status-success-bg: rgba(0, 200, 83, 0.1);
-  --color-status-warning-bg: rgba(255, 214, 0, 0.1);
-  --color-status-danger-bg: rgba(255, 23, 68, 0.1);
+  /* Dark */
+  --color-surface:          #0A0A0A;
+  --color-surface-card:     #141414;
+  --color-surface-elevated: #0F0F0F;
+  --color-border:           #1F1F1F;
+  --color-border-subtle:    #171717;
+  --color-border-strong:    #2A2A2A;
+  --color-content-primary:   #EDEDED;
+  --color-content-secondary: #9A9A9A;
+  --color-content-tertiary:  #5F5F5F;
+  --color-accent:            #3B82F6;
+  --color-accent-fg:         #FFFFFF;
+  --color-accent-soft:       rgba(59, 130, 246, 0.12);
+  --color-status-success:    #10B981;
+  --color-status-warning:    #F59E0B;
+  --color-status-danger:     #EF4444;
+  --color-status-success-bg: rgba(16, 185, 129, 0.12);
+  --color-status-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-status-danger-bg:  rgba(239, 68, 68, 0.12);
 }
 
 @tailwind base;
@@ -45,85 +51,83 @@
     @apply bg-surface text-content-primary antialiased;
   }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-surface-elevated;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border-strong rounded-full;
-  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { @apply bg-surface; }
+  ::-webkit-scrollbar-thumb { @apply bg-border-strong rounded-full; }
 }
 
 @layer components {
-  /* Cards */
+  /* ── Cards ─────────────────────────────────────────────────────── */
   .card {
     @apply bg-surface-card border border-border rounded-md;
   }
 
-  /* Primary button */
+  /* ── Buttons ────────────────────────────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 bg-white text-black text-sm font-medium rounded hover:bg-white/90 transition-colors;
+    @apply inline-flex items-center gap-1.5 h-7 px-2.5 bg-accent text-accent-fg
+           text-[13px] font-medium rounded-[5px] hover:opacity-90 transition-opacity;
   }
-
-  /* Ghost button */
+  .btn-secondary {
+    @apply inline-flex items-center gap-1.5 h-7 px-2.5 bg-surface-card text-content-primary
+           text-[13px] font-medium rounded-[5px] border border-border
+           hover:border-border-strong transition-colors;
+  }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 text-content-secondary text-sm font-medium rounded border border-border hover:bg-surface-card hover:text-content-primary transition-colors;
+    @apply inline-flex items-center gap-1.5 h-7 px-2.5 text-content-secondary
+           text-[13px] font-medium rounded-[5px]
+           hover:bg-surface-card hover:text-content-primary transition-colors;
   }
 
-  /* Status badges */
+  /* ── Status dot + label ─────────────────────────────────────────── */
+  .status-dot {
+    @apply inline-flex items-center gap-1.5 text-xs whitespace-nowrap;
+  }
+  .status-dot::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot-danger  { @apply text-status-danger; }
+  .status-dot-danger::before  { background: var(--color-status-danger);  box-shadow: 0 0 0 3px rgba(220,38,38,.15); }
+  .status-dot-warn    { @apply text-status-warning; }
+  .status-dot-warn::before    { background: var(--color-status-warning); }
+  .status-dot-info    { @apply text-content-secondary; }
+  .status-dot-info::before    { background: var(--color-accent); }
+  .status-dot-ok      { @apply text-status-success; }
+  .status-dot-ok::before      { background: var(--color-status-success); }
+
+  /* ── Legacy pill badges (kept for non-dashboard pages) ───────────── */
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded text-2xs font-medium;
   }
-  .badge-success {
-    @apply badge bg-status-success-bg text-status-success;
-  }
-  .badge-warning {
-    @apply badge bg-status-warning-bg text-status-warning;
-  }
-  .badge-danger {
-    @apply badge bg-status-danger-bg text-status-danger;
-  }
-  .badge-neutral {
-    @apply badge bg-border text-content-secondary;
-  }
+  .badge-success { @apply badge bg-status-success-bg text-status-success; }
+  .badge-warning { @apply badge bg-status-warning-bg text-status-warning; }
+  .badge-danger  { @apply badge bg-status-danger-bg  text-status-danger; }
+  .badge-neutral { @apply badge bg-border text-content-secondary; }
 
-  /* Tables */
-  .data-table {
-    @apply w-full text-sm;
-  }
-  .data-table thead tr {
-    @apply border-b border-border;
-  }
-  .data-table thead th {
-    @apply px-4 py-3 text-left text-2xs font-medium text-content-secondary uppercase tracking-wider;
-  }
-  .data-table tbody tr {
-    @apply border-b border-border-subtle hover:bg-surface-card transition-colors;
-  }
-  .data-table tbody td {
-    @apply px-4 py-3 text-content-primary;
-  }
+  /* ── Tables ─────────────────────────────────────────────────────── */
+  .data-table { @apply w-full text-sm; }
+  .data-table thead tr  { @apply border-b border-border; }
+  .data-table thead th  { @apply px-4 h-8 text-left text-2xs font-medium text-content-secondary uppercase tracking-wider; }
+  .data-table tbody tr  { @apply border-b border-border-subtle hover:bg-surface-card transition-colors; }
+  .data-table tbody td  { @apply px-4 h-9 text-content-primary; }
 
-  /* Form inputs */
+  /* ── Forms ──────────────────────────────────────────────────────── */
   .form-input {
-    @apply w-full bg-surface-card border border-border rounded px-3 py-2 text-sm text-content-primary placeholder-content-tertiary focus:outline-none focus:border-content-tertiary transition-colors;
+    @apply w-full bg-surface-card border border-border rounded px-3 py-2 text-sm
+           text-content-primary placeholder-content-tertiary
+           focus:outline-none focus:border-content-tertiary transition-colors;
   }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+  .form-label { @apply block text-xs font-medium text-content-secondary mb-1.5; }
 
-  /* Date picker icon — invert in dark mode so it's visible on dark backgrounds */
-  .dark input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-  }
-  .form-label {
-    @apply block text-xs font-medium text-content-secondary mb-1.5;
-  }
-
-  /* Nav item in sidebar */
+  /* ── Sidebar nav item ───────────────────────────────────────────── */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2 rounded text-sm text-content-secondary hover:text-content-primary hover:bg-surface-card transition-colors;
+    @apply flex items-center gap-[10px] px-[10px] h-7 text-[13px] text-content-secondary
+           rounded-[5px] hover:text-content-primary hover:bg-surface-card transition-colors;
   }
   .nav-item.active {
     @apply text-content-primary bg-surface-card;
