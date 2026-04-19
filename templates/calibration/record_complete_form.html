@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Ergebnis nachtragen" %} — {{ equipment.name }}{% endblock %}
+{% block page_title %}{% trans "Ergebnis nachtragen" %}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'calibration:detail' equipment.pk %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="card p-6">
+
+    {# AT_LAB context info #}
+    <div class="mb-6 rounded border border-border bg-surface-elevated px-4 py-3 space-y-1">
+      <p class="text-xs text-content-tertiary uppercase tracking-wider font-medium">{% trans "Offener Labor-Eintrag" %}</p>
+      <p class="text-sm text-content-primary font-medium">{{ equipment.name }}</p>
+      <p class="text-xs text-content-secondary">
+        {% trans "Eingesendet am:" %}
+        <span class="font-mono ml-1">{{ record.sent_at|date:"Y-m-d" }}</span>
+        {% if record.external_lab %}
+          · {{ record.external_lab }}
+        {% endif %}
+      </p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="space-y-5">
+
+        {% if form.non_field_errors %}
+          <div class="border border-status-danger/40 bg-status-danger-bg rounded px-4 py-3 text-sm text-status-danger">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.calibrated_at.label }} <span class="text-status-danger">*</span>
+            </label>
+            {{ form.calibrated_at }}
+            {% if form.calibrated_at.errors %}
+              <p class="text-xs text-status-danger mt-1">{{ form.calibrated_at.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <div>
+            <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+              {{ form.returned_at.label }}
+            </label>
+            {{ form.returned_at }}
+            {% if form.returned_at.errors %}
+              <p class="text-xs text-status-danger mt-1">{{ form.returned_at.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.result.label }} <span class="text-status-danger">*</span>
+          </label>
+          {{ form.result }}
+          {% if form.result.errors %}
+            <p class="text-xs text-status-danger mt-1">{{ form.result.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.performed_by.label }}
+          </label>
+          {{ form.performed_by }}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.certificate_number.label }}
+          </label>
+          {{ form.certificate_number }}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.next_due_override.label }}
+            <span class="text-content-tertiary font-normal normal-case tracking-normal ml-1">{% trans "(überschreibt automatische Berechnung)" %}</span>
+          </label>
+          {{ form.next_due_override }}
+        </div>
+
+        <div>
+          <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+            {{ form.notes.label }}
+          </label>
+          {{ form.notes }}
+        </div>
+
+      </div>
+
+      <div class="mt-6 flex gap-3">
+        <button type="submit" class="btn-primary">
+          {% trans "Ergebnis speichern" %}
+        </button>
+        <a href="{% url 'calibration:detail' equipment.pk %}" class="btn-ghost">
+          {% trans "Abbrechen" %}
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

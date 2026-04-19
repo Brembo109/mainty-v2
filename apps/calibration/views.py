@@ -10,7 +10,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin, WriteAccessMixin
 
-from .forms import CalibrationRecordForm, ReturnFromLabForm, TestEquipmentForm
+from .forms import CalibrationRecordCompleteForm, CalibrationRecordForm, TestEquipmentForm
 from .models import CalibrationRecord, TestEquipment
 
 
@@ -64,8 +64,6 @@ class TestEquipmentDetailView(LoginRequiredMixin, DetailView):
         )
         open_record = self.object.open_record
         ctx["open_record"] = open_record
-        if open_record:
-            ctx["return_form"] = ReturnFromLabForm(instance=open_record)
         return ctx
 
 
@@ -188,40 +186,38 @@ class CalibrationRecordDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteV
         return super().form_valid(form)
 
 
-class CalibrationReturnFromLabView(LoginRequiredMixin, WriteAccessMixin, View):
-    """Record the result when equipment returns from an external lab.
+class CalibrationRecordCompleteView(LoginRequiredMixin, WriteAccessMixin, View):
+    """Complete an open AT_LAB record by adding the calibration result."""
 
-    Updates the existing open CalibrationRecord (sent_at set, calibrated_at NULL)
-    instead of creating a second record.
-    """
-
-    def post(self, request, pk):
-        equipment = get_object_or_404(
-            TestEquipment.objects.select_related("asset", "responsible"), pk=pk
+    def _get_record(self, record_pk):
+        return get_object_or_404(
+            CalibrationRecord.objects.select_related("equipment"),
+            pk=record_pk,
+            sent_at__isnull=False,
+            calibrated_at__isnull=True,
         )
-        open_record = equipment.open_record
-        if open_record is None:
-            messages.error(request, _("Kein offener Laboreinsendung gefunden."))
-            return redirect(reverse("calibration:detail", kwargs={"pk": pk}))
 
-        form = ReturnFromLabForm(request.POST, instance=open_record)
+    def get(self, request, record_pk):
+        record = self._get_record(record_pk)
+        form = CalibrationRecordCompleteForm(instance=record)
+        return TemplateResponse(request, "calibration/record_complete_form.html", {
+            "form": form,
+            "record": record,
+            "equipment": record.equipment,
+        })
+
+    def post(self, request, record_pk):
+        record = self._get_record(record_pk)
+        form = CalibrationRecordCompleteForm(request.POST, instance=record)
         if form.is_valid():
             form.save()
-            messages.success(request, _("Ergebnis wurde erfolgreich erfasst."))
-            return redirect(reverse("calibration:detail", kwargs={"pk": pk}))
-
-        # Re-render detail with the bound return_form so errors are visible
-        ctx = {
-            "equipment": equipment,
-            "can_write": request.user.has_role(Role.ADMIN, Role.USER),
-            "records": equipment.records.select_related("performed_by").order_by(
-                "-calibrated_at", "-sent_at", "-created_at"
-            ),
-            "record_form": CalibrationRecordForm(initial={"performed_by": request.user}),
-            "open_record": open_record,
-            "return_form": form,
-        }
-        return TemplateResponse(request, "calibration/equipment_detail.html", ctx)
+            messages.success(request, _("Kalibrierungsergebnis wurde erfolgreich eingetragen."))
+            return redirect(reverse("calibration:detail", kwargs={"pk": record.equipment.pk}))
+        return TemplateResponse(request, "calibration/record_complete_form.html", {
+            "form": form,
+            "record": record,
+            "equipment": record.equipment,
+        })
 
 
 # ---------------------------------------------------------------------------

@@ -128,51 +128,59 @@ class CalibrationRecordForm(forms.ModelForm):
         return cleaned_data
 
 
-class ReturnFromLabForm(forms.ModelForm):
-    """Focused form to record the result when equipment returns from an external lab."""
+class CalibrationRecordCompleteForm(forms.ModelForm):
+    """Form for completing an open AT_LAB record with calibration result."""
 
     class Meta:
         model = CalibrationRecord
-        fields = ["returned_at", "calibrated_at", "result", "certificate_number", "next_due_override", "notes"]
+        fields = [
+            "calibrated_at", "result", "performed_by", "certificate_number",
+            "returned_at", "next_due_override", "notes",
+        ]
         widgets = {
-            "returned_at": forms.DateInput(
-                attrs={"type": "date", "class": _INPUT_CLASS},
-                format="%Y-%m-%d",
-            ),
             "calibrated_at": forms.DateInput(
                 attrs={"type": "date", "class": _INPUT_CLASS},
                 format="%Y-%m-%d",
             ),
             "result": forms.Select(attrs={"class": _INPUT_CLASS}),
+            "performed_by": forms.Select(attrs={"class": _INPUT_CLASS}),
             "certificate_number": forms.TextInput(attrs={
                 "class": _INPUT_CLASS,
                 "placeholder": _("z.B. CAL-2024-0042"),
             }),
+            "returned_at": forms.DateInput(
+                attrs={"type": "date", "class": _INPUT_CLASS},
+                format="%Y-%m-%d",
+            ),
             "next_due_override": forms.DateInput(
                 attrs={"type": "date", "class": _INPUT_CLASS},
                 format="%Y-%m-%d",
             ),
             "notes": forms.Textarea(attrs={
                 "class": _INPUT_CLASS,
-                "rows": 2,
+                "rows": 3,
                 "placeholder": _("Optionale Notizen…"),
             }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["result"].choices = [("", "---------")] + list(CalibrationResult.CHOICES)
-        self.fields["next_due_override"].required = False
-        self.fields["certificate_number"].required = False
-        self.fields["notes"].required = False
-        self.fields["returned_at"].required = False
+        self.fields["performed_by"].queryset = User.objects.filter(
+            is_active=True
+        ).order_by("username")
+        self.fields["performed_by"].required = False
+        self.fields["result"].choices = [("", "---------")] + list(
+            CalibrationResult.CHOICES
+        )
 
     def clean(self):
         cleaned_data = super().clean()
         calibrated_at = cleaned_data.get("calibrated_at")
         result = cleaned_data.get("result")
 
-        if calibrated_at and not result:
-            self.add_error("result", _("Ergebnis ist erforderlich wenn ein Kalibrierungsdatum angegeben wird."))
+        if not calibrated_at:
+            self.add_error("calibrated_at", _("Kalibrierungsdatum ist erforderlich."))
+        if not result:
+            self.add_error("result", _("Ergebnis ist erforderlich."))
 
         return cleaned_data
