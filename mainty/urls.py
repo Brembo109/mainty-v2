@@ -2,11 +2,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from apps.core.views import health
+from apps.core.health import LivenessView, ReadinessView
 
 # Non-i18n routes (health must be at a fixed URL for infrastructure monitoring)
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
     path("health/", health, name="health"),
+    path("healthz/", LivenessView.as_view(), name="healthz"),
+    path("readyz/", ReadinessView.as_view(), name="readyz"),
 ]
 
 # i18n-prefixed routes (prefix_default_language=False keeps /de/ optional)

@@ -10,6 +10,8 @@ _EXEMPT_PREFIXES = (
     "/accounts/",
     "/admin/",
     "/health/",
+    "/healthz/",
+    "/readyz/",
     "/static/",
     "/i18n/",
 )
