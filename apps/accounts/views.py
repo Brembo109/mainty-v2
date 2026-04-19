@@ -2,7 +2,9 @@ from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -11,8 +13,18 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView, View
 
 from apps.audit.models import AuditLog
+from apps.core.filters import build_toolbar_context
 from .constants import Role
-from .forms import AdminSetPasswordForm, LoginForm, StyledPasswordChangeForm, StyledSetPasswordForm, UserCreateForm, UserUpdateForm
+from .filter_defs import USER_FILTER_DIMENSIONS
+from .forms import (
+    AdminSetPasswordForm,
+    LoginForm,
+    StyledPasswordChangeForm,
+    StyledSetPasswordForm,
+    UserCreateForm,
+    UserFilterForm,
+    UserUpdateForm,
+)
 from .mixins import RoleRequiredMixin
 from .models import User
 
@@ -106,9 +118,58 @@ class UserListView(RoleRequiredMixin, ListView):
     model = User
     template_name = "accounts/user_list.html"
     context_object_name = "users"
+    paginate_by = 50
 
     def get_queryset(self):
-        return User.objects.prefetch_related("groups").order_by("username")
+        return _apply_user_filters(
+            User.objects.prefetch_related("groups").order_by("username"),
+            self._filter_form(),
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        form = self._filter_form()
+        ctx["filter_form"] = form
+        get_params = self.request.GET.copy()
+        get_params.pop("page", None)
+        ctx["filter_params"] = get_params.urlencode()
+        ctx.update(build_toolbar_context(
+            self.request, form, USER_FILTER_DIMENSIONS,
+            search_placeholder=_("Benutzername, Name, E-Mail…"),
+            hx_target="#user-list-body",
+            inline_fields=["role", "is_active"],
+        ))
+        return ctx
+
+    def render_to_response(self, context, **kwargs):
+        if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
+            return TemplateResponse(self.request, "accounts/partials/_user_list_body.html", context)
+        return super().render_to_response(context, **kwargs)
+
+    def _filter_form(self):
+        if not hasattr(self, "_cached_filter_form"):
+            self._cached_filter_form = UserFilterForm(self.request.GET or None)
+        return self._cached_filter_form
+
+
+def _apply_user_filters(qs, form):
+    if not form.is_valid():
+        return qs
+    cd = form.cleaned_data
+    if cd.get("q"):
+        qs = qs.filter(
+            Q(username__icontains=cd["q"])
+            | Q(email__icontains=cd["q"])
+            | Q(first_name__icontains=cd["q"])
+            | Q(last_name__icontains=cd["q"])
+        )
+    if cd.get("role"):
+        qs = qs.filter(groups__name=cd["role"])
+    if cd.get("is_active") == "yes":
+        qs = qs.filter(is_active=True)
+    elif cd.get("is_active") == "no":
+        qs = qs.filter(is_active=False)
+    return qs
 
 
 class UserCreateView(RoleRequiredMixin, CreateView):

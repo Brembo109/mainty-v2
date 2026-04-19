@@ -12,7 +12,9 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
+from apps.core.filters import build_toolbar_context
 
+from .filter_defs import CONTRACT_FILTER_DIMENSIONS
 from .forms import ContractFilterForm, ContractForm, ContractRenewalForm
 from .models import Contract, ContractRenewal
 
@@ -33,17 +35,24 @@ class ContractListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["filter_form"] = self._filter_form()
+        form = self._filter_form()
+        ctx["filter_form"] = form
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        ctx.update(build_toolbar_context(
+            self.request, form, CONTRACT_FILTER_DIMENSIONS,
+            search_placeholder=_("Bezeichnung, Dienstleister, Nr.…"),
+            hx_target="#contract-list-body",
+            inline_fields=["status", "vendor", "asset"],
+        ))
         return ctx
 
     def render_to_response(self, context, **kwargs):
         if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(
-                self.request, "contracts/partials/_contract_table.html", context
+                self.request, "contracts/partials/_contract_list_body.html", context
             )
         return super().render_to_response(context, **kwargs)
 
@@ -165,4 +174,8 @@ def _apply_filters(qs, form):
             qs = qs.filter(end_date__gte=today, end_date__lte=warning_cutoff)
         elif cd["status"] == "expired":
             qs = qs.filter(end_date__lt=today)
+    if cd.get("vendor"):
+        qs = qs.filter(vendor=cd["vendor"])
+    if cd.get("asset"):
+        qs = qs.filter(assets=cd["asset"])
     return qs

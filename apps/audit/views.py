@@ -8,7 +8,11 @@ from django.views.generic import ListView, View
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin
+from apps.core.filters import build_toolbar_context
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
+from .filter_defs import AUDIT_FILTER_DIMENSIONS
 from .forms import AuditFilterForm
 from .models import AuditLog
 
@@ -28,17 +32,24 @@ class AuditLogListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["filter_form"] = self._filter_form()
+        form = self._filter_form()
+        ctx["filter_form"] = form
         # Pre-encoded filter params without 'page' — used to build pagination links.
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
+        ctx.update(build_toolbar_context(
+            self.request, form, AUDIT_FILTER_DIMENSIONS,
+            search_placeholder=_("Benutzer, Objekt…"),
+            hx_target="#audit-list-body",
+            inline_fields=["action", "model"],
+        ))
         return ctx
 
     def render_to_response(self, context, **kwargs):
-        # Return only the table partial for HTMX filter requests.
+        # Return the wrapped list body so the toolbar re-renders with chips.
         if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
-            return TemplateResponse(self.request, "audit/partials/_audit_table.html", context)
+            return TemplateResponse(self.request, "audit/partials/_audit_list_body.html", context)
         return super().render_to_response(context, **kwargs)
 
     def _filter_form(self):
@@ -136,8 +147,13 @@ def _apply_filters(qs, form):
         qs = qs.filter(timestamp__date__gte=cd["date_from"])
     if cd.get("date_to"):
         qs = qs.filter(timestamp__date__lte=cd["date_to"])
-    if cd.get("actor"):
-        qs = qs.filter(actor_username__icontains=cd["actor"])
+    if cd.get("q"):
+        qs = qs.filter(
+            Q(actor_username__icontains=cd["q"])
+            | Q(object_repr__icontains=cd["q"])
+        )
     if cd.get("action"):
         qs = qs.filter(action=cd["action"])
+    if cd.get("model"):
+        qs = qs.filter(content_type_id=cd["model"])
     return qs

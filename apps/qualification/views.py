@@ -14,8 +14,15 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
+from apps.core.filters import build_toolbar_context
 
-from .forms import QualificationCycleCreateForm, QualificationCycleUpdateForm, SignatureForm
+from .filter_defs import QUALIFICATION_FILTER_DIMENSIONS
+from .forms import (
+    QualificationCycleCreateForm,
+    QualificationCycleFilterForm,
+    QualificationCycleUpdateForm,
+    SignatureForm,
+)
 from .models import QualificationCycle, QualificationSignature
 
 
@@ -26,24 +33,24 @@ def _cycle_qs():
     )
 
 
-def _apply_filters(qs, get_params):
-    q = get_params.get("q", "").strip()
-    qual_type = get_params.get("type", "").strip()
-    status = get_params.get("status", "").strip()
-
-    if q:
+def _apply_filters(qs, form):
+    if not form.is_valid():
+        return qs
+    cd = form.cleaned_data
+    if cd.get("q"):
         qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(asset__name__icontains=q)
-            | Q(responsible__icontains=q)
+            Q(title__icontains=cd["q"])
+            | Q(asset__name__icontains=cd["q"])
+            | Q(responsible__icontains=cd["q"])
         )
-    if qual_type:
-        qs = qs.filter(qual_type=qual_type)
+    if cd.get("qual_type"):
+        qs = qs.filter(qual_type=cd["qual_type"])
+    if cd.get("asset"):
+        qs = qs.filter(asset=cd["asset"])
     # Status filtering is done in Python after fetching because status depends
     # on the annotated last_signed_at — DB-side date math would be complex.
-    if status:
-        qs = list(qs)
-        qs = [c for c in qs if c.status == status]
+    if cd.get("status"):
+        qs = [c for c in qs if c.status == cd["status"]]
     return qs
 
 
@@ -53,25 +60,35 @@ class QualificationCycleListView(LoginRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return _apply_filters(_cycle_qs(), self.request.GET)
+        return _apply_filters(_cycle_qs(), self._filter_form())
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        form = self._filter_form()
+        ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
-        ctx["q"] = self.request.GET.get("q", "")
-        ctx["type_filter"] = self.request.GET.get("type", "")
-        ctx["status_filter"] = self.request.GET.get("status", "")
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
+        ctx.update(build_toolbar_context(
+            self.request, form, QUALIFICATION_FILTER_DIMENSIONS,
+            search_placeholder=_("Bezeichnung, Anlage…"),
+            hx_target="#cycle-list-body",
+            inline_fields=["status", "qual_type", "asset"],
+        ))
         return ctx
 
     def render_to_response(self, context, **kwargs):
         if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(
-                self.request, "qualification/partials/_cycle_table.html", context
+                self.request, "qualification/partials/_cycle_list_body.html", context
             )
         return super().render_to_response(context, **kwargs)
+
+    def _filter_form(self):
+        if not hasattr(self, "_cached_filter_form"):
+            self._cached_filter_form = QualificationCycleFilterForm(self.request.GET or None)
+        return self._cached_filter_form
 
 
 class QualificationCycleDetailView(LoginRequiredMixin, DetailView):
