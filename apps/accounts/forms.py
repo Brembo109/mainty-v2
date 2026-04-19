@@ -10,6 +10,34 @@ from .constants import Role
 from .models import User
 
 _FORM_INPUT_CLASS = "form-input"
+_FILTER_INPUT_CLASS = "filter-toolbar__inline-input"
+
+
+class UserFilterForm(forms.Form):
+    q = forms.CharField(
+        required=False,
+        label=_("Suche"),
+        widget=forms.TextInput(attrs={
+            "class": _FILTER_INPUT_CLASS,
+            "autocomplete": "off",
+        }),
+    )
+    role = forms.ChoiceField(
+        required=False,
+        label=_("Rolle"),
+        choices=[("", _("Alle Rollen"))] + Role.CHOICES,
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+    is_active = forms.ChoiceField(
+        required=False,
+        label=_("Status"),
+        choices=[
+            ("", _("Alle")),
+            ("yes", _("Aktiv")),
+            ("no", _("Inaktiv")),
+        ],
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
 
 
 class LoginForm(AuthenticationForm):

@@ -9,8 +9,15 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin, WriteAccessMixin
+from apps.core.filters import build_toolbar_context
 
-from .forms import CalibrationRecordCompleteForm, CalibrationRecordForm, TestEquipmentForm
+from .filter_defs import CALIBRATION_FILTER_DIMENSIONS
+from .forms import (
+    CalibrationRecordCompleteForm,
+    CalibrationRecordForm,
+    TestEquipmentFilterForm,
+    TestEquipmentForm,
+)
 from .models import CalibrationRecord, TestEquipment
 
 
@@ -23,25 +30,36 @@ class TestEquipmentListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return _apply_filters(
             TestEquipment.objects.select_related("asset", "responsible").prefetch_related("records"),
-            self.request.GET,
+            self._filter_form(),
         )
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        form = self._filter_form()
+        ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
-        ctx["q"] = self.request.GET.get("q", "")
-        ctx["status_filter"] = self.request.GET.get("status", "")
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
+        ctx.update(build_toolbar_context(
+            self.request, form, CALIBRATION_FILTER_DIMENSIONS,
+            search_placeholder=_("Bezeichnung, Seriennr., Hersteller…"),
+            hx_target="#equipment-list-body",
+            inline_fields=["status", "location", "responsible"],
+        ))
         return ctx
 
     def render_to_response(self, context, **kwargs):
         if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(
-                self.request, "calibration/partials/_equipment_table.html", context
+                self.request, "calibration/partials/_equipment_list_body.html", context
             )
         return super().render_to_response(context, **kwargs)
+
+    def _filter_form(self):
+        if not hasattr(self, "_cached_filter_form"):
+            self._cached_filter_form = TestEquipmentFilterForm(self.request.GET or None)
+        return self._cached_filter_form
 
 
 class TestEquipmentDetailView(LoginRequiredMixin, DetailView):
@@ -224,19 +242,23 @@ class CalibrationRecordCompleteView(LoginRequiredMixin, WriteAccessMixin, View):
 # Shared filter logic
 # ---------------------------------------------------------------------------
 
-def _apply_filters(qs, get_params):
-    q = get_params.get("q", "").strip()
-    status = get_params.get("status", "").strip()
-
-    if q:
+def _apply_filters(qs, form):
+    if not form.is_valid():
+        return qs
+    cd = form.cleaned_data
+    if cd.get("q"):
         qs = qs.filter(
-            Q(name__icontains=q)
-            | Q(serial_number__icontains=q)
-            | Q(manufacturer__icontains=q)
-            | Q(asset__name__icontains=q)
+            Q(name__icontains=cd["q"])
+            | Q(serial_number__icontains=cd["q"])
+            | Q(manufacturer__icontains=cd["q"])
+            | Q(asset__name__icontains=cd["q"])
         )
+    if cd.get("location"):
+        qs = qs.filter(location=cd["location"])
+    if cd.get("responsible"):
+        qs = qs.filter(responsible=cd["responsible"])
     # Status filtering in Python — status is a computed property depending on DB records.
     # Acceptable for GMP list sizes (< 500 items).
-    if status:
-        qs = [e for e in qs if e.status == status]
+    if cd.get("status"):
+        qs = [e for e in qs if e.status == cd["status"]]
     return qs

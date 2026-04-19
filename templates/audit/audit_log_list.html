@@ -49,50 +49,7 @@
 {% endblock %}
 
 {% block content %}
-
-  {# ── Filter bar ──────────────────────────────────────────────────── #}
-  <form
-    method="get"
-    id="audit-filter"
-    hx-get="{% url 'audit:list' %}"
-    hx-target="#audit-results"
-    hx-trigger="change, keyup changed delay:400ms from:[name=actor]"
-    hx-push-url="true"
-    hx-indicator="#htmx-indicator"
-    class="flex flex-wrap items-end gap-3 mb-5"
-  >
-    <div class="flex flex-col gap-1">
-      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.date_from.label }}</label>
-      {{ filter_form.date_from }}
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.date_to.label }}</label>
-      {{ filter_form.date_to }}
-    </div>
-    <div class="flex flex-col gap-1 min-w-36">
-      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.actor.label }}</label>
-      {{ filter_form.actor }}
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium">{{ filter_form.action.label }}</label>
-      {{ filter_form.action }}
-    </div>
-    <button type="submit"
-      class="px-3 py-1.5 text-xs border border-border rounded text-content-secondary hover:bg-surface-card hover:text-content-primary transition-colors self-end">
-      {% trans "Filtern" %}
-    </button>
-    {% if request.GET %}
-      <a href="{% url 'audit:list' %}"
-         class="px-3 py-1.5 text-xs text-content-tertiary hover:text-content-primary transition-colors self-end">
-        {% trans "Zurücksetzen" %}
-      </a>
-    {% endif %}
-  </form>
-
-  {# ── Results (HTMX swap target) ──────────────────────────────────── #}
-  <div id="audit-results">
-    {% include "audit/partials/_audit_table.html" %}
-  </div>
+  {% include "audit/partials/_audit_list_body.html" %}
 
   {# HTMX loading indicator #}
   <div id="htmx-indicator" class="htmx-indicator fixed bottom-4 right-4 text-xs text-content-tertiary bg-surface-card border border-border rounded px-3 py-1.5">

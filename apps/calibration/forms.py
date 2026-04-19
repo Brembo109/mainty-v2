@@ -7,6 +7,7 @@ from .constants import CalibrationResult, CalibrationStatus
 from .models import CalibrationRecord, TestEquipment
 
 _INPUT_CLASS = "form-input"
+_FILTER_INPUT_CLASS = "filter-toolbar__inline-input"
 
 
 class TestEquipmentForm(forms.ModelForm):
@@ -53,6 +54,52 @@ class TestEquipmentForm(forms.ModelForm):
         ).order_by("username")
         self.fields["responsible"].required = False
         self.fields["asset"].required = False
+
+
+class TestEquipmentFilterForm(forms.Form):
+    q = forms.CharField(
+        required=False,
+        label=_("Suche"),
+        widget=forms.TextInput(attrs={
+            "class": _FILTER_INPUT_CLASS,
+            "autocomplete": "off",
+        }),
+    )
+    status = forms.ChoiceField(
+        required=False,
+        label=_("Status"),
+        choices=[("", _("Alle Status"))] + CalibrationStatus.CHOICES,
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+    location = forms.ChoiceField(
+        required=False,
+        label=_("Standort"),
+        choices=[("", _("Alle"))],
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+    responsible = forms.ModelChoiceField(
+        required=False,
+        label=_("Verantwortlich"),
+        queryset=None,
+        empty_label=_("Alle"),
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["responsible"].queryset = User.objects.filter(
+            is_active=True
+        ).order_by("username")
+        locations = (
+            TestEquipment.objects
+            .exclude(location="")
+            .order_by("location")
+            .values_list("location", flat=True)
+            .distinct()
+        )
+        self.fields["location"].choices = (
+            [("", _("Alle"))] + [(loc, loc) for loc in locations]
+        )
 
 
 class CalibrationRecordForm(forms.ModelForm):

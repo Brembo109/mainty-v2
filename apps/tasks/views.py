@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -9,8 +11,10 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
+from apps.core.filters import build_toolbar_context
 
-from .forms import TaskCreateForm, TaskUpdateForm
+from .filter_defs import TASK_FILTER_DIMENSIONS
+from .forms import TaskCreateForm, TaskFilterForm, TaskUpdateForm
 from .models import Task
 
 
@@ -24,25 +28,37 @@ class TaskListView(LoginRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return _apply_filters(_task_qs(), self.request.GET)
+        return _apply_filters(_task_qs(), self._filter_form())
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        form = self._filter_form()
+        ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
-        ctx["q"] = self.request.GET.get("q", "")
-        ctx["status_filter"] = self.request.GET.get("status", "")
-        ctx["priority_filter"] = self.request.GET.get("priority", "")
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
+        ctx.update(build_toolbar_context(
+            self.request, form, TASK_FILTER_DIMENSIONS,
+            search_placeholder=_("Titel, Anlage, Benutzer…"),
+            hx_target="#task-list-body",
+            inline_fields=[
+                "status", "priority", "assigned_to", "asset", "overdue",
+            ],
+        ))
         return ctx
 
     def render_to_response(self, context, **kwargs):
         if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(
-                self.request, "tasks/partials/_task_table.html", context
+                self.request, "tasks/partials/_task_list_body.html", context
             )
         return super().render_to_response(context, **kwargs)
+
+    def _filter_form(self):
+        if not hasattr(self, "_cached_filter_form"):
+            self._cached_filter_form = TaskFilterForm(self.request.GET or None)
+        return self._cached_filter_form
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -146,20 +162,27 @@ class TaskDeleteView(LoginRequiredMixin, WriteAccessMixin, DeleteView):
 # Shared filter logic
 # ---------------------------------------------------------------------------
 
-def _apply_filters(qs, get_params):
-    q = get_params.get("q", "").strip()
-    status = get_params.get("status", "").strip()
-    priority = get_params.get("priority", "").strip()
-
-    if q:
+def _apply_filters(qs, form):
+    if not form.is_valid():
+        return qs
+    cd = form.cleaned_data
+    if cd.get("q"):
         qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(description__icontains=q)
-            | Q(assigned_to__username__icontains=q)
-            | Q(asset__name__icontains=q)
+            Q(title__icontains=cd["q"])
+            | Q(description__icontains=cd["q"])
+            | Q(assigned_to__username__icontains=cd["q"])
+            | Q(asset__name__icontains=cd["q"])
         )
-    if status:
-        qs = qs.filter(status=status)
-    if priority:
-        qs = qs.filter(priority=priority)
+    if cd.get("status"):
+        qs = qs.filter(status=cd["status"])
+    if cd.get("priority"):
+        qs = qs.filter(priority=cd["priority"])
+    if cd.get("assigned_to"):
+        qs = qs.filter(assigned_to=cd["assigned_to"])
+    if cd.get("asset"):
+        qs = qs.filter(asset=cd["asset"])
+    if cd.get("overdue") == "yes":
+        qs = qs.filter(due_date__lt=date.today()).exclude(status="done")
+    elif cd.get("overdue") == "no":
+        qs = qs.filter(Q(due_date__gte=date.today()) | Q(due_date__isnull=True) | Q(status="done"))
     return qs

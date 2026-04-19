@@ -9,6 +9,9 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 
+from apps.core.filters import build_toolbar_context
+
+from .filter_defs import ASSET_FILTER_DIMENSIONS
 from .forms import AssetFilterForm, AssetForm
 from .models import Asset
 
@@ -27,17 +30,27 @@ class AssetListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["filter_form"] = self._filter_form()
+        form = self._filter_form()
+        ctx["filter_form"] = form
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        ctx.update(build_toolbar_context(
+            self.request, form, ASSET_FILTER_DIMENSIONS,
+            search_placeholder=_("Anlage, Seriennr., Hersteller…"),
+            hx_target="#asset-list-body",
+            inline_fields=[
+                "status", "location", "department", "responsible",
+                "manufacturer", "has_contract",
+            ],
+        ))
         return ctx
 
     def render_to_response(self, context, **kwargs):
         if self.request.headers.get("HX-Request") and not self.request.headers.get("HX-Boosted"):
             return TemplateResponse(
-                self.request, "assets/partials/_asset_table.html", context
+                self.request, "assets/partials/_asset_list_body.html", context
             )
         return super().render_to_response(context, **kwargs)
 
@@ -132,7 +145,11 @@ def _apply_filters(qs, form):
         return qs
     cd = form.cleaned_data
     if cd.get("q"):
-        qs = qs.filter(Q(name__icontains=cd["q"]) | Q(serial_number__icontains=cd["q"]))
+        qs = qs.filter(
+            Q(name__icontains=cd["q"])
+            | Q(serial_number__icontains=cd["q"])
+            | Q(manufacturer__icontains=cd["q"])
+        )
     if cd.get("status"):
         qs = qs.filter(status=cd["status"])
     if cd.get("location"):
@@ -141,4 +158,10 @@ def _apply_filters(qs, form):
         qs = qs.filter(department=cd["department"])
     if cd.get("responsible"):
         qs = qs.filter(responsible=cd["responsible"])
+    if cd.get("manufacturer"):
+        qs = qs.filter(manufacturer=cd["manufacturer"])
+    if cd.get("has_contract") == "yes":
+        qs = qs.filter(contracts__isnull=False).distinct()
+    elif cd.get("has_contract") == "no":
+        qs = qs.filter(contracts__isnull=True)
     return qs

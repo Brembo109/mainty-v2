@@ -5,10 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}mainty{% endblock %} — mainty</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/mainty-hero.svg' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'main.css' %}">
+  <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 </head>
 <body class="bg-surface text-content-primary min-h-full flex" hx-boost="true">
@@ -18,9 +21,9 @@
 
     {# Workspace switcher #}
     <div class="h-12 px-3 flex items-center gap-2 border-b border-border shrink-0">
-      <div class="w-5 h-5 rounded-[4px] bg-accent flex items-center justify-center shrink-0">
-        <span class="text-[11px] font-bold text-accent-fg font-mono leading-none">m</span>
-      </div>
+      <span class="text-content-primary w-5 h-5 shrink-0 flex items-center justify-center" aria-hidden="true">
+        {% include "partials/_mainty_mark.svg" %}
+      </span>
       <div class="flex-1 min-w-0">
         <div class="text-[13px] font-medium text-content-primary leading-tight truncate">mainty</div>
         <div class="text-[11px] text-content-tertiary font-mono leading-tight truncate">{{ user.get_username }}</div>

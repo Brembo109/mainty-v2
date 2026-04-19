@@ -7,6 +7,7 @@ from .constants import ContractStatus
 from .models import Contract, ContractRenewal
 
 _INPUT_CLASS = "form-input"
+_FILTER_INPUT_CLASS = "filter-toolbar__inline-input"
 
 
 class ContractForm(forms.ModelForm):
@@ -100,8 +101,7 @@ class ContractFilterForm(forms.Form):
         required=False,
         label=_("Suche"),
         widget=forms.TextInput(attrs={
-            "class": _INPUT_CLASS,
-            "placeholder": _("Bezeichnung, Anbieter oder Nr.…"),
+            "class": _FILTER_INPUT_CLASS,
             "autocomplete": "off",
         }),
     )
@@ -109,5 +109,32 @@ class ContractFilterForm(forms.Form):
         required=False,
         label=_("Status"),
         choices=[("", _("Alle Status"))] + ContractStatus.CHOICES,
-        widget=forms.Select(attrs={"class": _INPUT_CLASS}),
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
     )
+    vendor = forms.ChoiceField(
+        required=False,
+        label=_("Dienstleister"),
+        choices=[("", _("Alle"))],
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+    asset = forms.ModelChoiceField(
+        required=False,
+        label=_("Anlage"),
+        queryset=None,
+        empty_label=_("Alle Anlagen"),
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["asset"].queryset = Asset.objects.order_by("name")
+        vendors = (
+            Contract.objects
+            .exclude(vendor="")
+            .order_by("vendor")
+            .values_list("vendor", flat=True)
+            .distinct()
+        )
+        self.fields["vendor"].choices = (
+            [("", _("Alle"))] + [(v, v) for v in vendors]
+        )

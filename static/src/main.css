@@ -132,4 +132,143 @@
   .nav-item.active {
     @apply text-content-primary bg-surface-card;
   }
+
+  /* ── Filter toolbar ─────────────────────────────────────────────── */
+
+  .filter-toolbar {
+    @apply flex items-center gap-2 flex-wrap mb-4;
+  }
+
+  .filter-toolbar__search {
+    @apply flex items-center gap-1.5 h-7 px-2.5
+           bg-surface-card border border-border rounded-[5px]
+           w-[260px] min-w-[200px];
+  }
+
+  .filter-toolbar__search-input {
+    @apply flex-1 bg-transparent border-0 outline-none
+           text-[13px] text-content-primary
+           placeholder:text-content-tertiary
+           min-w-0;
+  }
+
+  .filter-toolbar__search-clear {
+    @apply inline-flex items-center justify-center
+           w-4 h-4 rounded-[3px] bg-surface border-0
+           text-content-secondary hover:text-content-primary
+           cursor-pointer p-0 shrink-0;
+  }
+
+  .filter-toolbar__sep {
+    @apply w-px h-[18px] bg-border shrink-0;
+  }
+
+  .filter-toolbar__reset {
+    @apply h-[26px] px-2 bg-transparent border-0 cursor-pointer
+           text-content-tertiary hover:text-content-primary
+           text-[12px] transition-colors inline-flex items-center;
+  }
+
+  /* ── Filter chip ────────────────────────────────────────────────── */
+
+  .filter-chip {
+    @apply inline-flex items-stretch h-[26px]
+           bg-surface-card border border-border rounded-[5px]
+           text-[12px] overflow-hidden;
+  }
+
+  .filter-chip__label {
+    @apply inline-flex items-center px-2
+           text-content-secondary
+           border-r border-border;
+  }
+
+  .filter-chip__sep {
+    @apply inline-flex items-center px-1
+           text-content-tertiary;
+  }
+
+  .filter-chip__value {
+    @apply inline-flex items-center gap-1.5 pr-2
+           text-content-primary font-medium;
+  }
+
+  .filter-chip__more {
+    @apply text-[10px] text-content-secondary font-mono
+           px-[5px] py-[1px] rounded-[3px] bg-surface;
+  }
+
+  .filter-chip__remove {
+    @apply inline-flex items-center justify-center w-[22px]
+           bg-transparent border-l border-border
+           text-content-tertiary hover:text-content-primary
+           cursor-pointer p-0 transition-colors;
+  }
+
+  /* ── Add-filter button ──────────────────────────────────────────── */
+
+  .filter-add {
+    @apply inline-flex items-center gap-1.5 h-[26px] px-[9px]
+           bg-transparent border border-dashed border-border-strong rounded-[5px]
+           text-[12px] text-content-secondary
+           cursor-pointer transition-colors;
+  }
+
+  .filter-add:hover,
+  .filter-add[aria-expanded="true"] {
+    @apply bg-surface-card;
+  }
+
+  /* ── Filter popover ─────────────────────────────────────────────── */
+
+  .filter-popover {
+    @apply absolute top-full left-0 mt-1
+           min-w-[220px] max-w-[280px]
+           bg-surface-card border border-border-strong rounded-md
+           p-1 z-50;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .filter-popover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .filter-popover__search {
+    @apply flex items-center gap-1.5 px-2 py-1.5
+           border-b border-border -mx-1 -mt-1 mb-1
+           text-[12px] text-content-tertiary;
+  }
+
+  .filter-popover__item {
+    @apply flex items-center gap-2 w-full px-2 py-1.5
+           bg-transparent border-0 rounded
+           text-[13px] text-content-primary
+           cursor-pointer text-left;
+  }
+
+  .filter-popover__item:hover,
+  .filter-popover__item[data-active="true"] {
+    @apply bg-surface;
+  }
+
+  .filter-popover__item-hint {
+    @apply text-[11px] text-content-tertiary font-mono;
+  }
+
+  .filter-popover__empty {
+    @apply px-2 py-3 text-center text-[12px] text-content-tertiary;
+  }
+
+  /* Inline select/input inside the toolbar (popover-triggered editors) */
+  .filter-toolbar__inline-input {
+    @apply h-[22px] bg-transparent border-0 rounded-[3px]
+           text-[12px] text-content-primary pl-0 pr-1 py-0
+           focus:outline-none focus:ring-0;
+    max-width: 200px;
+    min-width: 80px;
+  }
+  .filter-toolbar__inline-input:focus { @apply bg-surface; }
+
+  /* Alpine.js x-cloak */
+  [x-cloak] { display: none !important; }
 }

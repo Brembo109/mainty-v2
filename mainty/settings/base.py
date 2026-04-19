@@ -71,6 +71,9 @@ TEMPLATES = [
                 "django.template.context_processors.i18n",
                 "apps.notifications.context_processors.notifications",
             ],
+            "builtins": [
+                "apps.core.templatetags.filter_tags",
+            ],
         },
     },
 ]
