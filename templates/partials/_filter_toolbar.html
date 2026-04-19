@@ -1,0 +1,176 @@
+{% load i18n %}
+{% comment %}
+_filter_toolbar.html — Linear-style filter toolbar.
+
+Required context:
+  filter_search_name         str   GET param for text search (default: "q")
+  filter_search_value        str   current search value (or empty)
+  filter_search_placeholder  str   placeholder text
+  filter_dimensions          list  [{key, label, hint?}]
+  filter_active_chips        list  [{key, label, value_display, extra_count,
+                                     remove_url}]
+  filter_reset_url           str   URL with no filter params
+  filter_hx_target           str   CSS selector HTMX swaps into
+  filter_hx_url              str   URL HTMX GETs from (usually same as list URL)
+  filter_form                Form  bound filter form (for inline editors and
+                                    hidden fields)
+  filter_inline_fields       list  field names rendered as visible inline
+                                    controls when the popover picks them
+{% endcomment %}
+<form
+  class="filter-toolbar"
+  method="get"
+  hx-get="{{ filter_hx_url }}"
+  hx-target="{{ filter_hx_target }}"
+  hx-swap="outerHTML"
+  hx-trigger="change, keyup changed delay:400ms from:[data-filter-search]"
+  hx-push-url="true"
+  hx-indicator="#htmx-indicator"
+  x-data="{ popoverOpen: false, editingDim: null }"
+  @keydown.escape.window="popoverOpen = false; editingDim = null"
+>
+
+  {# ── Search ──────────────────────────────────────────────────── #}
+  <label class="filter-toolbar__search">
+    <svg class="shrink-0 text-content-tertiary" width="12" height="12"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>
+    </svg>
+    <input
+      type="text"
+      name="{{ filter_search_name|default:'q' }}"
+      value="{{ filter_search_value }}"
+      placeholder="{{ filter_search_placeholder|default:_('Suche…') }}"
+      autocomplete="off"
+      data-filter-search
+      class="filter-toolbar__search-input"
+    >
+    {% if filter_search_value %}
+    <button type="button"
+      class="filter-toolbar__search-clear"
+      onclick="var i=this.parentElement.querySelector('[data-filter-search]'); i.value=''; htmx.trigger(this.closest('form'), 'change');"
+      aria-label="{% trans 'Suche löschen' %}">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M6 6l12 12M18 6l-12 12"/>
+      </svg>
+    </button>
+    {% endif %}
+  </label>
+
+  {# ── Separator ───────────────────────────────────────────────── #}
+  <div class="filter-toolbar__sep" aria-hidden="true"></div>
+
+  {# ── Active chips ────────────────────────────────────────────── #}
+  {% for chip in filter_active_chips %}
+    <span class="filter-chip">
+      <span class="filter-chip__label">{{ chip.label }}</span>
+      <span class="filter-chip__sep" aria-hidden="true">:</span>
+      <span class="filter-chip__value">
+        {{ chip.value_display }}
+        {% if chip.extra_count %}
+        <span class="filter-chip__more">+{{ chip.extra_count }}</span>
+        {% endif %}
+      </span>
+      <a href="{{ chip.remove_url }}"
+         hx-get="{{ chip.remove_url }}"
+         hx-target="{{ filter_hx_target }}"
+         hx-swap="outerHTML"
+         hx-push-url="true"
+         class="filter-chip__remove"
+         aria-label="{% blocktrans with label=chip.label %}{{ label }} entfernen{% endblocktrans %}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6l-12 12"/>
+        </svg>
+      </a>
+    </span>
+  {% endfor %}
+
+  {# ── Inline editors (one per dimension, shown on popover pick) ── #}
+  {% if filter_form %}
+    {% for field in filter_form %}
+      {% if field.name in filter_inline_fields %}
+        <label x-show="editingDim === '{{ field.name }}'" x-cloak
+               class="filter-chip" style="padding-right: 4px;">
+          <span class="filter-chip__label">{{ field.label }}</span>
+          <span class="filter-chip__sep" aria-hidden="true">:</span>
+          <span class="filter-chip__value" style="padding-left: 4px;">
+            <span x-init="$nextTick(() => { if (editingDim === '{{ field.name }}') $el.nextElementSibling?.focus?.() })"></span>
+            {{ field }}
+          </span>
+        </label>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {# ── Add-filter button + popover ─────────────────────────────── #}
+  <div class="relative">
+    {% with available=filter_dimensions|available_dimensions:filter_active_chips %}
+    {% if available %}
+    <button type="button"
+      class="filter-add"
+      :aria-expanded="popoverOpen.toString()"
+      @click.stop="popoverOpen = !popoverOpen">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      {% trans "Filter" %}
+    </button>
+
+    <div x-show="popoverOpen"
+         x-cloak
+         @click.outside="popoverOpen = false"
+         x-transition.opacity.duration.100ms
+         class="filter-popover"
+         role="menu">
+      <div class="filter-popover__search">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>
+        </svg>
+        <span>{% trans "Filter suchen…" %}</span>
+      </div>
+      {% for dim in available %}
+        <button type="button"
+          class="filter-popover__item"
+          @click="popoverOpen = false; editingDim = '{{ dim.key }}'"
+          role="menuitem">
+          <span class="flex-1">{{ dim.label }}</span>
+          {% if dim.hint %}
+          <span class="filter-popover__item-hint">{{ dim.hint }}</span>
+          {% endif %}
+        </button>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+
+  {# ── Reset ──────────────────────────────────────────────────── #}
+  {% if filter_active_chips or filter_search_value %}
+  <a href="{{ filter_reset_url }}"
+     hx-get="{{ filter_reset_url }}"
+     hx-target="{{ filter_hx_target }}"
+     hx-swap="outerHTML"
+     hx-push-url="true"
+     class="filter-toolbar__reset">
+    {% trans "Zurücksetzen" %}
+  </a>
+  {% endif %}
+
+  {% if filter_form %}
+    {% for field in filter_form %}
+      {% if field.name != filter_search_name %}
+        {% for value in field|get_multi_values %}
+          <input type="hidden" name="{{ field.name }}" value="{{ value }}"
+            {% if field.name in filter_inline_fields %}
+              x-bind:disabled="editingDim === '{{ field.name }}'"
+            {% endif %}>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+</form>

@@ -7,6 +7,7 @@ from .models import Asset
 
 _INPUT_CLASS = "form-input"
 _CHECKBOX_CLASS = "h-4 w-4 rounded border-border cursor-pointer"
+_FILTER_INPUT_CLASS = "filter-toolbar__inline-input"
 
 
 class AssetForm(forms.ModelForm):
@@ -135,7 +136,7 @@ class AssetFilterForm(forms.Form):
         required=False,
         label=_("Suche"),
         widget=forms.TextInput(attrs={
-            "class": _INPUT_CLASS,
+            "class": _FILTER_INPUT_CLASS,
             "placeholder": _("Name oder Seriennummer…"),
             "autocomplete": "off",
         }),
@@ -144,13 +145,13 @@ class AssetFilterForm(forms.Form):
         required=False,
         label=_("Status"),
         choices=[("", _("Alle Status"))] + AssetStatus.CHOICES,
-        widget=forms.Select(attrs={"class": _INPUT_CLASS}),
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
     )
     location = forms.CharField(
         required=False,
         label=_("Standort"),
         widget=forms.TextInput(attrs={
-            "class": _INPUT_CLASS,
+            "class": _FILTER_INPUT_CLASS,
             "placeholder": _("Standort…"),
             "autocomplete": "off",
         }),
@@ -159,14 +160,30 @@ class AssetFilterForm(forms.Form):
         required=False,
         label=_("Zugehörigkeit"),
         choices=[("", _("Alle Bereiche"))] + Department.CHOICES,
-        widget=forms.Select(attrs={"class": _INPUT_CLASS}),
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
     )
     responsible = forms.ModelChoiceField(
         required=False,
         label=_("Verantwortlicher"),
         queryset=None,
         empty_label=_("Alle Verantwortlichen"),
-        widget=forms.Select(attrs={"class": _INPUT_CLASS}),
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+    manufacturer = forms.ChoiceField(
+        required=False,
+        label=_("Hersteller"),
+        choices=[("", _("Alle Hersteller"))],
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
+    )
+    has_contract = forms.ChoiceField(
+        required=False,
+        label=_("Servicevertrag"),
+        choices=[
+            ("", _("Alle")),
+            ("yes", _("Vorhanden")),
+            ("no", _("Fehlt")),
+        ],
+        widget=forms.Select(attrs={"class": _FILTER_INPUT_CLASS}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -174,3 +191,16 @@ class AssetFilterForm(forms.Form):
         self.fields["responsible"].queryset = User.objects.filter(
             is_active=True
         ).order_by("username")
+        # Build the manufacturer choices from actual distinct Asset values so
+        # the filter always reflects what is currently in the database.
+        manufacturers = (
+            Asset.objects
+            .exclude(manufacturer="")
+            .order_by("manufacturer")
+            .values_list("manufacturer", flat=True)
+            .distinct()
+        )
+        self.fields["manufacturer"].choices = (
+            [("", _("Alle Hersteller"))]
+            + [(m, m) for m in manufacturers]
+        )
