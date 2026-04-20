@@ -10,17 +10,21 @@ from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import ASSET_FILTER_DIMENSIONS
 from .forms import AssetFilterForm, AssetForm
 from .models import Asset
 
 
-class AssetListView(LoginRequiredMixin, ListView):
+class AssetListView(EmptyStateMixin, LoginRequiredMixin, ListView):
     model = Asset
     template_name = "assets/asset_list.html"
     context_object_name = "assets"
     paginate_by = 25
+    empty_icon = "asset"
+    empty_title = _("Noch keine Anlagen")
+    empty_desc = _("Lege deine erste Anlage an, um Wartung, Qualifizierung und Verträge zu verfolgen.")
 
     def get_queryset(self):
         return _apply_filters(
@@ -36,6 +40,10 @@ class AssetListView(LoginRequiredMixin, ListView):
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        if ctx["can_write"]:
+            ctx["empty_primary"] = {
+                "label": _("Neue Anlage"), "url": reverse_lazy("assets:create"), "icon": "+",
+            }
         ctx.update(build_toolbar_context(
             self.request, form, ASSET_FILTER_DIMENSIONS,
             search_placeholder=_("Anlage, Seriennr., Hersteller…"),

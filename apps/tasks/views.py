@@ -12,6 +12,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import TASK_FILTER_DIMENSIONS
 from .forms import TaskCreateForm, TaskFilterForm, TaskUpdateForm
@@ -22,10 +23,13 @@ def _task_qs():
     return Task.objects.select_related("asset", "assigned_to")
 
 
-class TaskListView(LoginRequiredMixin, ListView):
+class TaskListView(EmptyStateMixin, LoginRequiredMixin, ListView):
     template_name = "tasks/task_list.html"
     context_object_name = "tasks"
     paginate_by = 25
+    empty_icon = "task"
+    empty_title = _("Keine offenen Aufgaben")
+    empty_desc = _("Aufgaben entstehen automatisch aus Wartungsplänen oder werden manuell angelegt.")
 
     def get_queryset(self):
         return _apply_filters(_task_qs(), self._filter_form())
@@ -35,6 +39,10 @@ class TaskListView(LoginRequiredMixin, ListView):
         form = self._filter_form()
         ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        if ctx["can_write"]:
+            ctx["empty_primary"] = {
+                "label": _("Neue Aufgabe"), "url": reverse_lazy("tasks:create"), "icon": "+",
+            }
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()

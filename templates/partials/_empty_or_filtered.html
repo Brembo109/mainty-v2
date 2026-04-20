@@ -1,0 +1,15 @@
+{% load i18n %}
+{% comment %}
+  Wrapper that picks 'filtered' vs 'first-run' empty-state based on
+  EmptyStateMixin context. Use inside the else-branch of `{% if objects %}`.
+
+  Required ctx (from EmptyStateMixin): filters_active, reset_filters_action,
+  empty_icon, empty_title, empty_desc, empty_primary, empty_secondary.
+{% endcomment %}
+{% if filters_active %}
+  {% trans "Keine Ergebnisse" as filtered_title %}
+  {% trans "Kein Eintrag entspricht deinen Filtern. Passe die Filter an oder setze sie zurück." as filtered_desc %}
+  {% include "partials/empty_state.html" with variant="filtered" icon="search" title=filtered_title desc=filtered_desc secondary=reset_filters_action %}
+{% else %}
+  {% include "partials/empty_state.html" with variant="first-run" icon=empty_icon title=empty_title desc=empty_desc primary=empty_primary secondary=empty_secondary %}
+{% endif %}

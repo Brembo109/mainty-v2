@@ -9,6 +9,7 @@ from django.views.generic import ListView, View
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
@@ -17,12 +18,15 @@ from .forms import AuditFilterForm
 from .models import AuditLog
 
 
-class AuditLogListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+class AuditLogListView(EmptyStateMixin, LoginRequiredMixin, RoleRequiredMixin, ListView):
     model = AuditLog
     template_name = "audit/audit_log_list.html"
     context_object_name = "entries"
     paginate_by = 50
     required_role = Role.ADMIN
+    empty_icon = "audit"
+    empty_title = _("Keine Audit-Ereignisse")
+    empty_desc = _("Audit-Ereignisse werden bei jeder GMP-relevanten Änderung automatisch erfasst.")
 
     def get_queryset(self):
         return _apply_filters(

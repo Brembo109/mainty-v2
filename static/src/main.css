@@ -407,4 +407,59 @@
     animation-play-state: paused;
   }
   .toast-danger .toast-progress { display: none; }
+
+  /* ── Empty states — replaces "Keine Einträge" stub rows ───────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 56px 32px;
+    gap: 4px;
+  }
+
+  .empty-state__icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+    color: var(--color-content-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .empty-state__icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    stroke-width: 1.25;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .empty-state__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-content-primary);
+    margin: 0;
+  }
+
+  .empty-state__desc {
+    font-size: 13px;
+    color: var(--color-content-secondary);
+    margin: 4px 0 16px;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+
+  .empty-state__actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .empty-state--filtered .empty-state__icon { opacity: .5; }
+  .empty-state--error    .empty-state__icon { color: var(--color-status-danger); }
 }

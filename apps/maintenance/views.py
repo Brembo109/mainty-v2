@@ -12,6 +12,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin, WriteAccessMixin
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import MAINTENANCE_FILTER_DIMENSIONS
 from .forms import (
@@ -30,10 +31,13 @@ def _plan_qs():
     )
 
 
-class MaintenancePlanListView(LoginRequiredMixin, ListView):
+class MaintenancePlanListView(EmptyStateMixin, LoginRequiredMixin, ListView):
     template_name = "maintenance/plan_list.html"
     context_object_name = "plans"
     paginate_by = 25
+    empty_icon = "maintenance"
+    empty_title = _("Noch keine Wartungspläne")
+    empty_desc = _("Wartungspläne erzeugen automatisch Aufgaben in definierten Intervallen.")
 
     def get_queryset(self):
         return _apply_filters(_plan_qs(), self._filter_form())
@@ -43,6 +47,10 @@ class MaintenancePlanListView(LoginRequiredMixin, ListView):
         form = self._filter_form()
         ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        if ctx["can_write"]:
+            ctx["empty_primary"] = {
+                "label": _("Neuer Plan"), "url": reverse_lazy("maintenance:create"), "icon": "+",
+            }
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()

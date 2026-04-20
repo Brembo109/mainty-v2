@@ -15,6 +15,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import QUALIFICATION_FILTER_DIMENSIONS
 from .forms import (
@@ -54,10 +55,13 @@ def _apply_filters(qs, form):
     return qs
 
 
-class QualificationCycleListView(LoginRequiredMixin, ListView):
+class QualificationCycleListView(EmptyStateMixin, LoginRequiredMixin, ListView):
     template_name = "qualification/cycle_list.html"
     context_object_name = "cycles"
     paginate_by = 25
+    empty_icon = "qualification"
+    empty_title = _("Noch keine Qualifizierungen")
+    empty_desc = _("Starte einen IQ/OQ/PQ-Zyklus, um GMP-konforme Qualifizierung zu dokumentieren.")
 
     def get_queryset(self):
         return _apply_filters(_cycle_qs(), self._filter_form())
@@ -67,6 +71,10 @@ class QualificationCycleListView(LoginRequiredMixin, ListView):
         form = self._filter_form()
         ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        if ctx["can_write"]:
+            ctx["empty_primary"] = {
+                "label": _("Neuer Zyklus"), "url": reverse_lazy("qualification:create"), "icon": "+",
+            }
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()

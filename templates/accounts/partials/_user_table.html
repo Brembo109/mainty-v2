@@ -1,4 +1,5 @@
 {% load i18n %}
+{% if users %}
 <div class="overflow-x-auto rounded border border-border">
   <table class="data-table">
     <thead>
@@ -51,12 +52,6 @@
           </div>
         </td>
       </tr>
-      {% empty %}
-      <tr>
-        <td colspan="6" class="text-center py-8 text-sm text-content-tertiary">
-          {% trans "Keine Benutzer gefunden." %}
-        </td>
-      </tr>
       {% endfor %}
     </tbody>
   </table>
@@ -83,4 +78,8 @@
     {% endif %}
   </div>
 </div>
+{% endif %}
+
+{% else %}
+  {% include "partials/_empty_or_filtered.html" %}
 {% endif %}
