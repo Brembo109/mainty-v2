@@ -1,0 +1,64 @@
+{% load i18n %}
+{% comment %}
+  Reusable detail-page shell. Renders header + meta-strip + sticky tab bar,
+  and yields the inner tab content from the extending template via the
+  `tab_content` block.
+
+  Expected context (caller must provide):
+    title           — page title (string)
+    subtitle        — small mono text below title (string, optional)
+    status_dot      — {class, label} (optional)
+    actions         — [{label, url, variant: 'primary'|'ghost'}] (optional)
+    meta_items      — [{label, value_html}] (optional)
+    tabs            — [{slug, label, count, url}]
+    active_tab      — slug of the currently active tab
+{% endcomment %}
+
+<div class="detail-header">
+  <div class="detail-title-row">
+    <div>
+      <h1 class="detail-title">
+        {{ title }}
+        {% if status_dot %}<span class="{{ status_dot.class }}">{{ status_dot.label }}</span>{% endif %}
+      </h1>
+      {% if subtitle %}<div class="detail-subtitle">{{ subtitle }}</div>{% endif %}
+    </div>
+    {% if actions %}
+      <div class="detail-actions">
+        {% for a in actions %}
+          <a href="{{ a.url }}" class="{% if a.variant == 'primary' %}btn-primary{% else %}btn-ghost{% endif %}">{{ a.label }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if meta_items %}
+    <div class="meta-strip">
+      {% for m in meta_items %}
+        <div class="meta-item">
+          <span class="meta-label">{{ m.label }}</span>
+          <span class="meta-value">{{ m.value_html|safe }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<nav class="detail-tabs" aria-label="{% trans 'Bereiche' %}">
+  {% for t in tabs %}
+    <a href="{{ t.url }}"
+       class="detail-tab{% if t.slug == active_tab %} active{% endif %}"
+       hx-get="{{ t.url }}"
+       hx-target="#tab-content"
+       hx-push-url="true"
+       hx-swap="innerHTML"
+       {% if t.slug == active_tab %}aria-current="page"{% endif %}>
+      {{ t.label }}
+      {% if t.count is not None %}<span class="detail-tab__count">{{ t.count }}</span>{% endif %}
+    </a>
+  {% endfor %}
+</nav>
+
+<div id="tab-content" class="detail-tab-content">
+  {% block tab_content %}{% endblock %}
+</div>

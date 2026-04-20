@@ -16,10 +16,12 @@ class AssetForm(forms.ModelForm):
         fields = [
             "name", "serial_number", "location", "manufacturer", "status",
             "lock_reason",
-            "device_code", "inventory_number", "service_provider", "department",
+            "short_code", "inventory_number", "service_provider", "department",
             "owner",
             "responsible", "deputy",
-            "log_number", "manual_number",
+            "logbook_ref", "logbook_url",
+            "bal_ref", "bal_url",
+            "requalification_interval_years", "pq_required",
             "has_computer",
             "computer_name", "computer_ip", "computer_network_port",
             "computer_windows_version", "computer_software_version",
@@ -48,9 +50,9 @@ class AssetForm(forms.ModelForm):
                 "class": _INPUT_CLASS,
                 "placeholder": _("z.B. Kalibrierung überfällig"),
             }),
-            "device_code": forms.TextInput(attrs={
+            "short_code": forms.TextInput(attrs={
                 "class": _INPUT_CLASS,
-                "placeholder": _("z.B. AKL-01"),
+                "placeholder": _("z.B. HPLC-A1"),
             }),
             "inventory_number": forms.TextInput(attrs={
                 "class": _INPUT_CLASS,
@@ -67,14 +69,28 @@ class AssetForm(forms.ModelForm):
             }),
             "responsible": forms.Select(attrs={"class": _INPUT_CLASS}),
             "deputy": forms.Select(attrs={"class": _INPUT_CLASS}),
-            "log_number": forms.TextInput(attrs={
+            "logbook_ref": forms.TextInput(attrs={
                 "class": _INPUT_CLASS,
                 "placeholder": _("z.B. LOG-2024-001"),
             }),
-            "manual_number": forms.TextInput(attrs={
+            "logbook_url": forms.URLInput(attrs={
+                "class": _INPUT_CLASS,
+                "placeholder": _("https://…"),
+            }),
+            "bal_ref": forms.TextInput(attrs={
                 "class": _INPUT_CLASS,
                 "placeholder": _("z.B. BAL-2024-001"),
             }),
+            "bal_url": forms.URLInput(attrs={
+                "class": _INPUT_CLASS,
+                "placeholder": _("https://…"),
+            }),
+            "requalification_interval_years": forms.NumberInput(attrs={
+                "class": _INPUT_CLASS,
+                "min": 1,
+                "max": 20,
+            }),
+            "pq_required": forms.CheckboxInput(attrs={"class": _CHECKBOX_CLASS}),
             "has_computer": forms.CheckboxInput(attrs={"class": _CHECKBOX_CLASS}),
             "computer_name": forms.TextInput(attrs={
                 "class": _INPUT_CLASS,
