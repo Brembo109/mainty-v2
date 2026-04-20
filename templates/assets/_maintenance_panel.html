@@ -1,0 +1,50 @@
+{% load i18n %}
+
+<div class="tab-header">
+  <div>
+    <h3>{% trans "Wartungspläne" %}</h3>
+    <div class="sub">
+      {% blocktrans count counter=maintenance_plans|length %}{{ counter }} Plan{% plural %}{{ counter }} Pläne{% endblocktrans %}
+    </div>
+  </div>
+  {% if can_write %}
+    <a href="{% url 'maintenance:create' %}?asset={{ asset.pk }}" class="btn-primary">+ {% trans "Neue Wartung" %}</a>
+  {% endif %}
+</div>
+
+{% if maintenance_plans %}
+  <div class="overflow-x-auto rounded border border-border">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{% trans "Bezeichnung" %}</th>
+          <th>{% trans "Intervall" %}</th>
+          <th>{% trans "Zuletzt durchgeführt" %}</th>
+          <th>{% trans "Nächste Fälligkeit" %}</th>
+          <th>{% trans "Status" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for plan in maintenance_plans %}
+          <tr>
+            <td class="font-medium">
+              <a href="{% url 'maintenance:detail' plan.pk %}" class="hover:text-content-primary transition-colors">{{ plan.title }}</a>
+            </td>
+            <td class="text-xs text-content-tertiary">{{ plan.interval_days }} {% trans "Tage" %}</td>
+            <td class="font-mono text-xs text-content-secondary">{{ plan.last_performed_at|date:"Y-m-d"|default:"—" }}</td>
+            <td class="font-mono text-xs text-content-secondary">{{ plan.next_due|date:"Y-m-d" }}</td>
+            <td><span class="{{ plan.status_badge_class }}">{{ plan.status_label }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  {% trans "Keine Wartungspläne" as es_title %}
+  {% if can_write %}
+    {% trans "Erstelle den ersten Wartungsplan für diese Anlage." as es_desc %}
+  {% else %}
+    {% trans "Für diese Anlage sind noch keine Wartungspläne angelegt." as es_desc %}
+  {% endif %}
+  {% include "partials/empty_state.html" with icon="maintenance" title=es_title desc=es_desc variant="first-run" %}
+{% endif %}
