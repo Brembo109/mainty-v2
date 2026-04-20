@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static 'main.css' %}">
   <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <script src="{% static 'toasts.js' %}" defer></script>
 </head>
 <body class="bg-surface text-content-primary min-h-full flex" hx-boost="true">
 
@@ -122,20 +123,8 @@
       </div>
     </header>
 
-    {# Flash messages #}
-    {% if messages %}
-    <div class="px-5 pt-4 space-y-2">
-      {% for message in messages %}
-      <div class="flex items-center gap-3 px-4 py-3 rounded border text-sm
-        {% if message.tags == 'error' %}border-status-danger bg-status-danger-bg text-status-danger
-        {% elif message.tags == 'success' %}border-status-success bg-status-success-bg text-status-success
-        {% elif message.tags == 'warning' %}border-status-warning bg-status-warning-bg text-status-warning
-        {% else %}border-border bg-surface-card text-content-primary{% endif %}">
-        {{ message }}
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    {# Toast bag — JS reads + removes this on load and renders bottom-right toasts. #}
+    {% include "partials/_django_messages.html" %}
 
     {# Page content #}
     <main class="flex-1 p-5">

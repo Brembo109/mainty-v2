@@ -6,8 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{% endblock %} — mainty</title>
   <link rel="stylesheet" href="{% static 'main.css' %}">
+  <script src="{% static 'toasts.js' %}" defer></script>
 </head>
 <body class="bg-surface text-content-primary min-h-full flex flex-col items-center justify-center p-4">
+
+  {% include "partials/_django_messages.html" %}
 
   <div class="w-full max-w-sm">
 

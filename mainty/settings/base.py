@@ -2,6 +2,8 @@ import environ
 from datetime import timedelta
 from pathlib import Path
 
+from django.contrib.messages import constants as messages
+
 env = environ.Env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -153,3 +155,12 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 # Reminder command
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 REMINDER_EMAIL_SUBJECT = env("REMINDER_EMAIL_SUBJECT", default="[mainty] GMP-Erinnerung — Handlungsbedarf")
+
+# Map Django message levels to toast variants (consumed by templates/partials/_django_messages.html)
+MESSAGE_TAGS = {
+    messages.DEBUG:   "info",
+    messages.INFO:    "info",
+    messages.SUCCESS: "ok",
+    messages.WARNING: "warn",
+    messages.ERROR:   "danger",
+}

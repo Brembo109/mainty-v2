@@ -1,0 +1,12 @@
+{% load i18n %}
+{% if messages %}
+<div data-django-messages hidden>
+  {% for m in messages %}
+    <div
+      data-message
+      data-level="{{ m.tags|default:'info' }}"
+      data-title="{{ m.message }}"
+    ></div>
+  {% endfor %}
+</div>
+{% endif %}
