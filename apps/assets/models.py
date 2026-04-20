@@ -190,7 +190,7 @@ class Asset(AuditedModel):
         counts = {
             "overview": None,
             "maintenance": self.maintenance_plans.count(),
-            "qualification": self.qualification_cycles.count(),
+            "qualification": self.qualifications.filter(completed_on__isnull=False).count(),
             "documents": documents_count,
         }
         return counts.get(slug)

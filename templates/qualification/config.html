@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Qualifizierungs-Intervall" %} · {{ asset.name }}{% endblock %}
+{% block page_title %}{% trans "Qualifizierungs-Intervall" %}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'assets:detail_qualification' asset.pk %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-xl">
+  <div class="card p-6">
+    <h2 class="text-lg font-semibold text-content-primary mb-1">{{ asset.name }}</h2>
+    <p class="text-xs text-content-tertiary font-mono mb-5">{{ asset.short_code }}</p>
+
+    <form method="post" novalidate class="space-y-5">
+      {% csrf_token %}
+
+      <div>
+        <label for="id_years" class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+          {% trans "Requalifizierungs-Intervall (Jahre)" %} <span class="text-status-danger">*</span>
+        </label>
+        <input type="number" name="requalification_interval_years" id="id_years"
+               min="1" max="20"
+               value="{{ asset.requalification_interval_years }}"
+               class="form-input w-32" required>
+        <p class="mt-1 text-xs text-content-tertiary">
+          {% trans "Zwischen 1 und 20 Jahren. Standard: 4 Jahre." %}
+        </p>
+      </div>
+
+      <div class="flex items-start gap-2">
+        <input type="checkbox" name="pq_required" id="id_pq_required"
+               {% if asset.pq_required %}checked{% endif %}
+               class="mt-0.5">
+        <div>
+          <label for="id_pq_required" class="text-sm text-content-primary font-medium">
+            {% trans "PQ erforderlich" %}
+          </label>
+          <p class="text-xs text-content-tertiary mt-0.5">
+            {% trans "Ist eine Performance-Qualifizierung für diese Anlage vorgesehen?" %}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        <button type="submit" class="btn-primary">{% trans "Speichern" %}</button>
+        <a href="{% url 'assets:detail_qualification' asset.pk %}" class="btn-ghost">{% trans "Abbrechen" %}</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

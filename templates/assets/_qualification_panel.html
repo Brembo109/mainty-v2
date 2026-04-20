@@ -2,50 +2,99 @@
 
 <div class="tab-header">
   <div>
-    <h3>{% trans "Qualifizierungs-Zyklen" %}</h3>
+    <h3>{% trans "Qualifizierungs-Historie" %}</h3>
     <div class="sub">
-      {% trans "IQ · OQ · PQ — CFR 21 Part 11 signiert" %}
+      {% trans "QP · DQ · IQ · OQ · PQ · QB einmalig — Requalifizierung (RQ) im konfigurierten Intervall" %}
     </div>
   </div>
   {% if can_write %}
-    <a href="{% url 'qualification:create' %}?asset={{ asset.pk }}" class="btn-primary">+ {% trans "Zyklus hinzufügen" %}</a>
+    <div style="display:flex;gap:6px">
+      <a href="{% url 'qualification:config' asset.pk %}" class="btn-ghost">{% trans "Intervall konfigurieren" %}</a>
+      <a href="{% url 'qualification:create' %}?asset={{ asset.pk }}" class="btn-primary">+ {% trans "Signatur hinzufügen" %}</a>
+    </div>
   {% endif %}
 </div>
 
+<div class="section-title" style="margin-top:0">{% trans "Erstqualifizierung" %}</div>
+{% for q in first_qualifications %}
+  <div class="qual-card">
+    <span class="qual-type">{{ q.stage }}</span>
+    <div>
+      <div class="qual-title">
+        {{ q.stage_long_label }}
+        {% if q.stage == "PQ" and not asset.pq_required %}
+          <span style="color:var(--color-content-tertiary);font-weight:400;font-size:11px;margin-left:4px">{% trans "optional" %}</span>
+        {% endif %}
+      </div>
+      <div class="qual-sub">
+        {% if q.completed_on %}
+          {% blocktrans with d=q.completed_on|date:"Y-m-d" %}Einmalig · abgeschlossen {{ d }}{% endblocktrans %}
+        {% else %}
+          {% trans "Einmalig · noch nicht abgeschlossen" %}
+        {% endif %}
+      </div>
+    </div>
+    <div>
+      {% if q.completed_on %}
+        <span class="status-dot status-dot-ok">{% trans "Abgeschlossen" %}</span>
+      {% else %}
+        <span class="status-dot status-dot-idle">{% trans "Ausstehend" %}</span>
+      {% endif %}
+    </div>
+    <div class="qual-next">
+      {% if q.completed_on %}
+        <strong>{{ q.completed_on|date:"Y-m-d" }}</strong>{% trans "Erstqualifizierung" %}
+      {% else %}
+        <strong>—</strong>{% trans "offen" %}
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+<div class="section-title">{% trans "Requalifizierung (RQ)" %}</div>
 <div class="qual-interval-banner">
   <div>
-    {% blocktrans with years=asset.requalification_interval_years %}Requalifizierungs-Intervall: <strong>{{ years }} Jahre</strong>{% endblocktrans %}
-    {% if asset.pq_required %}· {% trans "PQ erforderlich" %}{% endif %}
+    {% blocktrans with years=asset.requalification_interval_years %}Intervall: <strong>{{ years }} Jahre</strong>{% endblocktrans %}
+    {% if next_rq_date %}
+      · {% blocktrans with d=next_rq_date|date:"Y-m-d" %}nächste RQ geplant für {{ d }}{% endblocktrans %}
+    {% endif %}
   </div>
   {% if can_write %}
-    <a href="{% url 'assets:update' asset.pk %}">{% trans "Bearbeiten" %}</a>
+    <a href="{% url 'qualification:config' asset.pk %}">{% trans "Bearbeiten" %}</a>
   {% endif %}
 </div>
 
-{% if qualification_cycles %}
-  {% for cycle in qualification_cycles %}
-    <div class="qual-card">
-      <span class="qual-type">{{ cycle.qual_type }}</span>
-      <div>
-        <div class="qual-title">
-          <a href="{% url 'qualification:detail' cycle.pk %}" class="hover:text-content-primary">{{ cycle.title }}</a>
-        </div>
-        <div class="qual-sub">
-          {% blocktrans with days=cycle.interval_days %}Intervall {{ days }} Tage{% endblocktrans %}
-          {% if cycle.responsible %}· {{ cycle.responsible }}{% endif %}
-        </div>
+{% for rq in requalifications %}
+  <div class="qual-card">
+    <span class="qual-type">RQ</span>
+    <div>
+      <div class="qual-title">
+        {% blocktrans with n=rq.rq_cycle %}Requalifizierung #{{ n }}{% endblocktrans %}
       </div>
-      <div>
-        <span class="{{ cycle.status_badge_class }}">{{ cycle.status_label }}</span>
-      </div>
-      <div class="qual-next">
-        <strong>{{ cycle.next_due|date:"Y-m-d" }}</strong>
-        {% trans "Nächste Fälligkeit" %}
+      <div class="qual-sub">
+        {% if rq.completed_on %}
+          {% blocktrans with d=rq.completed_on|date:"Y-m-d" %}Durchgeführt {{ d }}{% endblocktrans %}
+        {% elif rq.planned_for %}
+          {% blocktrans with d=rq.planned_for|date:"Y-m-d" %}Geplant für {{ d }}{% endblocktrans %}
+        {% else %}
+          {% trans "Geplant" %}
+        {% endif %}
       </div>
     </div>
-  {% endfor %}
-{% else %}
-  {% trans "Keine Qualifizierungs-Zyklen" as es_title %}
-  {% trans "Erstelle den ersten Qualifizierungs-Zyklus für diese Anlage." as es_desc %}
-  {% include "partials/empty_state.html" with icon="qualification" title=es_title desc=es_desc variant="first-run" %}
-{% endif %}
+    <div>
+      {% if rq.completed_on %}
+        <span class="status-dot status-dot-ok">{% trans "Abgeschlossen" %}</span>
+      {% else %}
+        <span class="status-dot status-dot-idle">{% trans "Geplant" %}</span>
+      {% endif %}
+    </div>
+    <div class="qual-next">
+      <strong>{% if rq.completed_on %}{{ rq.completed_on|date:"Y-m-d" }}{% elif rq.planned_for %}{{ rq.planned_for|date:"Y-m-d" }}{% else %}—{% endif %}</strong>
+      {% blocktrans with n=rq.rq_cycle %}RQ-Zyklus {{ n }}{% endblocktrans %}
+    </div>
+  </div>
+{% empty %}
+  <div style="padding:24px;border:1px solid var(--color-border);border-radius:6px;text-align:center;color:var(--color-content-secondary);font-size:13px">
+    {% trans "Noch keine Requalifizierung durchgeführt." %}
+  </div>
+{% endfor %}

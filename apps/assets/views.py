@@ -228,16 +228,51 @@ def asset_maintenance(request, pk):
 
 @login_required
 def asset_qualification(request, pk):
+    from apps.qualification.constants import QualStage
+    from apps.qualification.models import Qualification
+
     asset = get_object_or_404(_asset_queryset(), pk=pk)
-    cycles = (
-        asset.qualification_cycles
-        .annotate(last_signed_at=Max("signatures__signed_at"))
-        .order_by("qual_type", "title")
+
+    firsts = list(asset.qualifications.exclude(stage=QualStage.RQ))
+    first_by_stage = {q.stage: q for q in firsts}
+    first_qualifications = []
+    for stage in QualStage.FIRST_STAGES:
+        if stage == QualStage.PQ and not asset.pq_required and stage not in first_by_stage:
+            continue
+        q = first_by_stage.get(stage)
+        if q is None:
+            q = Qualification(asset=asset, stage=stage)
+        first_qualifications.append(q)
+
+    requalifications = list(
+        asset.qualifications.filter(stage=QualStage.RQ).order_by("rq_cycle")
     )
+
+    # Next planned RQ: last completed RQ + interval, or last completed first-stage
+    # qualification + interval, or None if nothing is done.
+    next_rq_date = None
+    interval = asset.requalification_interval_years
+    last_rq = next(
+        (r for r in reversed(requalifications) if r.completed_on), None,
+    )
+    anchor_date = last_rq.completed_on if last_rq else None
+    if anchor_date is None:
+        anchor_q = max(
+            (q.completed_on for q in firsts if q.completed_on),
+            default=None,
+        )
+        anchor_date = anchor_q
+    if anchor_date:
+        next_rq_date = anchor_date.replace(year=anchor_date.year + interval)
+
     return _render_tab(
         request, asset, "qualification",
         "assets/_qualification_panel.html",
-        {"qualification_cycles": cycles},
+        {
+            "first_qualifications": first_qualifications,
+            "requalifications": requalifications,
+            "next_rq_date": next_rq_date,
+        },
     )
 
 
