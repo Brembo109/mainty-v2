@@ -11,4 +11,5 @@ urlpatterns = [
     path("<int:pk>/edit/", views.QualificationCycleUpdateView.as_view(), name="update"),
     path("<int:pk>/delete/", views.QualificationCycleDeleteView.as_view(), name="delete"),
     path("<int:pk>/sign/", views.QualificationSignView.as_view(), name="sign"),
+    path("asset/<int:asset_pk>/config/", views.asset_qualification_config, name="config"),
 ]

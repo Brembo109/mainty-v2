@@ -2,15 +2,18 @@ from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Max, Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, View
+
+from apps.assets.models import Asset
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
@@ -224,3 +227,32 @@ class QualificationSignView(LoginRequiredMixin, View):
             "qualification/partials/_sign_modal.html",
             {"cycle": cycle, "sign_form": form},
         )
+
+
+@login_required
+def asset_qualification_config(request, asset_pk):
+    """Edit requalification_interval_years + pq_required for a single asset."""
+
+    if not request.user.has_role(Role.ADMIN, Role.USER):
+        raise PermissionDenied
+
+    asset = get_object_or_404(Asset, pk=asset_pk)
+
+    if request.method == "POST":
+        try:
+            years = int(request.POST.get("requalification_interval_years", ""))
+        except (TypeError, ValueError):
+            years = 0
+        if 1 <= years <= 20:
+            asset.requalification_interval_years = years
+            asset.pq_required = bool(request.POST.get("pq_required"))
+            asset.save(update_fields=["requalification_interval_years", "pq_required"])
+            messages.success(request, _("Qualifizierungs-Intervall aktualisiert."))
+            return redirect("assets:detail_qualification", pk=asset.pk)
+        messages.error(request, _("Bitte einen gültigen Intervall zwischen 1 und 20 Jahren angeben."))
+
+    return render(
+        request,
+        "qualification/config.html",
+        {"asset": asset},
+    )

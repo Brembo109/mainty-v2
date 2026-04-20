@@ -2,11 +2,17 @@ from datetime import date, datetime, timedelta
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from apps.audit.mixins import AuditedModel
 
-from .constants import QUALIFICATION_WARNING_DAYS, QualStatus, QualType
+from .constants import (
+    QUALIFICATION_WARNING_DAYS,
+    QualStage,
+    QualStatus,
+    QualType,
+)
 
 
 class QualificationCycle(AuditedModel):
@@ -150,3 +156,92 @@ class QualificationSignature(AuditedModel):
         raise ValueError(
             "QualificationSignature records are immutable and cannot be deleted."
         )
+
+
+class Qualification(AuditedModel):
+    """Stage-based qualification milestone (PR #7 model).
+
+    Six one-time stages (QP/DQ/IQ/OQ/PQ/QB) for the initial qualification,
+    plus RQ records per requalification cycle. `rq_cycle` is only populated
+    for RQ stages (1, 2, 3, …); for the first-time stages it stays NULL.
+
+    GMP traceability: AuditedModel captures create/update events; the
+    legacy QualificationCycle + QualificationSignature models remain in
+    place for historical signature chains.
+    """
+
+    asset = models.ForeignKey(
+        "assets.Asset",
+        on_delete=models.CASCADE,
+        related_name="qualifications",
+        verbose_name=_("Anlage"),
+    )
+    stage = models.CharField(
+        max_length=2,
+        choices=QualStage.CHOICES,
+        db_index=True,
+        verbose_name=_("Stufe"),
+    )
+    planned_for = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_("Geplant für"),
+    )
+    completed_on = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_("Abgeschlossen am"),
+    )
+    rq_cycle = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("RQ-Zyklus"),
+        help_text=_("Nur für RQ-Stufen: fortlaufende Zyklus-Nr."),
+    )
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("Abgeschlossen von"),
+    )
+    completed_by_username = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name=_("Benutzername"),
+    )
+    notes = models.TextField(blank=True, verbose_name=_("Notizen"))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["asset", "stage", "rq_cycle"]
+        verbose_name = _("Qualifizierung")
+        verbose_name_plural = _("Qualifizierungen")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "stage"],
+                condition=~Q(stage="RQ"),
+                name="qualification_first_stage_unique",
+            ),
+            models.UniqueConstraint(
+                fields=["asset", "stage", "rq_cycle"],
+                condition=Q(stage="RQ"),
+                name="qualification_rq_cycle_unique",
+            ),
+        ]
+
+    def __str__(self):
+        base = f"{self.asset} — {self.stage}"
+        if self.stage == QualStage.RQ and self.rq_cycle:
+            base += f" #{self.rq_cycle}"
+        return base
+
+    @property
+    def stage_long_label(self):
+        return QualStage.LONG_LABEL.get(self.stage, self.stage)
+
+    @property
+    def is_completed(self):
+        return self.completed_on is not None

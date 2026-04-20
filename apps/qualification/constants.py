@@ -22,6 +22,44 @@ class QualType:
     }
 
 
+class QualStage:
+    """Stage model for the Qualification records (PR #7).
+
+    Six one-time stages for the initial qualification, plus RQ for the
+    recurring requalification cycles.
+    """
+
+    QP = "QP"
+    DQ = "DQ"
+    IQ = "IQ"
+    OQ = "OQ"
+    PQ = "PQ"
+    QB = "QB"
+    RQ = "RQ"
+
+    FIRST_STAGES = [QP, DQ, IQ, OQ, PQ, QB]
+
+    CHOICES = [
+        (QP, _("QP — Qualifizierungsplan")),
+        (DQ, _("DQ — Designqualifizierung")),
+        (IQ, _("IQ — Installationsqualifizierung")),
+        (OQ, _("OQ — Operationsqualifizierung")),
+        (PQ, _("PQ — Performanzqualifizierung")),
+        (QB, _("QB — Qualifizierungsbericht")),
+        (RQ, _("RQ — Requalifizierung")),
+    ]
+
+    LONG_LABEL = {
+        QP: _("Qualifizierungsplan"),
+        DQ: _("Designqualifizierung"),
+        IQ: _("Installationsqualifizierung"),
+        OQ: _("Operationsqualifizierung"),
+        PQ: _("Performanzqualifizierung"),
+        QB: _("Qualifizierungsbericht"),
+        RQ: _("Requalifizierung"),
+    }
+
+
 class QualStatus:
     OK = "ok"
     DUE_SOON = "due_soon"
