@@ -5,6 +5,7 @@ module.exports = {
     "./apps/**/*.html",
     "./apps/**/*.py",
     "./mainty/**/*.py",
+    "./static/dist/*.js",
   ],
   theme: {
     extend: {
