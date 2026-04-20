@@ -178,11 +178,44 @@ class Asset(AuditedModel):
         }
 
     def tab_count(self, slug):
+        from django.contrib.contenttypes.models import ContentType
+        from apps.audit.models import AuditLog
+
+        documents_count = sum(1 for ref in (self.logbook_ref, self.bal_ref) if ref)
+        if slug == "audit":
+            return AuditLog.objects.filter(
+                content_type=ContentType.objects.get_for_model(Asset),
+                object_id=str(self.pk),
+            ).count()
         counts = {
             "overview": None,
             "maintenance": self.maintenance_plans.count(),
             "qualification": self.qualification_cycles.count(),
-            "documents": 0,
-            "audit": 0,
+            "documents": documents_count,
         }
         return counts.get(slug)
+
+    def meta_items(self):
+        items = [
+            {"label": _("Standort"), "value_html": self.location or "—"},
+            {"label": _("Zugehörigkeit"), "value_html": self.get_department_display()},
+            {
+                "label": _("Verantwortlich"),
+                "value_html": (
+                    self.responsible.get_full_name() or self.responsible.username
+                    if self.responsible
+                    else "—"
+                ),
+            },
+            {
+                "label": _("Stellvertreter"),
+                "value_html": (
+                    self.deputy.get_full_name() or self.deputy.username
+                    if self.deputy
+                    else "—"
+                ),
+            },
+        ]
+        if self.manufacturer:
+            items.append({"label": _("Hersteller"), "value_html": self.manufacturer})
+        return items

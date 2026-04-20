@@ -1,0 +1,90 @@
+{% load i18n %}
+
+<div class="section-title">{% trans "Stammdaten" %}</div>
+<div class="overview-grid">
+  <div class="kv"><span class="kv-key">{% trans "Name" %}</span><span class="kv-value">{{ asset.name }}</span></div>
+  <div class="kv"><span class="kv-key">{% trans "Kürzel" %}</span><span class="kv-value mono">{{ asset.short_code }}</span></div>
+  <div class="kv"><span class="kv-key">{% trans "Seriennummer" %}</span><span class="kv-value mono">{{ asset.serial_number }}</span></div>
+  <div class="kv"><span class="kv-key">{% trans "Inventarnummer" %}</span><span class="kv-value mono">{{ asset.inventory_number|default:"—" }}</span></div>
+  <div class="kv"><span class="kv-key">{% trans "Hersteller" %}</span><span class="kv-value">{{ asset.manufacturer|default:"—" }}</span></div>
+  <div class="kv"><span class="kv-key">{% trans "Standort" %}</span><span class="kv-value">{{ asset.location }}</span></div>
+  <div class="kv"><span class="kv-key">{% trans "Zugehörigkeit" %}</span><span class="kv-value">{{ asset.get_department_display }}</span></div>
+  {% if asset.service_provider %}
+    <div class="kv"><span class="kv-key">{% trans "Servicedienstleister" %}</span><span class="kv-value">{{ asset.service_provider }}</span></div>
+  {% endif %}
+  {% if asset.owner %}
+    <div class="kv"><span class="kv-key">{% trans "Eigentümer" %}</span><span class="kv-value">{{ asset.owner }}</span></div>
+  {% endif %}
+  <div class="kv">
+    <span class="kv-key">{% trans "Verantwortlich" %}</span>
+    <span class="kv-value">{% if asset.responsible %}{{ asset.responsible.get_full_name|default:asset.responsible.username }}{% else %}—{% endif %}</span>
+  </div>
+  <div class="kv">
+    <span class="kv-key">{% trans "Stellvertreter" %}</span>
+    <span class="kv-value">{% if asset.deputy %}{{ asset.deputy.get_full_name|default:asset.deputy.username }}{% else %}—{% endif %}</span>
+  </div>
+  <div class="kv">
+    <span class="kv-key">{% trans "Bedienungsanleitung (BAL)" %}</span>
+    <span class="kv-value">
+      {% if asset.bal_ref and asset.bal_url %}<a href="{{ asset.bal_url }}">{{ asset.bal_ref }}</a>
+      {% elif asset.bal_ref %}{{ asset.bal_ref }}
+      {% else %}—{% endif %}
+    </span>
+  </div>
+  <div class="kv">
+    <span class="kv-key">{% trans "Logbuch (LOG)" %}</span>
+    <span class="kv-value">
+      {% if asset.logbook_ref and asset.logbook_url %}<a href="{{ asset.logbook_url }}">{{ asset.logbook_ref }}</a>
+      {% elif asset.logbook_ref %}{{ asset.logbook_ref }}
+      {% else %}—{% endif %}
+    </span>
+  </div>
+  <div class="kv">
+    <span class="kv-key">{% trans "RQ-Intervall" %}</span>
+    <span class="kv-value mono">{{ asset.requalification_interval_years }} {% trans "Jahre" %}</span>
+  </div>
+  <div class="kv">
+    <span class="kv-key">{% trans "PQ erforderlich" %}</span>
+    <span class="kv-value">{% if asset.pq_required %}{% trans "Ja" %}{% else %}{% trans "Nein" %}{% endif %}</span>
+  </div>
+</div>
+
+{% if asset.has_computer %}
+  <div class="section-title">{% trans "Computer" %}</div>
+  <div class="overview-grid">
+    {% if asset.computer_name %}<div class="kv"><span class="kv-key">{% trans "Computername" %}</span><span class="kv-value mono">{{ asset.computer_name }}</span></div>{% endif %}
+    {% if asset.computer_ip %}<div class="kv"><span class="kv-key">{% trans "IP-Adresse" %}</span><span class="kv-value mono">{{ asset.computer_ip }}</span></div>{% endif %}
+    {% if asset.computer_network_port %}<div class="kv"><span class="kv-key">{% trans "Netzwerkdose" %}</span><span class="kv-value">{{ asset.computer_network_port }}</span></div>{% endif %}
+    {% if asset.computer_windows_version %}<div class="kv"><span class="kv-key">{% trans "Windows-Version" %}</span><span class="kv-value">{{ asset.computer_windows_version }}</span></div>{% endif %}
+    {% if asset.computer_software_version %}<div class="kv"><span class="kv-key">{% trans "Software-Version" %}</span><span class="kv-value mono">{{ asset.computer_software_version }}</span></div>{% endif %}
+    <div class="kv">
+      <span class="kv-key">{% trans "Backups eingerichtet" %}</span>
+      <span class="kv-value">
+        {% if asset.computer_backups_enabled %}<span class="status-dot status-dot-ok">{% trans "Ja" %}</span>
+          {% if asset.computer_backups_description %}<span style="color:var(--color-content-secondary);margin-left:8px">{{ asset.computer_backups_description }}</span>{% endif %}
+        {% else %}<span class="status-dot status-dot-idle">{% trans "Nein" %}</span>{% endif %}
+      </span>
+    </div>
+  </div>
+{% endif %}
+
+<div class="section-title">
+  {% trans "Kürzliche Aktivität" %}
+  <a href="{% url 'assets:detail_audit' asset.pk %}">{% trans "Alle anzeigen" %} →</a>
+</div>
+{% if recent_activity %}
+  <div class="activity">
+    {% for event in recent_activity %}
+      <div class="activity-row">
+        <span class="activity-when">{{ event.timestamp|date:"Y-m-d H:i" }}</span>
+        <span class="activity-dot {% if event.action == 'CREATE' %}ok{% elif event.action == 'DELETE' %}warn{% else %}info{% endif %}"></span>
+        <span class="activity-text"><strong>{{ event.get_action_display }}</strong> — {{ event.object_repr }}</span>
+        <span class="activity-user">{{ event.actor_username|default:"System" }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  {% trans "Keine Aktivität" as es_title %}
+  {% trans "Noch keine Ereignisse für diese Anlage." as es_desc %}
+  {% include "partials/empty_state.html" with icon="audit" title=es_title desc=es_desc variant="first-run" %}
+{% endif %}
