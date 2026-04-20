@@ -13,6 +13,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import CONTRACT_FILTER_DIMENSIONS
 from .forms import ContractFilterForm, ContractForm, ContractRenewalForm
@@ -21,11 +22,14 @@ from .models import Contract, ContractRenewal
 _EXPIRY_WARNING_DAYS = getattr(settings, "CONTRACT_EXPIRY_WARNING_DAYS", 90)
 
 
-class ContractListView(LoginRequiredMixin, ListView):
+class ContractListView(EmptyStateMixin, LoginRequiredMixin, ListView):
     model = Contract
     template_name = "contracts/contract_list.html"
     context_object_name = "contracts"
     paginate_by = 25
+    empty_icon = "contract"
+    empty_title = _("Noch keine Verträge")
+    empty_desc = _("Lege Wartungs- oder Service-Verträge an, um Laufzeiten und Ablaufwarnungen zu verfolgen.")
 
     def get_queryset(self):
         return _apply_filters(
@@ -41,6 +45,10 @@ class ContractListView(LoginRequiredMixin, ListView):
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        if ctx["can_write"]:
+            ctx["empty_primary"] = {
+                "label": _("Neuer Vertrag"), "url": reverse_lazy("contracts:create"), "icon": "+",
+            }
         ctx.update(build_toolbar_context(
             self.request, form, CONTRACT_FILTER_DIMENSIONS,
             search_placeholder=_("Bezeichnung, Dienstleister, Nr.…"),

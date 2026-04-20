@@ -14,6 +14,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from apps.audit.models import AuditLog
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 from .constants import Role
 from .filter_defs import USER_FILTER_DIMENSIONS
 from .forms import (
@@ -113,12 +114,16 @@ def set_theme(request):
     return redirect(next_url)
 
 
-class UserListView(RoleRequiredMixin, ListView):
+class UserListView(EmptyStateMixin, RoleRequiredMixin, ListView):
     required_role = Role.ADMIN
     model = User
     template_name = "accounts/user_list.html"
     context_object_name = "users"
     paginate_by = 50
+    empty_icon = "user"
+    empty_title = _("Noch keine Benutzer")
+    empty_desc = _("Lege Benutzerkonten an und weise Rollen zu, um den Zugriff zu steuern.")
+    empty_primary = {"label": _("Neuer Benutzer"), "url": reverse_lazy("accounts:user-create"), "icon": "+"}
 
     def get_queryset(self):
         return _apply_user_filters(

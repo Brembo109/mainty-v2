@@ -105,12 +105,5 @@
 {% endif %}
 
 {% else %}
-<div class="flex flex-col items-center justify-center py-16 text-center">
-  <svg class="w-8 h-8 text-content-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-    <path stroke-linecap="round" stroke-linejoin="round"
-      d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
-  </svg>
-  <p class="text-sm text-content-secondary">{% trans "Keine Einträge gefunden." %}</p>
-  <p class="text-xs text-content-tertiary mt-1">{% trans "Passen Sie die Filter an oder warten Sie auf neue Ereignisse." %}</p>
-</div>
+  {% include "partials/_empty_or_filtered.html" %}
 {% endif %}

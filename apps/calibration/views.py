@@ -10,6 +10,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.constants import Role
 from apps.accounts.mixins import RoleRequiredMixin, WriteAccessMixin
 from apps.core.filters import build_toolbar_context
+from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import CALIBRATION_FILTER_DIMENSIONS
 from .forms import (
@@ -21,11 +22,14 @@ from .forms import (
 from .models import CalibrationRecord, TestEquipment
 
 
-class TestEquipmentListView(LoginRequiredMixin, ListView):
+class TestEquipmentListView(EmptyStateMixin, LoginRequiredMixin, ListView):
     model = TestEquipment
     template_name = "calibration/equipment_list.html"
     context_object_name = "equipment_list"
     paginate_by = 25
+    empty_icon = "calibration"
+    empty_title = _("Noch keine Prüfmittel")
+    empty_desc = _("Lege Prüfmittel an, um Kalibrierungen zu planen und Ablaufwarnungen zu erhalten.")
 
     def get_queryset(self):
         return _apply_filters(
@@ -38,6 +42,10 @@ class TestEquipmentListView(LoginRequiredMixin, ListView):
         form = self._filter_form()
         ctx["filter_form"] = form
         ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
+        if ctx["can_write"]:
+            ctx["empty_primary"] = {
+                "label": _("Neues Prüfmittel"), "url": reverse_lazy("calibration:create"), "icon": "+",
+            }
         get_params = self.request.GET.copy()
         get_params.pop("page", None)
         ctx["filter_params"] = get_params.urlencode()

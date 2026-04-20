@@ -1,0 +1,33 @@
+{% load i18n %}
+{% comment %}
+  Empty-state component.
+
+  Required:
+    icon      — slug for icon lookup (see partials/empty_icons.html)
+    title     — short heading
+
+  Optional:
+    desc      — one-sentence description
+    variant   — 'first-run' (default) | 'filtered' | 'error'
+    primary   — dict: { label, url, icon }
+    secondary — dict: { label, url }
+{% endcomment %}
+<div class="empty-state empty-state--{{ variant|default:'first-run' }}">
+  <div class="empty-state__icon">
+    {% include "partials/empty_icons.html" with icon=icon %}
+  </div>
+  <p class="empty-state__title">{{ title }}</p>
+  {% if desc %}<p class="empty-state__desc">{{ desc }}</p>{% endif %}
+  {% if primary or secondary %}
+    <div class="empty-state__actions">
+      {% if primary %}
+        <a href="{{ primary.url }}" class="btn-primary">
+          {% if primary.icon %}<span aria-hidden="true">{{ primary.icon }}</span> {% endif %}{{ primary.label }}
+        </a>
+      {% endif %}
+      {% if secondary %}
+        <a href="{{ secondary.url }}" class="btn-ghost">{{ secondary.label }}</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
