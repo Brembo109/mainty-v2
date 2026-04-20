@@ -26,9 +26,11 @@ class Asset(AuditedModel):
         blank=True,
         verbose_name=_("Hersteller"),
     )
-    device_code = models.CharField(
+    short_code = models.CharField(
         max_length=50,
-        verbose_name=_("Gerätekürzel"),
+        unique=True,
+        verbose_name=_("Kürzel"),
+        help_text=_("Internes Kürzel, eindeutig pro Gerät (z.B. HPLC-A1)."),
     )
     inventory_number = models.CharField(
         max_length=100,
@@ -77,15 +79,33 @@ class Asset(AuditedModel):
         blank=True,
         verbose_name=_("Eigentümer"),
     )
-    log_number = models.CharField(
+    logbook_ref = models.CharField(
         max_length=100,
         blank=True,
         verbose_name=_("Logbuch (LOG)"),
     )
-    manual_number = models.CharField(
+    logbook_url = models.URLField(
+        blank=True,
+        verbose_name=_("Logbuch-Link"),
+    )
+    bal_ref = models.CharField(
         max_length=100,
         blank=True,
         verbose_name=_("Bedienungsanleitung (BAL)"),
+    )
+    bal_url = models.URLField(
+        blank=True,
+        verbose_name=_("BAL-Link"),
+    )
+    requalification_interval_years = models.PositiveSmallIntegerField(
+        default=4,
+        verbose_name=_("Requalifizierungs-Intervall (Jahre)"),
+        help_text=_("Intervall für die turnusmäßige Requalifizierung (RQ)."),
+    )
+    pq_required = models.BooleanField(
+        default=False,
+        verbose_name=_("PQ erforderlich"),
+        help_text=_("Ist eine Performance-Qualifizierung für diese Anlage vorgesehen?"),
     )
     has_computer = models.BooleanField(
         default=False,
@@ -149,3 +169,20 @@ class Asset(AuditedModel):
     @property
     def status_badge_class(self):
         return AssetStatus.BADGE_CLASS.get(self.status, "status-dot status-dot-idle")
+
+    @property
+    def status_dot(self):
+        return {
+            "class": self.status_badge_class,
+            "label": self.get_status_display(),
+        }
+
+    def tab_count(self, slug):
+        counts = {
+            "overview": None,
+            "maintenance": self.maintenance_plans.count(),
+            "qualification": self.qualification_cycles.count(),
+            "documents": 0,
+            "audit": 0,
+        }
+        return counts.get(slug)

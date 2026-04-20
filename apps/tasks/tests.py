@@ -31,7 +31,7 @@ def _make_asset(name=None):
         name=name or f"Asset {c}",
         serial_number=f"SN-{c:04d}",
         location="Halle 1",
-        device_code=f"DEV-{c:02d}",
+        short_code=f"DEV-{c:02d}",
         inventory_number=f"INV-{c:03d}",
         department=Department.HERSTELLUNG,
     )

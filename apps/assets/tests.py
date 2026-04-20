@@ -20,7 +20,7 @@ def make_asset(**kwargs):
         "name": "Autoklav A1",
         "serial_number": f"SN-{_asset_counter:04d}",
         "location": "Halle 3",
-        "device_code": f"AKL-{_asset_counter:02d}",
+        "short_code": f"AKL-{_asset_counter:02d}",
         "inventory_number": f"INV-2024-{_asset_counter:03d}",
         "department": Department.HERSTELLUNG,
     }
@@ -43,10 +43,10 @@ class AssetDepartmentFieldTest(TestCase):
 
 
 class AssetIdentificationFieldsTest(TestCase):
-    def test_device_code_and_inventory_number_stored(self):
-        asset = make_asset(device_code="AKL-99", inventory_number="INV-9999")
+    def test_short_code_and_inventory_number_stored(self):
+        asset = make_asset(short_code="AKL-99", inventory_number="INV-9999")
         asset.refresh_from_db()
-        self.assertEqual(asset.device_code, "AKL-99")
+        self.assertEqual(asset.short_code, "AKL-99")
         self.assertEqual(asset.inventory_number, "INV-9999")
 
     def test_service_provider_optional(self):
@@ -105,12 +105,13 @@ class AssetFormValidationTest(TestCase):
             "location": "Halle 3",
             "manufacturer": "",
             "status": "free",
-            "device_code": "AKL-01",
+            "short_code": "AKL-01",
             "inventory_number": "INV-001",
             "service_provider": "",
             "department": Department.HERSTELLUNG,
             "responsible": self.responsible.pk,
             "deputy": self.deputy.pk,
+            "requalification_interval_years": 4,
         }
         data.update(overrides)
         return data
@@ -119,10 +120,10 @@ class AssetFormValidationTest(TestCase):
         form = AssetForm(data=self._valid_data())
         self.assertTrue(form.is_valid(), form.errors)
 
-    def test_device_code_required(self):
-        form = AssetForm(data=self._valid_data(device_code=""))
+    def test_short_code_required(self):
+        form = AssetForm(data=self._valid_data(short_code=""))
         self.assertFalse(form.is_valid())
-        self.assertIn("device_code", form.errors)
+        self.assertIn("short_code", form.errors)
 
     def test_inventory_number_required(self):
         form = AssetForm(data=self._valid_data(inventory_number=""))
@@ -174,7 +175,7 @@ class AssetFilterViewTest(TestCase):
             name="Anlage Herstellung",
             serial_number="SN-H01",
             location="Halle 1",
-            device_code="H-01",
+            short_code="H-01",
             inventory_number="INV-H01",
             department=Department.HERSTELLUNG,
             responsible=self.responsible,
@@ -184,7 +185,7 @@ class AssetFilterViewTest(TestCase):
             name="Anlage QK",
             serial_number="SN-Q01",
             location="Halle 2",
-            device_code="Q-01",
+            short_code="Q-01",
             inventory_number="INV-Q01",
             department=Department.QUALITAETSKONTROLLE,
             responsible=self.responsible,
@@ -207,7 +208,7 @@ class AssetFilterViewTest(TestCase):
             name="Anlage Andere",
             serial_number="SN-A01",
             location="Halle 3",
-            device_code="A-01",
+            short_code="A-01",
             inventory_number="INV-A01",
             department=Department.PROZESSENTWICKLUNG,
             responsible=other_resp,

@@ -5,6 +5,6 @@ from .models import Asset
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ["name", "serial_number", "location", "manufacturer", "status"]
+    list_display = ["name", "short_code", "serial_number", "location", "manufacturer", "status"]
     list_filter = ["status"]
-    search_fields = ["name", "serial_number", "location", "manufacturer"]
+    search_fields = ["name", "short_code", "serial_number", "location", "manufacturer"]

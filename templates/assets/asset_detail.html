@@ -91,9 +91,9 @@
 
           <div>
             <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
-              {% trans "Gerätekürzel" %}
+              {% trans "Kürzel" %}
             </dt>
-            <dd class="text-sm text-content-primary font-mono">{{ asset.device_code|default:"—" }}</dd>
+            <dd class="text-sm text-content-primary font-mono">{{ asset.short_code|default:"—" }}</dd>
           </div>
 
           <div>
@@ -150,28 +150,32 @@
       </div>
 
       {# Dokumente #}
-      {% if asset.log_number or asset.manual_number %}
+      {% if asset.logbook_ref or asset.bal_ref %}
       <div class="pt-4 border-t border-border">
         <h3 class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
           {% trans "Dokumente" %}
         </h3>
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
 
-          {% if asset.log_number %}
+          {% if asset.logbook_ref %}
           <div>
             <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
               {% trans "Logbuch (LOG)" %}
             </dt>
-            <dd class="text-sm text-content-primary font-mono">{{ asset.log_number }}</dd>
+            <dd class="text-sm text-content-primary font-mono">
+              {% if asset.logbook_url %}<a href="{{ asset.logbook_url }}" class="hover:text-content-primary">{{ asset.logbook_ref }}</a>{% else %}{{ asset.logbook_ref }}{% endif %}
+            </dd>
           </div>
           {% endif %}
 
-          {% if asset.manual_number %}
+          {% if asset.bal_ref %}
           <div>
             <dt class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-1">
               {% trans "Bedienungsanleitung (BAL)" %}
             </dt>
-            <dd class="text-sm text-content-primary font-mono">{{ asset.manual_number }}</dd>
+            <dd class="text-sm text-content-primary font-mono">
+              {% if asset.bal_url %}<a href="{{ asset.bal_url }}" class="hover:text-content-primary">{{ asset.bal_ref }}</a>{% else %}{{ asset.bal_ref }}{% endif %}
+            </dd>
           </div>
           {% endif %}
 

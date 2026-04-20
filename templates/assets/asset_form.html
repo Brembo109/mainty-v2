@@ -104,14 +104,14 @@
             </p>
             <div class="space-y-5">
 
-              {# Gerätekürzel #}
+              {# Kürzel #}
               <div>
                 <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
-                  {{ form.device_code.label }} <span class="text-status-danger">*</span>
+                  {{ form.short_code.label }} <span class="text-status-danger">*</span>
                 </label>
-                {{ form.device_code }}
-                {% if form.device_code.errors %}
-                  <p class="mt-1 text-xs text-status-danger">{{ form.device_code.errors.0 }}</p>
+                {{ form.short_code }}
+                {% if form.short_code.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.short_code.errors.0 }}</p>
                 {% endif %}
               </div>
 
@@ -203,28 +203,80 @@
             </p>
             <div class="space-y-5">
 
-              {# Logbuch #}
+              {# Logbuch — Ref #}
               <div>
                 <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
-                  {{ form.log_number.label }}
+                  {{ form.logbook_ref.label }}
                   <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
                 </label>
-                {{ form.log_number }}
-                {% if form.log_number.errors %}
-                  <p class="mt-1 text-xs text-status-danger">{{ form.log_number.errors.0 }}</p>
+                {{ form.logbook_ref }}
+                {% if form.logbook_ref.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.logbook_ref.errors.0 }}</p>
                 {% endif %}
               </div>
 
-              {# Bedienungsanleitung #}
+              {# Logbuch — URL #}
               <div>
                 <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
-                  {{ form.manual_number.label }}
+                  {{ form.logbook_url.label }}
                   <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
                 </label>
-                {{ form.manual_number }}
-                {% if form.manual_number.errors %}
-                  <p class="mt-1 text-xs text-status-danger">{{ form.manual_number.errors.0 }}</p>
+                {{ form.logbook_url }}
+                {% if form.logbook_url.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.logbook_url.errors.0 }}</p>
                 {% endif %}
+              </div>
+
+              {# Bedienungsanleitung — Ref #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.bal_ref.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.bal_ref }}
+                {% if form.bal_ref.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.bal_ref.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              {# Bedienungsanleitung — URL #}
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.bal_url.label }}
+                  <span class="text-content-tertiary font-normal ml-1">{% trans "(optional)" %}</span>
+                </label>
+                {{ form.bal_url }}
+                {% if form.bal_url.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.bal_url.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+          {# ── Qualifizierung ───────────────────────────────────────── #}
+          <div class="pt-2 border-t border-border">
+            <p class="text-2xs text-content-tertiary uppercase tracking-wider font-medium mb-4">
+              {% trans "Qualifizierung" %}
+            </p>
+            <div class="space-y-5">
+
+              <div>
+                <label class="text-2xs text-content-tertiary uppercase tracking-wider font-medium block mb-1.5">
+                  {{ form.requalification_interval_years.label }}
+                </label>
+                {{ form.requalification_interval_years }}
+                {% if form.requalification_interval_years.errors %}
+                  <p class="mt-1 text-xs text-status-danger">{{ form.requalification_interval_years.errors.0 }}</p>
+                {% endif %}
+              </div>
+
+              <div class="flex items-center gap-2.5">
+                {{ form.pq_required }}
+                <label for="{{ form.pq_required.id_for_label }}"
+                       class="text-2xs text-content-tertiary uppercase tracking-wider font-medium cursor-pointer">
+                  {{ form.pq_required.label }}
+                </label>
               </div>
 
             </div>
