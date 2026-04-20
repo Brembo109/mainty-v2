@@ -1,0 +1,51 @@
+{% load i18n %}
+
+<div class="tab-header">
+  <div>
+    <h3>{% trans "Qualifizierungs-Zyklen" %}</h3>
+    <div class="sub">
+      {% trans "IQ · OQ · PQ — CFR 21 Part 11 signiert" %}
+    </div>
+  </div>
+  {% if can_write %}
+    <a href="{% url 'qualification:create' %}?asset={{ asset.pk }}" class="btn-primary">+ {% trans "Zyklus hinzufügen" %}</a>
+  {% endif %}
+</div>
+
+<div class="qual-interval-banner">
+  <div>
+    {% blocktrans with years=asset.requalification_interval_years %}Requalifizierungs-Intervall: <strong>{{ years }} Jahre</strong>{% endblocktrans %}
+    {% if asset.pq_required %}· {% trans "PQ erforderlich" %}{% endif %}
+  </div>
+  {% if can_write %}
+    <a href="{% url 'assets:update' asset.pk %}">{% trans "Bearbeiten" %}</a>
+  {% endif %}
+</div>
+
+{% if qualification_cycles %}
+  {% for cycle in qualification_cycles %}
+    <div class="qual-card">
+      <span class="qual-type">{{ cycle.qual_type }}</span>
+      <div>
+        <div class="qual-title">
+          <a href="{% url 'qualification:detail' cycle.pk %}" class="hover:text-content-primary">{{ cycle.title }}</a>
+        </div>
+        <div class="qual-sub">
+          {% blocktrans with days=cycle.interval_days %}Intervall {{ days }} Tage{% endblocktrans %}
+          {% if cycle.responsible %}· {{ cycle.responsible }}{% endif %}
+        </div>
+      </div>
+      <div>
+        <span class="{{ cycle.status_badge_class }}">{{ cycle.status_label }}</span>
+      </div>
+      <div class="qual-next">
+        <strong>{{ cycle.next_due|date:"Y-m-d" }}</strong>
+        {% trans "Nächste Fälligkeit" %}
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  {% trans "Keine Qualifizierungs-Zyklen" as es_title %}
+  {% trans "Erstelle den ersten Qualifizierungs-Zyklus für diese Anlage." as es_desc %}
+  {% include "partials/empty_state.html" with icon="qualification" title=es_title desc=es_desc variant="first-run" %}
+{% endif %}

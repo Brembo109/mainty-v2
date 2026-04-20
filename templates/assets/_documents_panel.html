@@ -1,0 +1,32 @@
+{% load i18n %}
+
+<div class="tab-header">
+  <div>
+    <h3>{% trans "Dokumente" %}</h3>
+    <div class="sub">{% trans "Verknüpfte Referenzen (Logbuch, Bedienungsanleitung) — Datei-Upload folgt in einer späteren Iteration." %}</div>
+  </div>
+  {% if can_write %}
+    <a href="{% url 'assets:update' asset.pk %}" class="btn-ghost">{% trans "Referenzen bearbeiten" %}</a>
+  {% endif %}
+</div>
+
+{% if asset_documents %}
+  <div class="docs-grid">
+    {% for d in asset_documents %}
+      <div class="doc-card">
+        <div class="doc-icon">{% if d.url %}LNK{% else %}REF{% endif %}</div>
+        <div>
+          <div class="font-medium">{{ d.label }}</div>
+          <div class="text-xs text-content-tertiary font-mono">
+            {% if d.url %}<a href="{{ d.url }}" class="hover:text-content-primary">{{ d.ref }}</a>
+            {% else %}{{ d.ref }}{% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  {% trans "Keine Dokumente" as es_title %}
+  {% trans "Lege Logbuch- oder BAL-Referenzen unter der Anlagen-Bearbeitung an." as es_desc %}
+  {% include "partials/empty_state.html" with icon="contract" title=es_title desc=es_desc variant="first-run" %}
+{% endif %}

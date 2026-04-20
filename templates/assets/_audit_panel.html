@@ -1,0 +1,34 @@
+{% load i18n %}
+
+<div class="tab-header">
+  <div>
+    <h3>{% trans "Audit-Trail" %}</h3>
+    <div class="sub">{% trans "Alle Änderungen mit Zeitstempel und Benutzer · CFR 21 Part 11" %}</div>
+  </div>
+</div>
+
+{% if audit_events %}
+  <div class="audit-row header">
+    <span>{% trans "Zeitstempel" %}</span>
+    <span>{% trans "Aktion" %}</span>
+    <span>{% trans "Benutzer" %}</span>
+    <span>{% trans "Objekt" %}</span>
+  </div>
+  {% for e in audit_events %}
+    <div class="audit-row">
+      <span class="audit-when">{{ e.timestamp|date:"Y-m-d H:i" }}</span>
+      <span><span class="chip-neutral">{{ e.get_action_display }}</span></span>
+      <span>{{ e.actor_username|default:_("System") }}</span>
+      <span class="audit-sign">{{ e.object_repr|truncatechars:40 }}</span>
+    </div>
+  {% endfor %}
+  {% if audit_total > audit_events|length %}
+    <div class="text-center mt-3 text-xs text-content-tertiary">
+      {% blocktrans with shown=audit_events|length total=audit_total %}{{ shown }} von {{ total }} Einträgen{% endblocktrans %}
+    </div>
+  {% endif %}
+{% else %}
+  {% trans "Keine Audit-Ereignisse" as es_title %}
+  {% trans "Für diese Anlage wurden noch keine Änderungen protokolliert." as es_desc %}
+  {% include "partials/empty_state.html" with icon="audit" title=es_title desc=es_desc variant="first-run" %}
+{% endif %}

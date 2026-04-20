@@ -1,20 +1,34 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Max, Q
+from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from apps.accounts.constants import Role
 from apps.accounts.mixins import WriteAccessMixin
 
+from apps.audit.models import AuditLog
 from apps.core.filters import build_toolbar_context
 from apps.core.view_mixins import EmptyStateMixin
 
 from .filter_defs import ASSET_FILTER_DIMENSIONS
 from .forms import AssetFilterForm, AssetForm
 from .models import Asset
+
+
+TAB_SLUGS = ["overview", "maintenance", "qualification", "documents", "audit"]
+TAB_LABELS = {
+    "overview": _("Übersicht"),
+    "maintenance": _("Wartung"),
+    "qualification": _("Qualifizierung"),
+    "documents": _("Dokumente"),
+    "audit": _("Audit"),
+}
 
 
 class AssetListView(EmptyStateMixin, LoginRequiredMixin, ListView):
@@ -68,37 +82,6 @@ class AssetListView(EmptyStateMixin, LoginRequiredMixin, ListView):
         return self._cached_filter_form
 
 
-class AssetDetailView(LoginRequiredMixin, DetailView):
-    model = Asset
-    template_name = "assets/asset_detail.html"
-    context_object_name = "asset"
-
-    def get_queryset(self):
-        return super().get_queryset().select_related("responsible", "deputy")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["can_write"] = self.request.user.has_role(Role.ADMIN, Role.USER)
-        ctx["contracts"] = self.object.contracts.order_by("end_date")
-        ctx["maintenance_plans"] = (
-            self.object.maintenance_plans
-            .annotate(last_performed_at=Max("records__performed_at"))
-            .order_by("title")
-        )
-        ctx["qualification_cycles"] = (
-            self.object.qualification_cycles
-            .annotate(last_signed_at=Max("signatures__signed_at"))
-            .order_by("qual_type", "title")
-        )
-        ctx["asset_tasks"] = (
-            self.object.tasks
-            .select_related("assigned_to")
-            .exclude(status="done")
-            .order_by("status", "-priority", "due_date")
-        )
-        return ctx
-
-
 class AssetCreateView(LoginRequiredMixin, WriteAccessMixin, CreateView):
     model = Asset
     form_class = AssetForm
@@ -142,6 +125,151 @@ class AssetDeleteView(LoginRequiredMixin, WriteAccessMixin, DeleteView):
     def form_valid(self, form):
         messages.success(self.request, _("Anlage wurde gelöscht."))
         return super().form_valid(form)
+
+
+# ---------------------------------------------------------------------------
+# Detail-Shell tab views
+# ---------------------------------------------------------------------------
+
+def _shell_context(asset, active_tab, request):
+    can_write = request.user.has_role(Role.ADMIN, Role.USER)
+    actions = []
+    if can_write:
+        actions.append({
+            "label": _("Bearbeiten"),
+            "url": reverse("assets:update", args=[asset.pk]),
+            "variant": "primary",
+        })
+    actions.append({
+        "label": _("Zurück"),
+        "url": reverse("assets:list"),
+        "variant": "ghost",
+    })
+    subtitle_parts = []
+    if asset.short_code:
+        subtitle_parts.append(f"Kürzel {asset.short_code}")
+    if asset.inventory_number:
+        subtitle_parts.append(f"Inv. {asset.inventory_number}")
+    return {
+        "asset": asset,
+        "active_tab": active_tab,
+        "can_write": can_write,
+        "title": asset.name,
+        "subtitle": " · ".join(subtitle_parts),
+        "status_dot": asset.status_dot,
+        "meta_items": asset.meta_items(),
+        "actions": actions,
+        "tabs": [
+            {
+                "slug": slug,
+                "label": TAB_LABELS[slug],
+                "count": asset.tab_count(slug),
+                "url": reverse(f"assets:detail_{slug}", args=[asset.pk]),
+            }
+            for slug in TAB_SLUGS
+        ],
+    }
+
+
+def _is_htmx(request):
+    return request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
+
+
+def _render_tab(request, asset, active_tab, panel_template, extra_ctx):
+    ctx = _shell_context(asset, active_tab, request)
+    ctx.update(extra_ctx)
+    ctx["panel_template"] = panel_template
+    template = panel_template if _is_htmx(request) else "assets/asset_detail.html"
+    return render(request, template, ctx)
+
+
+def _asset_queryset():
+    return Asset.objects.select_related("responsible", "deputy")
+
+
+def _asset_audit_qs(asset):
+    asset_ct = ContentType.objects.get_for_model(Asset)
+    return AuditLog.objects.filter(
+        content_type=asset_ct,
+        object_id=str(asset.pk),
+    ).select_related("actor", "content_type").order_by("-timestamp")
+
+
+@login_required
+def asset_detail(request, pk):
+    return asset_overview(request, pk)
+
+
+@login_required
+def asset_overview(request, pk):
+    asset = get_object_or_404(_asset_queryset(), pk=pk)
+    recent = list(_asset_audit_qs(asset)[:5])
+    return _render_tab(
+        request, asset, "overview",
+        "assets/_overview_panel.html",
+        {"recent_activity": recent},
+    )
+
+
+@login_required
+def asset_maintenance(request, pk):
+    asset = get_object_or_404(_asset_queryset(), pk=pk)
+    plans = (
+        asset.maintenance_plans
+        .annotate(last_performed_at=Max("records__performed_at"))
+        .order_by("title")
+    )
+    return _render_tab(
+        request, asset, "maintenance",
+        "assets/_maintenance_panel.html",
+        {"maintenance_plans": plans},
+    )
+
+
+@login_required
+def asset_qualification(request, pk):
+    asset = get_object_or_404(_asset_queryset(), pk=pk)
+    cycles = (
+        asset.qualification_cycles
+        .annotate(last_signed_at=Max("signatures__signed_at"))
+        .order_by("qual_type", "title")
+    )
+    return _render_tab(
+        request, asset, "qualification",
+        "assets/_qualification_panel.html",
+        {"qualification_cycles": cycles},
+    )
+
+
+@login_required
+def asset_documents(request, pk):
+    asset = get_object_or_404(_asset_queryset(), pk=pk)
+    doc_links = [
+        (asset.logbook_ref, asset.logbook_url, _("Logbuch (LOG)")),
+        (asset.bal_ref, asset.bal_url, _("Bedienungsanleitung (BAL)")),
+    ]
+    documents = [
+        {"ref": ref, "url": url, "label": label}
+        for ref, url, label in doc_links
+        if ref
+    ]
+    return _render_tab(
+        request, asset, "documents",
+        "assets/_documents_panel.html",
+        {"asset_documents": documents},
+    )
+
+
+@login_required
+def asset_audit(request, pk):
+    asset = get_object_or_404(_asset_queryset(), pk=pk)
+    events = list(_asset_audit_qs(asset)[:100])
+    total = _asset_audit_qs(asset).count()
+    return _render_tab(
+        request, asset, "audit",
+        "assets/_audit_panel.html",
+        {"audit_events": events, "audit_total": total},
+    )
 
 
 # ---------------------------------------------------------------------------
